@@ -239,7 +239,6 @@ void entity_collide_all(struct entity_list *list) {
         fish->splat_x = teeth->x;
         fish->splat_y = teeth->y;
         fish->splat_z = teeth->z;
-        fish->death_action = DEATH_NONE;
         break;
       }
     }

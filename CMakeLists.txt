@@ -17,7 +17,12 @@ set(UNDERTHEC_SOURCES
         src/color.c
         src/rng.c
         src/entity.c
-        src/scene.c
+        src/scene/scene.c
+        src/scene/effects.c
+        src/scene/creatures.c
+        src/scene/environment.c
+        src/scene/kaiju.c
+        src/scene/fishhook.c
 )
 
 if (WIN32)
