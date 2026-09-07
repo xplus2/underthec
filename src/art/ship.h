@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const ship_image_0[] = {
-	"",
 	"     |    |    |",
 	"    )_)  )_)  )_)",
 	"   )___))___))___)\\",
@@ -15,7 +14,6 @@ static const char *const ship_image_0[] = {
 };
 
 static const char *const ship_image_1[] = {
-	"",
 	"         |    |    |",
 	"        (_(  (_(  (_(",
 	"      /(___((___((___(",
@@ -26,7 +24,6 @@ static const char *const ship_image_1[] = {
 };
 
 static const char *const ship_mask_0[] = {
-	"",
 	"     y    y    y",
 	"",
 	"                  w",
@@ -37,7 +34,6 @@ static const char *const ship_mask_0[] = {
 };
 
 static const char *const ship_mask_1[] = {
-	"",
 	"         y    y    y",
 	"",
 	"      w",

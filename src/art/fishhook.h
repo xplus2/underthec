@@ -4,14 +4,12 @@
 #include "../sprite.h"
 
 static const char *const fishhook_image[] = {
-	"",
 	"       o",
 	"      ||",
 	"      ||",
 	"/ \\\?\?\?||",
 	"  \\__//",
 	"  `--'",
-	"",
 	NULL
 };
 

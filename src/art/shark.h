@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const shark_image_0[] = {
-	"",
 	"                              __",
 	"                             ( `\\",
 	"  ,\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?)   `\\",
@@ -19,7 +18,6 @@ static const char *const shark_image_0[] = {
 };
 
 static const char *const shark_image_1[] = {
-	"",
 	"                     __",
 	"                    /' )",
 	"                  /'   (\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?,",
@@ -39,7 +37,6 @@ static const char *const shark_mask_0[] = {
 	"",
 	"",
 	"",
-	"",
 	"                                           cR",
 	" ",
 	"                                          cWWWWWWWW",
@@ -47,7 +44,6 @@ static const char *const shark_mask_0[] = {
 };
 
 static const char *const shark_mask_1[] = {
-	"",
 	"",
 	"",
 	"",

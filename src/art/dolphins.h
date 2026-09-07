@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const dolphin_image_0_0[] = {
-	"",
 	"        ,",
 	"      __)\\_",
 	"(\\_.-'    a`-.",
@@ -13,7 +12,6 @@ static const char *const dolphin_image_0_0[] = {
 };
 
 static const char *const dolphin_image_0_1[] = {
-	"",
 	"        ,",
 	"(\\__  __)\\_",
 	"(/~.''    a`-.",
@@ -22,7 +20,6 @@ static const char *const dolphin_image_0_1[] = {
 };
 
 static const char *const dolphin_image_1_0[] = {
-	"",
 	"     ,",
 	"   _/(__",
 	".-'a    `-._/)",
@@ -31,7 +28,6 @@ static const char *const dolphin_image_1_0[] = {
 };
 
 static const char *const dolphin_image_1_1[] = {
-	"",
 	"     ,",
 	"   _/(__  __/)",
 	".-'a    ``.~\\)",
@@ -42,13 +38,11 @@ static const char *const dolphin_image_1_1[] = {
 static const char *const dolphin_mask_0[] = {
 	"",
 	"",
-	"",
 	"          W",
 	NULL
 };
 
 static const char *const dolphin_mask_1[] = {
-	"",
 	"",
 	"",
 	"   W",

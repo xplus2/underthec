@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const swan_image_0[] = {
-	"",
 	"       ___",
 	",_    / _,\\",
 	"| \\   \\( \\|",
@@ -16,7 +15,6 @@ static const char *const swan_image_0[] = {
 };
 
 static const char *const swan_image_1[] = {
-	"",
 	" ___",
 	"/,_ \\    _,",
 	"|/ )/   / |",
@@ -29,14 +27,12 @@ static const char *const swan_image_1[] = {
 
 static const char *const swan_mask_0[] = {
 	"",
-	"",
 	"         g",
 	"         yy",
 	NULL
 };
 
 static const char *const swan_mask_1[] = {
-	"",
 	"",
 	" g",
 	"yy",

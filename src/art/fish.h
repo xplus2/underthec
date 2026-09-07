@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const fish_new_0[] = {
-	"",
 	"   \\",
 	"  / \\",
 	">=_('>",
@@ -14,7 +13,6 @@ static const char *const fish_new_0[] = {
 };
 
 static const char *const fish_new_1[] = {
-	"",
 	"   1",
 	"  1 1",
 	"663745",
@@ -24,7 +22,6 @@ static const char *const fish_new_1[] = {
 };
 
 static const char *const fish_new_2[] = {
-	"",
 	"  /",
 	" / \\",
 	"<')_=<",
@@ -34,7 +31,6 @@ static const char *const fish_new_2[] = {
 };
 
 static const char *const fish_new_3[] = {
-	"",
 	"  2",
 	" 111",
 	"547366",
@@ -44,7 +40,6 @@ static const char *const fish_new_3[] = {
 };
 
 static const char *const fish_new_4[] = {
-	"",
 	"     ,",
 	"     }\\",
 	"\\  .'  `\\",
@@ -56,7 +51,6 @@ static const char *const fish_new_4[] = {
 };
 
 static const char *const fish_new_5[] = {
-	"",
 	"     2",
 	"     22",
 	"6  11  11",
@@ -68,7 +62,6 @@ static const char *const fish_new_5[] = {
 };
 
 static const char *const fish_new_6[] = {
-	"",
 	"    ,",
 	"   /{",
 	" /'  `.  /",
@@ -80,7 +73,6 @@ static const char *const fish_new_6[] = {
 };
 
 static const char *const fish_new_7[] = {
-	"",
 	"    2",
 	"   22",
 	" 11  11  6",
@@ -92,7 +84,6 @@ static const char *const fish_new_7[] = {
 };
 
 static const char *const fish_new_8[] = {
-	"",
 	"            \\'`.",
 	"             )  \\",
 	"(`.\?\?\?\?\?\?_.-`' ' '`-.",
@@ -105,7 +96,6 @@ static const char *const fish_new_8[] = {
 };
 
 static const char *const fish_new_9[] = {
-	"",
 	"            1111",
 	"             1  1",
 	"111      11111 1 1111",
@@ -118,7 +108,6 @@ static const char *const fish_new_9[] = {
 };
 
 static const char *const fish_new_10[] = {
-	"",
 	"       .'`/",
 	"      /  (",
 	"  .-'` ` `'-._\?\?\?\?\?\?.')",
@@ -131,7 +120,6 @@ static const char *const fish_new_10[] = {
 };
 
 static const char *const fish_new_11[] = {
-	"",
 	"       1111",
 	"      1  1",
 	"  1111 1 11111      111",
@@ -144,7 +132,6 @@ static const char *const fish_new_11[] = {
 };
 
 static const char *const fish_new_12[] = {
-	"",
 	"       ,--,_",
 	"__    _\\.---'-.",
 	"\\ '.-\"     // o\\",
@@ -154,7 +141,6 @@ static const char *const fish_new_12[] = {
 };
 
 static const char *const fish_new_13[] = {
-	"",
 	"       22222",
 	"66    121111211",
 	"6 6111     77 41",
@@ -164,7 +150,6 @@ static const char *const fish_new_13[] = {
 };
 
 static const char *const fish_new_14[] = {
-	"",
 	"    _,--,",
 	" .-'---./_    __",
 	"/o \\\\     \"-.' /",
@@ -174,7 +159,6 @@ static const char *const fish_new_14[] = {
 };
 
 static const char *const fish_new_15[] = {
-	"",
 	"    22222",
 	" 112111121    66",
 	"14 77     1116 6",
@@ -184,7 +168,6 @@ static const char *const fish_new_15[] = {
 };
 
 static const char *const fish_old_0[] = {
-	"",
 	"       \\",
 	"     ...\\..,",
 	"\\  /'       \\",
@@ -195,7 +178,6 @@ static const char *const fish_old_0[] = {
 };
 
 static const char *const fish_old_1[] = {
-	"",
 	"       2",
 	"     1112111",
 	"6  11       1",
@@ -206,7 +188,6 @@ static const char *const fish_old_1[] = {
 };
 
 static const char *const fish_old_2[] = {
-	"",
 	"      /",
 	"  ,../...",
 	" /       '\\  /",
@@ -217,7 +198,6 @@ static const char *const fish_old_2[] = {
 };
 
 static const char *const fish_old_3[] = {
-	"",
 	"      2",
 	"  1112111",
 	" 1       11  6",
@@ -228,7 +208,6 @@ static const char *const fish_old_3[] = {
 };
 
 static const char *const fish_old_4[] = {
-	"",
 	"    \\",
 	"\\ /--\\",
 	">=  (o>",
@@ -238,7 +217,6 @@ static const char *const fish_old_4[] = {
 };
 
 static const char *const fish_old_5[] = {
-	"",
 	"    2",
 	"6 1111",
 	"66  745",
@@ -248,7 +226,6 @@ static const char *const fish_old_5[] = {
 };
 
 static const char *const fish_old_6[] = {
-	"",
 	"  /",
 	" /--\\ /",
 	"<o)  =<",
@@ -258,7 +235,6 @@ static const char *const fish_old_6[] = {
 };
 
 static const char *const fish_old_7[] = {
-	"",
 	"  2",
 	" 1111 6",
 	"547  66",
@@ -268,7 +244,6 @@ static const char *const fish_old_7[] = {
 };
 
 static const char *const fish_old_8[] = {
-	"",
 	"       \\:.",
 	"\\;,   ,;\\\\\\,,",
 	"  \\\\\\;;:::::::o",
@@ -278,7 +253,6 @@ static const char *const fish_old_8[] = {
 };
 
 static const char *const fish_old_9[] = {
-	"",
 	"       222",
 	"666   1122211",
 	"  6661111111114",
@@ -288,7 +262,6 @@ static const char *const fish_old_9[] = {
 };
 
 static const char *const fish_old_10[] = {
-	"",
 	"      .:/",
 	"   ,,///;,   ,;/",
 	" o:::::::;;///",
@@ -298,7 +271,6 @@ static const char *const fish_old_10[] = {
 };
 
 static const char *const fish_old_11[] = {
-	"",
 	"      222",
 	"   1122211   666",
 	" 4111111111666",
@@ -308,7 +280,6 @@ static const char *const fish_old_11[] = {
 };
 
 static const char *const fish_old_12[] = {
-	"",
 	"  __",
 	"><_'>",
 	"   '",
@@ -316,7 +287,6 @@ static const char *const fish_old_12[] = {
 };
 
 static const char *const fish_old_13[] = {
-	"",
 	"  11",
 	"61145",
 	"   3",
@@ -324,7 +294,6 @@ static const char *const fish_old_13[] = {
 };
 
 static const char *const fish_old_14[] = {
-	"",
 	" __",
 	"<'_><",
 	" `",
@@ -332,7 +301,6 @@ static const char *const fish_old_14[] = {
 };
 
 static const char *const fish_old_15[] = {
-	"",
 	" 11",
 	"54116",
 	" 3",
@@ -340,7 +308,6 @@ static const char *const fish_old_15[] = {
 };
 
 static const char *const fish_old_16[] = {
-	"",
 	"   ..\\,",
 	">='   ('>",
 	"  '''/''",
@@ -348,7 +315,6 @@ static const char *const fish_old_16[] = {
 };
 
 static const char *const fish_old_17[] = {
-	"",
 	"   1121",
 	"661   745",
 	"  111311",
@@ -356,7 +322,6 @@ static const char *const fish_old_17[] = {
 };
 
 static const char *const fish_old_18[] = {
-	"",
 	"  ,/..",
 	"<')   `=<",
 	" ``\\```",
@@ -364,7 +329,6 @@ static const char *const fish_old_18[] = {
 };
 
 static const char *const fish_old_19[] = {
-	"",
 	"  1211",
 	"547   166",
 	" 113111",
@@ -372,7 +336,6 @@ static const char *const fish_old_19[] = {
 };
 
 static const char *const fish_old_20[] = {
-	"",
 	"   \\",
 	"  / \\",
 	">=_('>",
@@ -382,7 +345,6 @@ static const char *const fish_old_20[] = {
 };
 
 static const char *const fish_old_21[] = {
-	"",
 	"   2",
 	"  1 1",
 	"661745",
@@ -392,7 +354,6 @@ static const char *const fish_old_21[] = {
 };
 
 static const char *const fish_old_22[] = {
-	"",
 	"  /",
 	" / \\",
 	"<')_=<",
@@ -402,7 +363,6 @@ static const char *const fish_old_22[] = {
 };
 
 static const char *const fish_old_23[] = {
-	"",
 	"  2",
 	" 1 1",
 	"547166",
@@ -412,7 +372,6 @@ static const char *const fish_old_23[] = {
 };
 
 static const char *const fish_old_24[] = {
-	"",
 	"  ,\\",
 	">=('>",
 	"  '/",
@@ -420,7 +379,6 @@ static const char *const fish_old_24[] = {
 };
 
 static const char *const fish_old_25[] = {
-	"",
 	"  12",
 	"66745",
 	"  13",
@@ -428,7 +386,6 @@ static const char *const fish_old_25[] = {
 };
 
 static const char *const fish_old_26[] = {
-	"",
 	" /,",
 	"<')=<",
 	" \\`",
@@ -436,7 +393,6 @@ static const char *const fish_old_26[] = {
 };
 
 static const char *const fish_old_27[] = {
-	"",
 	" 21",
 	"54766",
 	" 31",
@@ -444,7 +400,6 @@ static const char *const fish_old_27[] = {
 };
 
 static const char *const fish_old_28[] = {
-	"",
 	"  __",
 	"\\/ o\\",
 	"/\\__/",
@@ -452,7 +407,6 @@ static const char *const fish_old_28[] = {
 };
 
 static const char *const fish_old_29[] = {
-	"",
 	"  11",
 	"61 41",
 	"61111",
@@ -460,7 +414,6 @@ static const char *const fish_old_29[] = {
 };
 
 static const char *const fish_old_30[] = {
-	"",
 	" __",
 	"/o \\/",
 	"\\__/\\",
@@ -468,7 +421,6 @@ static const char *const fish_old_30[] = {
 };
 
 static const char *const fish_old_31[] = {
-	"",
 	" 11",
 	"14 16",
 	"11116",

@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const duck_image_0_0[] = {
-	"",
 	"      _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
 	",____(')=\?\?,____(')=\?\?,____(')<",
 	" \\~~= ')\?\?\?\?\\~~= ')\?\?\?\?\\~~= ')",
@@ -12,7 +11,6 @@ static const char *const duck_image_0_0[] = {
 };
 
 static const char *const duck_image_0_1[] = {
-	"",
 	"      _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
 	",____(')=\?\?,____(')<\?\?,____(')=",
 	" \\~~= ')\?\?\?\?\\~~= ')\?\?\?\?\\~~= ')",
@@ -20,7 +18,6 @@ static const char *const duck_image_0_1[] = {
 };
 
 static const char *const duck_image_0_2[] = {
-	"",
 	"      _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
 	",____(')<\?\?,____(')=\?\?,____(')=",
 	" \\~~= ')\?\?\?\?\\~~= ')\?\?\?\?\\~~= ')",
@@ -28,7 +25,6 @@ static const char *const duck_image_0_2[] = {
 };
 
 static const char *const duck_image_1_0[] = {
-	"",
 	"  _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
 	">(')____,\?\?=(')____,\?\?=(')____,",
 	" (` =~~/\?\?\?\?(` =~~/\?\?\?\?(` =~~/",
@@ -36,7 +32,6 @@ static const char *const duck_image_1_0[] = {
 };
 
 static const char *const duck_image_1_1[] = {
-	"",
 	"  _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
 	"=(')____,\?\?>(')____,\?\?=(')____,",
 	" (` =~~/\?\?\?\?(` =~~/\?\?\?\?(` =~~/",
@@ -44,7 +39,6 @@ static const char *const duck_image_1_1[] = {
 };
 
 static const char *const duck_image_1_2[] = {
-	"",
 	"  _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
 	"=(')____,\?\?=(')____,\?\?>(')____,",
 	" (` =~~/\?\?\?\?(` =~~/\?\?\?\?(` =~~/",
@@ -52,7 +46,6 @@ static const char *const duck_image_1_2[] = {
 };
 
 static const char *const duck_mask_0[] = {
-	"",
 	"      g          g          g",
 	"wwwwwgcgy  wwwwwgcgy  wwwwwgcgy",
 	" wwww Ww    wwww Ww    wwww Ww",
@@ -60,7 +53,6 @@ static const char *const duck_mask_0[] = {
 };
 
 static const char *const duck_mask_1[] = {
-	"",
 	"  g          g          g",
 	"ygcgwwwww  ygcgwwwww  ygcgwwwww",
 	" wW wwww    wW wwww    wW wwww",

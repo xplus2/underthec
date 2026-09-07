@@ -949,12 +949,20 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
 
     if (laser != NULL) {
       struct entity *target = NULL;
+      struct entity *kaiju_ent = NULL;
       for (int i = 0; i < sc->entities.count; i++) {
         struct entity *e = &sc->entities.items[i];
-        if (!e->marked_dead && e->id == laser->splat_z) {
+        if (e->marked_dead)
+          continue;
+        if (e->id == laser->splat_z)
           target = e;
-          break;
-        }
+        else if (e->type == ENT_KAIJU)
+          kaiju_ent = e;
+      }
+      int eye_row, eye_col;
+      if (kaiju_ent != NULL && find_kaiju_eye(kaiju_ent, &eye_row, &eye_col)) {
+        laser->splat_x = kaiju_ent->x + eye_col;
+        laser->y = kaiju_ent->y + eye_row;
       }
       if (target == NULL) {
         laser->marked_dead = true;

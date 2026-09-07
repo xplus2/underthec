@@ -7,7 +7,6 @@ static const char *const submarine_image_0_0[] = {
 	"",
 	"",
 	"",
-	"",
 	"                       __",
 	"                      _|_",
 	"                     /   |",
@@ -19,7 +18,6 @@ static const char *const submarine_image_0_0[] = {
 };
 
 static const char *const submarine_image_0_1[] = {
-	"",
 	"",
 	"",
 	"                       __",
@@ -35,7 +33,6 @@ static const char *const submarine_image_0_1[] = {
 
 static const char *const submarine_image_0_2[] = {
 	"",
-	"",
 	"                       __",
 	"                       |",
 	"                       |",
@@ -49,7 +46,6 @@ static const char *const submarine_image_0_2[] = {
 };
 
 static const char *const submarine_image_0_3[] = {
-	"",
 	"                       __",
 	"                       |",
 	"                       |",
@@ -64,7 +60,6 @@ static const char *const submarine_image_0_3[] = {
 };
 
 static const char *const submarine_image_0_4[] = {
-	"",
 	"                      __",
 	"                       |",
 	"                       |",
@@ -79,7 +74,6 @@ static const char *const submarine_image_0_4[] = {
 };
 
 static const char *const submarine_image_0_5[] = {
-	"",
 	"                       __",
 	"                       |",
 	"                       |",
@@ -95,7 +89,6 @@ static const char *const submarine_image_0_5[] = {
 
 static const char *const submarine_image_0_6[] = {
 	"",
-	"",
 	"                       __",
 	"                       |",
 	"                       |",
@@ -109,7 +102,6 @@ static const char *const submarine_image_0_6[] = {
 };
 
 static const char *const submarine_image_0_7[] = {
-	"",
 	"",
 	"",
 	"                       __",
@@ -127,7 +119,6 @@ static const char *const submarine_image_0_8[] = {
 	"",
 	"",
 	"",
-	"",
 	"                       __",
 	"                      _|_",
 	"                     /   |",
@@ -139,7 +130,6 @@ static const char *const submarine_image_0_8[] = {
 };
 
 static const char *const submarine_image_1_0[] = {
-	"",
 	"",
 	"",
 	"",
@@ -156,7 +146,6 @@ static const char *const submarine_image_1_0[] = {
 static const char *const submarine_image_1_1[] = {
 	"",
 	"",
-	"",
 	"               __",
 	"                |",
 	"               _|_",
@@ -169,7 +158,6 @@ static const char *const submarine_image_1_1[] = {
 };
 
 static const char *const submarine_image_1_2[] = {
-	"",
 	"",
 	"               __",
 	"                |",
@@ -184,7 +172,6 @@ static const char *const submarine_image_1_2[] = {
 };
 
 static const char *const submarine_image_1_3[] = {
-	"",
 	"               __",
 	"                |",
 	"                |",
@@ -199,7 +186,6 @@ static const char *const submarine_image_1_3[] = {
 };
 
 static const char *const submarine_image_1_4[] = {
-	"",
 	"                __",
 	"                |",
 	"                |",
@@ -214,7 +200,6 @@ static const char *const submarine_image_1_4[] = {
 };
 
 static const char *const submarine_image_1_5[] = {
-	"",
 	"               __",
 	"                |",
 	"                |",
@@ -230,7 +215,6 @@ static const char *const submarine_image_1_5[] = {
 
 static const char *const submarine_image_1_6[] = {
 	"",
-	"",
 	"               __",
 	"                |",
 	"                |",
@@ -244,7 +228,6 @@ static const char *const submarine_image_1_6[] = {
 };
 
 static const char *const submarine_image_1_7[] = {
-	"",
 	"",
 	"",
 	"               __",
@@ -262,7 +245,6 @@ static const char *const submarine_image_1_8[] = {
 	"",
 	"",
 	"",
-	"",
 	"               __",
 	"               _|_",
 	"              |   \\",
@@ -274,7 +256,6 @@ static const char *const submarine_image_1_8[] = {
 };
 
 static const char *const submarine_mask_0[] = {
-	"",
 	"                      www",
 	"                       ww",
 	"                       ww",
@@ -289,7 +270,6 @@ static const char *const submarine_mask_0[] = {
 };
 
 static const char *const submarine_mask_1[] = {
-	"",
 	"               www",
 	"               ww",
 	"               ww",

@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const swordfish_image_0[] = {
-	"",
 	"                             )\",",
 	"_\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?/\\\\\\\\",
 	" \",\?\?\?\?\?\?\?\?\?\?\?\?_____,,,,,--\\\\\\\\\\\\)",
@@ -18,7 +17,6 @@ static const char *const swordfish_image_0[] = {
 };
 
 static const char *const swordfish_image_1[] = {
-	"",
 	"                ,\"(",
 	"               ////\\\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?_",
 	"              (//////--,,,,,_____\?\?\?\?\?\?\?\?\?\?\?\?,\"",
@@ -32,7 +30,6 @@ static const char *const swordfish_image_1[] = {
 };
 
 static const char *const swordfish_mask_0[] = {
-	"",
 	"                             222",
 	"6                           22222",
 	" 66            2222222222222222222",
@@ -46,7 +43,6 @@ static const char *const swordfish_mask_0[] = {
 };
 
 static const char *const swordfish_mask_1[] = {
-	"",
 	"                222",
 	"               22222                           6",
 	"              2222222222222222222            66",

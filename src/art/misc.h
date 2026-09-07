@@ -23,8 +23,14 @@ static const char *const water_line_segment_3[] = {
 	NULL
 };
 
+static const char *const *const water_line_segments[] = {
+	water_line_segment_0,
+	water_line_segment_1,
+	water_line_segment_2,
+	water_line_segment_3,
+};
+
 static const char *const splat_frame_0[] = {
-	"",
 	"",
 	"   .",
 	"  ***",
@@ -34,7 +40,6 @@ static const char *const splat_frame_0[] = {
 
 static const char *const splat_frame_1[] = {
 	"",
-	"",
 	" \",*;`",
 	" \"*,**",
 	" *\"'~'",
@@ -42,7 +47,6 @@ static const char *const splat_frame_1[] = {
 };
 
 static const char *const splat_frame_2[] = {
-	"",
 	"  , ,",
 	" \" \",\"'",
 	" *\" *'\"",
@@ -51,7 +55,6 @@ static const char *const splat_frame_2[] = {
 };
 
 static const char *const splat_frame_3[] = {
-	"",
 	"* ' , ' `",
 	"' ` * . '",
 	" ' `' \",'",

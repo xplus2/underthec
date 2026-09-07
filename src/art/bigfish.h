@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const bigfish1_image_0[] = {
-	"",
 	" ______",
 	"`\"\"-.  `````-----.....__",
 	"     `.  .      .       `-.",
@@ -23,7 +22,6 @@ static const char *const bigfish1_image_0[] = {
 };
 
 static const char *const bigfish1_image_1[] = {
-	"",
 	"                           ______",
 	"          __.....-----'''''  .-\"\"'",
 	"       .-'       .      .  .'",
@@ -42,7 +40,6 @@ static const char *const bigfish1_image_1[] = {
 };
 
 static const char *const bigfish1_mask_0[] = {
-	"",
 	" 111111",
 	"11111  11111111111111111",
 	"     11  2      2       111",
@@ -61,7 +58,6 @@ static const char *const bigfish1_mask_0[] = {
 };
 
 static const char *const bigfish1_mask_1[] = {
-	"",
 	"                           111111",
 	"          11111111111111111  11111",
 	"       111       2      2  11",
@@ -80,7 +76,6 @@ static const char *const bigfish1_mask_1[] = {
 };
 
 static const char *const bigfish2_image_0[] = {
-	"",
 	"                _ _ _",
 	"             .='\\ \\ \\`\"=,",
 	"           .'\\ \\ \\ \\ \\ \\ \\",
@@ -98,7 +93,6 @@ static const char *const bigfish2_image_0[] = {
 };
 
 static const char *const bigfish2_image_1[] = {
-	"",
 	"            _ _ _",
 	"        ,=\"`/ / /'=.",
 	"       / / / / / / /'.",
@@ -116,7 +110,6 @@ static const char *const bigfish2_image_1[] = {
 };
 
 static const char *const bigfish2_mask_0[] = {
-	"",
 	"                1 1 1",
 	"             1111 1 11111",
 	"           111 1 1 1 1 1 1",
@@ -134,7 +127,6 @@ static const char *const bigfish2_mask_0[] = {
 };
 
 static const char *const bigfish2_mask_1[] = {
-	"",
 	"            1 1 1",
 	"        11111 1 1111",
 	"       1 1 1 1 1 1 111",

@@ -4,7 +4,6 @@
 #include "../sprite.h"
 
 static const char *const whale_mask_0[] = {
-	"",
 	"             C C",
 	"           CCCCCCC",
 	"           C  C  C",
@@ -16,7 +15,6 @@ static const char *const whale_mask_0[] = {
 };
 
 static const char *const whale_mask_1[] = {
-	"",
 	"   C C",
 	" CCCCCCC",
 	" C  C  C",
@@ -31,7 +29,6 @@ static const char *const whale_frame_0_0[] = {
 	"",
 	"",
 	"",
-	"",
 	"        .-----:",
 	"      .'       `.",
 	",\?\?\?\?/       (o) \\",
@@ -40,7 +37,6 @@ static const char *const whale_frame_0_0[] = {
 };
 
 static const char *const whale_frame_0_1[] = {
-	"",
 	"",
 	"",
 	"",
@@ -55,7 +51,6 @@ static const char *const whale_frame_0_2[] = {
 	"",
 	"",
 	"",
-	"",
 	"        .-----:",
 	"      .'       `.",
 	",\?\?\?\?/       (o) \\",
@@ -64,7 +59,6 @@ static const char *const whale_frame_0_2[] = {
 };
 
 static const char *const whale_frame_0_3[] = {
-	"",
 	"",
 	"",
 	"",
@@ -79,7 +73,6 @@ static const char *const whale_frame_0_4[] = {
 	"",
 	"",
 	"",
-	"",
 	"        .-----:",
 	"      .'       `.",
 	",\?\?\?\?/       (o) \\",
@@ -88,7 +81,6 @@ static const char *const whale_frame_0_4[] = {
 };
 
 static const char *const whale_frame_0_5[] = {
-	"",
 	"           ",
 	"           ",
 	"              :",
@@ -100,7 +92,6 @@ static const char *const whale_frame_0_5[] = {
 };
 
 static const char *const whale_frame_0_6[] = {
-	"",
 	"           ",
 	"              :",
 	"              :",
@@ -112,7 +103,6 @@ static const char *const whale_frame_0_6[] = {
 };
 
 static const char *const whale_frame_0_7[] = {
-	"",
 	"             . .",
 	"             -:-",
 	"              :",
@@ -124,7 +114,6 @@ static const char *const whale_frame_0_7[] = {
 };
 
 static const char *const whale_frame_0_8[] = {
-	"",
 	"             . .",
 	"            .-:-.",
 	"              :",
@@ -136,7 +125,6 @@ static const char *const whale_frame_0_8[] = {
 };
 
 static const char *const whale_frame_0_9[] = {
-	"",
 	"             . .",
 	"           '.-:-.`",
 	"           '  :  '",
@@ -148,7 +136,6 @@ static const char *const whale_frame_0_9[] = {
 };
 
 static const char *const whale_frame_0_10[] = {
-	"",
 	"           ",
 	"            .- -.",
 	"           ;  :  ;",
@@ -160,7 +147,6 @@ static const char *const whale_frame_0_10[] = {
 };
 
 static const char *const whale_frame_0_11[] = {
-	"",
 	"           ",
 	"           ",
 	"           ;     ;",
@@ -175,7 +161,6 @@ static const char *const whale_frame_1_0[] = {
 	"",
 	"",
 	"",
-	"",
 	"    :-----.",
 	"  .'       `.",
 	" / (o)       \\\?\?\?\?,",
@@ -184,7 +169,6 @@ static const char *const whale_frame_1_0[] = {
 };
 
 static const char *const whale_frame_1_1[] = {
-	"",
 	"",
 	"",
 	"",
@@ -199,7 +183,6 @@ static const char *const whale_frame_1_2[] = {
 	"",
 	"",
 	"",
-	"",
 	"    :-----.",
 	"  .'       `.",
 	" / (o)       \\\?\?\?\?,",
@@ -208,7 +191,6 @@ static const char *const whale_frame_1_2[] = {
 };
 
 static const char *const whale_frame_1_3[] = {
-	"",
 	"",
 	"",
 	"",
@@ -223,7 +205,6 @@ static const char *const whale_frame_1_4[] = {
 	"",
 	"",
 	"",
-	"",
 	"    :-----.",
 	"  .'       `.",
 	" / (o)       \\\?\?\?\?,",
@@ -232,7 +213,6 @@ static const char *const whale_frame_1_4[] = {
 };
 
 static const char *const whale_frame_1_5[] = {
-	"",
 	" ",
 	" ",
 	"    :",
@@ -244,7 +224,6 @@ static const char *const whale_frame_1_5[] = {
 };
 
 static const char *const whale_frame_1_6[] = {
-	"",
 	" ",
 	"    :",
 	"    :",
@@ -256,7 +235,6 @@ static const char *const whale_frame_1_6[] = {
 };
 
 static const char *const whale_frame_1_7[] = {
-	"",
 	"   . .",
 	"   -:-",
 	"    :",
@@ -268,7 +246,6 @@ static const char *const whale_frame_1_7[] = {
 };
 
 static const char *const whale_frame_1_8[] = {
-	"",
 	"   . .",
 	"  .-:-.",
 	"    :",
@@ -280,7 +257,6 @@ static const char *const whale_frame_1_8[] = {
 };
 
 static const char *const whale_frame_1_9[] = {
-	"",
 	"   . .",
 	" '.-:-.`",
 	" '  :  '",
@@ -292,7 +268,6 @@ static const char *const whale_frame_1_9[] = {
 };
 
 static const char *const whale_frame_1_10[] = {
-	"",
 	" ",
 	"  .- -.",
 	" ;  :  ;",
@@ -304,7 +279,6 @@ static const char *const whale_frame_1_10[] = {
 };
 
 static const char *const whale_frame_1_11[] = {
-	"",
 	" ",
 	" ",
 	" ;     ;",
