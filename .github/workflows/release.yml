@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: get
+        run: |
+          ver=$(grep -oP '(?<=TOOL_VERSION ")[^"]+' src/version.h)
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+
+  linux:
+    needs: version
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/musl-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j
+      - run: |
+          ver=${{ needs.version.outputs.version }}
+          name=underthec-${ver}-linux-${{ matrix.arch }}
+          mkdir "$name"
+          cp build/underthec LICENSE README.md "$name"/
+          tar -czf "${name}.tar.gz" "$name"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: underthec-*-linux-${{ matrix.arch }}.tar.gz
+
+  windows-amd64:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y mingw-w64
+      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j
+      - run: |
+          ver=${{ needs.version.outputs.version }}
+          name=underthec-${ver}-windows-amd64
+          mkdir "$name"
+          cp build/underthec.exe LICENSE README.md "$name"/
+          zip -r "${name}.zip" "$name"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-amd64
+          path: underthec-*-windows-amd64.zip
+
+  release:
+    needs: [version, linux, windows-amd64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
