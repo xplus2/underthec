@@ -80,8 +80,14 @@ void entity_list_init(struct entity_list *list);
 void entity_list_free(struct entity_list *list);
 void entity_list_clear(struct entity_list *list);
 struct entity *entity_spawn(struct entity_list *list);
+struct entity *entity_find_first(struct entity_list *list, enum entity_type type);
+struct entity *entity_find_by_id(struct entity_list *list, int id);
 void entity_randomize_mask(struct entity *e, ascii_rows mask_template);
+typedef void (*row_transform_fn)(const char *in, char *out, void *ctx);
+char **entity_build_transformed_rows(ascii_rows tmpl, row_transform_fn fn, void *ctx);
+void entity_free_owned_rows(char **rows);
 void entity_set_owned_shape_frames(struct entity *e, char ***rows, int frame_count, double frame_interval_ticks);
+void entity_set_owned_single_row(struct entity *e, char *row, double frame_interval_ticks);
 void entity_clear_owned(struct entity *e);
 ascii_rows entity_shape(const struct entity *e);
 ascii_rows entity_mask(const struct entity *e);
@@ -93,5 +99,6 @@ bool entity_glyph_overlap(const struct entity *a, const struct entity *b);
 typedef void (*entity_death_fn)(const struct entity *dead, void *ctx);
 void entity_reap(struct entity_list *list, entity_death_fn fn, void *ctx);
 void entity_draw_all(const struct entity_list *list, struct canvas *c);
+void entity_draw_shutdown(void);
 
 #endif

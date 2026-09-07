@@ -29,10 +29,9 @@ void canvas_resize(struct canvas *c, int width, int height) {
 }
 
 void canvas_clear(struct canvas *c) {
-  struct attr blank = {COL_DEFAULT, false};
-  for (int y = 0; y < c->height; y++) {
-    for (int x = 0; x < c->width; x++) canvas_put(c, x, y, ' ', blank);
-  }
+  struct cell blank = {' ', COL_DEFAULT, false};
+  int n = c->width * c->height;
+  for (int i = 0; i < n; i++) c->cells[i] = blank;
 }
 
 void canvas_put(struct canvas *c, int x, int y, unsigned char glyph, struct attr a) {

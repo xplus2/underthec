@@ -23,6 +23,7 @@ set(UNDERTHEC_SOURCES
         src/scene/environment.c
         src/scene/kaiju.c
         src/scene/fishhook.c
+        src/term/term_common.c
 )
 
 if (WIN32)

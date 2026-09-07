@@ -3,7 +3,6 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include <string.h>
 #include <windows.h>
 
 static HANDLE h_in;
@@ -14,9 +13,6 @@ static bool have_orig_modes = false;
 static bool vt_enabled = false;
 static bool is_active = false;
 static char stdout_buf[1 << 16];
-
-static struct canvas prev;
-static bool prev_valid = false;
 
 int term_init(void) {
   h_in = CreateFileA("CONIN$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
@@ -34,8 +30,6 @@ int term_init(void) {
   setvbuf(stdout, stdout_buf, _IOFBF, sizeof(stdout_buf));
   fputs("\x1b[?1049h\x1b[?25l\x1b[2J\x1b[H", stdout);
   fflush(stdout);
-  canvas_init(&prev);
-  prev_valid = false;
   is_active = true;
   return 0;
 }
@@ -53,7 +47,7 @@ void term_shutdown(void) {
     CloseHandle(h_in);
     h_in = INVALID_HANDLE_VALUE;
   }
-  canvas_free(&prev);
+  term_common_shutdown();
 }
 
 void term_size(int *cols, int *rows) {
@@ -80,50 +74,4 @@ int term_poll_key(int timeout_ms) {
     if (c != 0) return tolower((unsigned char)c);
   }
   return -1;
-}
-
-static void write_sgr(enum color col, bool bold, bool mono) {
-  if (mono) return;
-  static const int fg[] = {39, 30, 31, 32, 33, 34, 35, 36, 37};
-  printf("\x1b[0;%s%dm", bold ? "1;" : "", fg[col]);
-}
-
-void term_present(const struct canvas *c) {
-  bool mono = !term_has_color();
-  if (!prev_valid || prev.width != c->width || prev.height != c->height) {
-    canvas_resize(&prev, c->width, c->height);
-    memset(prev.cells, 0, (size_t)prev.width * (size_t)prev.height * sizeof(*prev.cells));
-    fputs("\x1b[2J", stdout);
-    prev_valid = true;
-  }
-  for (int y = 0; y < c->height; y++) {
-    int x = 0;
-    while (x < c->width) {
-      struct cell *cur = &c->cells[(size_t)y * (size_t)c->width + (size_t)x];
-      struct cell *old = &prev.cells[(size_t)y * (size_t)c->width + (size_t)x];
-      if (cur->glyph == old->glyph && cur->col == old->col && cur->bold == old->bold) {
-        x++;
-        continue;
-      }
-      printf("\x1b[%d;%dH", y + 1, x + 1);
-      enum color last_col = COL_DEFAULT;
-      bool last_bold = false;
-      bool first = true;
-      while (x < c->width) {
-        cur = &c->cells[(size_t)y * (size_t)c->width + (size_t)x];
-        old = &prev.cells[(size_t)y * (size_t)c->width + (size_t)x];
-        if (cur->glyph == old->glyph && cur->col == old->col && cur->bold == old->bold) break;
-        if (first || cur->col != last_col || cur->bold != last_bold) {
-          write_sgr(cur->col, cur->bold, mono);
-          last_col = cur->col;
-          last_bold = cur->bold;
-          first = false;
-        }
-        putchar((int)cur->glyph);
-        *old = *cur;
-        x++;
-      }
-    }
-  }
-  fflush(stdout);
 }

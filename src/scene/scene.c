@@ -48,6 +48,7 @@ void scene_init(struct scene *sc, bool classic_mode) {
 void scene_free(struct scene *sc) {
   entity_list_free(&sc->entities);
   scene_set_message(sc, NULL, 0);
+  entity_draw_shutdown();
 }
 
 void scene_reset(struct scene *sc, int term_w, int term_h) {

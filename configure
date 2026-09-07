@@ -29,7 +29,7 @@ for arg in "$@"; do
 	esac
 done
 
-srcs="src/main.c src/canvas.c src/color.c src/rng.c src/entity.c src/scene/scene.c src/scene/effects.c src/scene/creatures.c src/scene/environment.c src/scene/kaiju.c src/scene/fishhook.c"
+srcs="src/main.c src/canvas.c src/color.c src/rng.c src/entity.c src/scene/scene.c src/scene/effects.c src/scene/creatures.c src/scene/environment.c src/scene/kaiju.c src/scene/fishhook.c src/term/term_common.c"
 
 case "$host" in
 *mingw*) term_src="src/term/term_windows.c" ;;

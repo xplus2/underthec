@@ -8,7 +8,7 @@ static int round_to_int(double v) {
   return (int)(v >= 0.0 ? v + 0.5 : v - 0.5);
 }
 
-static void free_row_array(char **rows) {
+void entity_free_owned_rows(char **rows) {
   if (rows == NULL) return;
   for (int i = 0; rows[i] != NULL; i++) free(rows[i]);
   free(rows);
@@ -16,11 +16,11 @@ static void free_row_array(char **rows) {
 
 void entity_clear_owned(struct entity *e) {
   if (e->owned_mask != NULL) {
-    free_row_array(e->owned_mask);
+    entity_free_owned_rows(e->owned_mask);
     e->owned_mask = NULL;
   }
   if (e->owned_frame_table != NULL) {
-    for (int i = 0; i < e->frame_count; i++) free_row_array(e->owned_shape_rows[i]);
+    for (int i = 0; i < e->frame_count; i++) entity_free_owned_rows(e->owned_shape_rows[i]);
     free(e->owned_shape_rows);
     e->owned_shape_rows = NULL;
     free(e->owned_frame_table);
@@ -64,18 +64,53 @@ struct entity *entity_spawn(struct entity_list *list) {
   return e;
 }
 
-void entity_randomize_mask(struct entity *e, ascii_rows mask_template) {
-  int rows = 0;
-  while (mask_template[rows] != NULL) rows++;
-  char **owned = malloc((size_t)(rows + 1) * sizeof(*owned));
-  for (int i = 0; i < rows; i++) {
-    size_t len = strlen(mask_template[i]);
-    owned[i] = malloc(len + 1);
-    color_randomize_mask(mask_template[i], owned[i]);
+struct entity *entity_find_first(struct entity_list *list, enum entity_type type) {
+  for (int i = 0; i < list->count; i++) {
+    struct entity *e = &list->items[i];
+    if (!e->marked_dead && e->type == type) return e;
   }
-  owned[rows] = NULL;
+  return NULL;
+}
+
+struct entity *entity_find_by_id(struct entity_list *list, int id) {
+  for (int i = 0; i < list->count; i++) {
+    struct entity *e = &list->items[i];
+    if (!e->marked_dead && e->id == id) return e;
+  }
+  return NULL;
+}
+
+char **entity_build_transformed_rows(ascii_rows tmpl, row_transform_fn fn, void *ctx) {
+  int rows = 0;
+  while (tmpl[rows] != NULL) rows++;
+  char **out = malloc((size_t)(rows + 1) * sizeof(*out));
+  for (int i = 0; i < rows; i++) {
+    size_t len = strlen(tmpl[i]);
+    out[i] = malloc(len + 1);
+    fn(tmpl[i], out[i], ctx);
+  }
+  out[rows] = NULL;
+  return out;
+}
+
+static void randomize_row(const char *in, char *out, void *ctx) {
+  (void)ctx;
+  color_randomize_mask(in, out);
+}
+
+void entity_randomize_mask(struct entity *e, ascii_rows mask_template) {
+  char **owned = entity_build_transformed_rows(mask_template, randomize_row, NULL);
   entity_clear_owned(e);
   e->owned_mask = owned;
+}
+
+void entity_set_owned_single_row(struct entity *e, char *row, double frame_interval_ticks) {
+  char **rows = malloc(2 * sizeof(*rows));
+  rows[0] = row;
+  rows[1] = NULL;
+  char ***frame_list = malloc(1 * sizeof(*frame_list));
+  frame_list[0] = rows;
+  entity_set_owned_shape_frames(e, frame_list, 1, frame_interval_ticks);
 }
 
 void entity_set_owned_shape_frames(struct entity *e, char ***rows, int frame_count, double frame_interval_ticks) {
@@ -164,29 +199,52 @@ static void tick_dolphin(struct entity *e) {
   e->age_ticks++;
 }
 
+static void advance_frame(struct entity *e) {
+  if (e->frame_count <= 1 || e->frame_interval <= 0.0) return;
+  e->frame_timer += 1.0;
+  if (e->frame_timer >= e->frame_interval) {
+    e->frame_timer -= e->frame_interval;
+    e->frame_cur = (e->frame_cur + 1) % e->frame_count;
+  }
+}
+
 void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
   for (int i = 0; i < list->count; i++) {
     struct entity *e = &list->items[i];
     if (e->marked_dead) continue;
-    if (e->type == ENT_SUBMARINE) {
+    switch (e->type) {
+    case ENT_SUBMARINE:
       tick_submarine(e, term_w);
-    } else if (e->type == ENT_LASER || e->type == ENT_FISHHOOK) {
-      /* nothing to C here, @scene.c */
-    } else {
-      if (e->type == ENT_DOLPHIN)
-        tick_dolphin(e);
-      else {
-        e->x += e->vx;
-        e->y += e->vy;
-      }
-
-      if (e->frame_count > 1 && e->frame_interval > 0.0) {
-        e->frame_timer += 1.0;
-        if (e->frame_timer >= e->frame_interval) {
-          e->frame_timer -= e->frame_interval;
-          e->frame_cur = (e->frame_cur + 1) % e->frame_count;
-        }
-      }
+      break;
+    case ENT_LASER:
+    case ENT_FISHHOOK:
+      break;
+    case ENT_DOLPHIN:
+      tick_dolphin(e);
+      advance_frame(e);
+      break;
+    case ENT_WATERLINE:
+    case ENT_CASTLE:
+    case ENT_SEAWEED:
+    case ENT_FISH:
+    case ENT_BUBBLE:
+    case ENT_SPLAT:
+    case ENT_TEETH:
+    case ENT_SHARK:
+    case ENT_SHIP:
+    case ENT_WHALE:
+    case ENT_MONSTER:
+    case ENT_BIGFISH:
+    case ENT_MESSAGE:
+    case ENT_KAIJU:
+    case ENT_SWORDFISH:
+    case ENT_RUBBLE:
+    case ENT_DUCK:
+    case ENT_SWAN:
+      e->x += e->vx;
+      e->y += e->vy;
+      advance_frame(e);
+      break;
     }
     if (e->die_frame >= 0) {
       e->age_ticks++;
@@ -333,17 +391,29 @@ bool entity_glyph_overlap(const struct entity *a, const struct entity *b) {
   return false;
 }
 
+static int *g_order_buf = NULL;
+static int g_order_cap = 0;
+
+void entity_draw_shutdown(void) {
+  free(g_order_buf);
+  g_order_buf = NULL;
+  g_order_cap = 0;
+}
+
 void entity_draw_all(const struct entity_list *list, struct canvas *c) {
   int n = list->count;
   if (n <= 0) return;
 
-  int *order = malloc((size_t)n * sizeof(*order));
-  if (order == NULL) return;
-  for (int i = 0; i < n; i++) order[i] = i;
+  if (n > g_order_cap) {
+    int *grown = realloc(g_order_buf, (size_t)n * sizeof(*grown));
+    g_order_buf = grown;
+    g_order_cap = n;
+  }
+  for (int i = 0; i < n; i++) g_order_buf[i] = i;
   g_sort_items = list->items;
-  qsort(order, (size_t)n, sizeof(*order), cmp_depth);
+  qsort(g_order_buf, (size_t)n, sizeof(*g_order_buf), cmp_depth);
   for (int oi = 0; oi < n; oi++) {
-    const struct entity *e = &list->items[order[oi]];
+    const struct entity *e = &list->items[g_order_buf[oi]];
     ascii_rows rows = entity_shape(e);
     if (rows == NULL) continue;
     ascii_rows mrows = entity_mask(e);
@@ -364,5 +434,4 @@ void entity_draw_all(const struct entity_list *list, struct canvas *c) {
       }
     }
   }
-  free(order);
 }

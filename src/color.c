@@ -30,105 +30,24 @@ bool color_supported(void) {
 }
 
 struct attr color_from_mask_letter(char c) {
-  struct attr a = {COL_DEFAULT, false};
-  switch (c) {
-  case 'c':
-    a.col = COL_CYAN;
-    a.bold = false;
-    break;
-  case 'C':
-    a.col = COL_CYAN;
-    a.bold = true;
-    break;
-  case 'r':
-    a.col = COL_RED;
-    a.bold = false;
-    break;
-  case 'R':
-    a.col = COL_RED;
-    a.bold = true;
-    break;
-  case 'y':
-    a.col = COL_YELLOW;
-    a.bold = false;
-    break;
-  case 'Y':
-    a.col = COL_YELLOW;
-    a.bold = true;
-    break;
-  case 'b':
-    a.col = COL_BLUE;
-    a.bold = false;
-    break;
-  case 'B':
-    a.col = COL_BLUE;
-    a.bold = true;
-    break;
-  case 'g':
-    a.col = COL_GREEN;
-    a.bold = false;
-    break;
-  case 'G':
-    a.col = COL_GREEN;
-    a.bold = true;
-    break;
-  case 'm':
-    a.col = COL_MAGENTA;
-    a.bold = false;
-    break;
-  case 'M':
-    a.col = COL_MAGENTA;
-    a.bold = true;
-    break;
-  case 'w':
-    a.col = COL_WHITE;
-    a.bold = false;
-    break;
-  case 'W':
-    a.col = COL_WHITE;
-    a.bold = true;
-    break;
-  case 'k':
-    a.col = COL_BLACK;
-    a.bold = false;
-    break;
-  case 'K':
-    a.col = COL_BLACK;
-    a.bold = true;
-    break;
-  default:
-    a.col = COL_DEFAULT;
-    a.bold = false;
-    break;
-  }
-  return a;
+  static const char letters[] = "cCrRyYbBgGmMwWkK";
+  static const enum color cols[8] = {COL_CYAN, COL_RED, COL_YELLOW, COL_BLUE, COL_GREEN, COL_MAGENTA, COL_WHITE, COL_BLACK};
+  if (c == '\0') return (struct attr){COL_DEFAULT, false};
+  const char *p = strchr(letters, c);
+  if (p == NULL) return (struct attr){COL_DEFAULT, false};
+  int idx = (int)(p - letters);
+  return (struct attr){cols[idx / 2], (idx % 2) == 1};
 }
 
 struct attr color_from_name(const char *name) {
-  struct attr a = {COL_DEFAULT, false};
-  if (name == NULL || name[0] == '\0') return a;
+  static const char *const names[8] = {"black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"};
+  static const enum color cols[8] = {COL_BLACK, COL_RED, COL_GREEN, COL_YELLOW, COL_BLUE, COL_MAGENTA, COL_CYAN, COL_WHITE};
+  if (name == NULL || name[0] == '\0') return (struct attr){COL_DEFAULT, false};
   bool bold = (name[0] >= 'A' && name[0] <= 'Z');
-  if (strcasecmp(name, "black") == 0)
-    a.col = COL_BLACK;
-  else if (strcasecmp(name, "red") == 0)
-    a.col = COL_RED;
-  else if (strcasecmp(name, "green") == 0)
-    a.col = COL_GREEN;
-  else if (strcasecmp(name, "yellow") == 0)
-    a.col = COL_YELLOW;
-  else if (strcasecmp(name, "blue") == 0)
-    a.col = COL_BLUE;
-  else if (strcasecmp(name, "magenta") == 0)
-    a.col = COL_MAGENTA;
-  else if (strcasecmp(name, "cyan") == 0)
-    a.col = COL_CYAN;
-  else if (strcasecmp(name, "white") == 0)
-    a.col = COL_WHITE;
-  else
-    return (struct attr){COL_DEFAULT, false};
-
-  a.bold = bold;
-  return a;
+  for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+    if (strcasecmp(name, names[i]) == 0) return (struct attr){cols[i], bold};
+  }
+  return (struct attr){COL_DEFAULT, false};
 }
 
 void color_randomize_mask(const char *in, char *out) {

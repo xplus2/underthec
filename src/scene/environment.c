@@ -22,12 +22,6 @@ void add_environment(struct scene *sc, int w, int h) {
     char *tiled = malloc((size_t)unit_len * (size_t)repeat + 1);
     tiled[0] = '\0';
     for (int r = 0; r < repeat; r++) strcat(tiled, unit);
-    char **rows = malloc(2 * sizeof(*rows));
-    rows[0] = tiled;
-    rows[1] = NULL;
-
-    char ***frame_list = malloc(1 * sizeof(*frame_list));
-    frame_list[0] = rows;
 
     struct entity *e = entity_spawn(&sc->entities);
     e->type = ENT_WATERLINE;
@@ -35,10 +29,10 @@ void add_environment(struct scene *sc, int w, int h) {
     e->y = i + 5;
     e->z = depths[i];
     e->vx = speeds[i];
-    e->splat_z = unit_len; /* tile period, for wrap in environment_tick */
+    e->splat_z = unit_len;
     e->physical = true;
     e->default_attr = color_from_name("cyan");
-    entity_set_owned_shape_frames(e, frame_list, 1, 0.0);
+    entity_set_owned_single_row(e, tiled, 0.0);
   }
 }
 
@@ -74,12 +68,9 @@ void add_seaweed(struct scene *sc, int w, int h) {
   for (int i = 1; i <= height; i++) {
     bool left = (i % 2) != 0;
     char *paren = malloc(2);
-    paren[0] = '(';
-    paren[1] = '\0';
+    memcpy(paren, "(", 2);
     char *gap = malloc(3);
-    gap[0] = ' ';
-    gap[1] = ')';
-    gap[2] = '\0';
+    memcpy(gap, " )", 3);
     if (left) {
       rows0[i - 1] = paren;
       rows1[i - 1] = gap;

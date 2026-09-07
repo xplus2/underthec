@@ -21,4 +21,6 @@ int term_poll_key(int timeout_ms);
 /* write changes only */
 void term_present(const struct canvas *c);
 
+void term_common_shutdown(void);
+
 #endif
