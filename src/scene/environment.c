@@ -47,6 +47,43 @@ void add_castle(struct scene *sc, int w, int h) {
   e->default_attr = color_from_name("BLACK");
 }
 
+struct castle_reveal_ctx {
+  int revealed_from_row;
+  int row;
+};
+
+static void map_castle_reveal(const char *in, char *out, void *ctx) {
+  struct castle_reveal_ctx *rv = ctx;
+  if (rv->row < rv->revealed_from_row) out[0] = '\0';
+  else strcpy(out, in);
+  rv->row++;
+}
+
+static void map_identity_row(const char *in, char *out, void *ctx) {
+  (void)ctx;
+  strcpy(out, in);
+}
+
+void add_castle_building(struct scene *sc, int w, int h) {
+  int rows = 0;
+  while (castle_image[rows] != NULL) rows++;
+
+  char ***frame_list = malloc((size_t)rows * sizeof(*frame_list));
+  for (int step = 0; step < rows; step++) {
+    struct castle_reveal_ctx ctx = {rows - 1 - step, 0};
+    frame_list[step] = entity_build_transformed_rows(castle_image, map_castle_reveal, &ctx);
+  }
+
+  struct entity *e = entity_spawn(&sc->entities);
+  e->type = ENT_CASTLE;
+  e->x = w - 32;
+  e->y = h - 13;
+  e->z = Z_CASTLE;
+  e->default_attr = color_from_name("BLACK");
+  entity_set_owned_shape_frames(e, frame_list, rows, 8.0);
+  e->owned_mask = entity_build_transformed_rows(castle_mask, map_identity_row, NULL);
+}
+
 void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle_height) {
   struct entity *e = entity_spawn(&sc->entities);
   e->type = ENT_RUBBLE;

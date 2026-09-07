@@ -21,6 +21,7 @@
 #define Z_SWAN 3
 #define Z_FISHHOOK 7
 #define Z_HOOKED 5
+#define Z_CRAB 21
 
 /* effects.c */
 void spawn_splat(struct scene *sc, double tx, double ty, int tz);
@@ -35,6 +36,7 @@ int random_swim_y(int h, int sprite_height);
 /* environment.c */
 void add_environment(struct scene *sc, int w, int h);
 void add_castle(struct scene *sc, int w, int h);
+void add_castle_building(struct scene *sc, int w, int h);
 void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle_height);
 void add_seaweed(struct scene *sc, int w, int h);
 void add_all_seaweed(struct scene *sc, int w, int h);
@@ -45,6 +47,7 @@ void environment_tick(struct scene *sc);
 /* kaiju.c */
 void spawn_kaiju(struct scene *sc, int w, int h);
 void kaiju_tick(struct scene *sc, int term_w);
+void schedule_kaiju_return(struct scene *sc);
 
 /* fishhook.c */
 void spawn_fishhook(struct scene *sc, int w, int h);

@@ -14,7 +14,7 @@ static void on_death(const struct entity *dead, void *ctx) {
 
   if (dead->spawn_splat) spawn_splat(sctx->sc, dead->splat_x, dead->splat_y, dead->splat_z);
   if (dead->type == ENT_KAIJU && dead->id == sctx->sc->castle_hidden_by) {
-    add_castle(sctx->sc, sctx->w, sctx->h);
+    add_castle_building(sctx->sc, sctx->w, sctx->h);
     sctx->sc->castle_hidden_by = 0;
   }
   switch (dead->death_action) {
@@ -26,6 +26,9 @@ static void on_death(const struct entity *dead, void *ctx) {
     break;
   case DEATH_ADD_KAIJU:
     spawn_kaiju(sctx->sc, sctx->w, sctx->h);
+    break;
+  case DEATH_ADD_KAIJU_COOLDOWN:
+    schedule_kaiju_return(sctx->sc);
     break;
   case DEATH_RANDOM_OBJECT:
   case DEATH_SHARK:

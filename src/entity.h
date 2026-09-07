@@ -28,7 +28,9 @@ enum entity_type {
   ENT_DUCK,
   ENT_DOLPHIN,
   ENT_SWAN,
-  ENT_FISHHOOK
+  ENT_FISHHOOK,
+  ENT_CRAB,
+  ENT_KAIJU_TIMER
 };
 
 enum death_action {
@@ -37,7 +39,8 @@ enum death_action {
   DEATH_ADD_SEAWEED,
   DEATH_ADD_KAIJU,
   DEATH_RANDOM_OBJECT,
-  DEATH_SHARK
+  DEATH_SHARK,
+  DEATH_ADD_KAIJU_COOLDOWN
 };
 
 struct entity {

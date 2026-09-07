@@ -45,7 +45,14 @@ void spawn_kaiju(struct scene *sc, int w, int h) {
   e->y = random_swim_y(h, height);
   e->x = dir ? (double)(w - 2) : (double)(1 - width);
 
-  finish_creature_spawn(e, ENT_KAIJU, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_KAIJU, (struct attr){COL_DEFAULT, false});
+  finish_creature_spawn(e, ENT_KAIJU, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_KAIJU_COOLDOWN, (struct attr){COL_DEFAULT, false});
+}
+
+void schedule_kaiju_return(struct scene *sc) {
+  struct entity *e = entity_spawn(&sc->entities);
+  e->type = ENT_KAIJU_TIMER;
+  e->die_after = rng_double(10.0) + 5.0;
+  e->death_action = DEATH_ADD_KAIJU;
 }
 
 static bool find_kaiju_eye(const struct entity *kaiju, int *row_out, int *col_out) {

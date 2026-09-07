@@ -218,6 +218,7 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
       break;
     case ENT_LASER:
     case ENT_FISHHOOK:
+    case ENT_KAIJU_TIMER:
       break;
     case ENT_DOLPHIN:
       tick_dolphin(e);
@@ -241,11 +242,13 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
     case ENT_RUBBLE:
     case ENT_DUCK:
     case ENT_SWAN:
+    case ENT_CRAB:
       e->x += e->vx;
       e->y += e->vy;
       advance_frame(e);
       break;
     }
+    if (e->type == ENT_CASTLE && e->frame_cur == e->frame_count - 1) e->frame_interval = 0.0;
     if (e->die_frame >= 0) {
       e->age_ticks++;
       if (e->age_ticks >= e->die_frame) {
