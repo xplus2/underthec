@@ -1,0 +1,24 @@
+# configure artifacts
+/config.mk
+
+# build artifacts
+*.o
+src/*.o
+*.d
+
+# result binaries
+/underthec
+/underthec.exe
+
+# cmake generic and profile builds
+/build*/
+/cmake-*/
+
+# dist
+/CMakeFiles
+/obj-x86_64-linux-gnu
+
+# IDE
+/.idea
+
+#EOF

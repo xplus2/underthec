@@ -1,0 +1,76 @@
+#ifndef UNDERTHEC_ART_DUCKS_H
+#define UNDERTHEC_ART_DUCKS_H
+
+#include "../sprite.h"
+
+static const char *const duck_image_0_0[] = {
+	"",
+	"      _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
+	",____(')=\?\?,____(')=\?\?,____(')<",
+	" \\~~= ')\?\?\?\?\\~~= ')\?\?\?\?\\~~= ')",
+	NULL
+};
+
+static const char *const duck_image_0_1[] = {
+	"",
+	"      _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
+	",____(')=\?\?,____(')<\?\?,____(')=",
+	" \\~~= ')\?\?\?\?\\~~= ')\?\?\?\?\\~~= ')",
+	NULL
+};
+
+static const char *const duck_image_0_2[] = {
+	"",
+	"      _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
+	",____(')<\?\?,____(')=\?\?,____(')=",
+	" \\~~= ')\?\?\?\?\\~~= ')\?\?\?\?\\~~= ')",
+	NULL
+};
+
+static const char *const duck_image_1_0[] = {
+	"",
+	"  _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
+	">(')____,\?\?=(')____,\?\?=(')____,",
+	" (` =~~/\?\?\?\?(` =~~/\?\?\?\?(` =~~/",
+	NULL
+};
+
+static const char *const duck_image_1_1[] = {
+	"",
+	"  _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
+	"=(')____,\?\?>(')____,\?\?=(')____,",
+	" (` =~~/\?\?\?\?(` =~~/\?\?\?\?(` =~~/",
+	NULL
+};
+
+static const char *const duck_image_1_2[] = {
+	"",
+	"  _\?\?\?\?\?\?\?\?\?\?_\?\?\?\?\?\?\?\?\?\?_",
+	"=(')____,\?\?=(')____,\?\?>(')____,",
+	" (` =~~/\?\?\?\?(` =~~/\?\?\?\?(` =~~/",
+	NULL
+};
+
+static const char *const duck_mask_0[] = {
+	"",
+	"      g          g          g",
+	"wwwwwgcgy  wwwwwgcgy  wwwwwgcgy",
+	" wwww Ww    wwww Ww    wwww Ww",
+	NULL
+};
+
+static const char *const duck_mask_1[] = {
+	"",
+	"  g          g          g",
+	"ygcgwwwww  ygcgwwwww  ygcgwwwww",
+	" wW wwww    wW wwww    wW wwww",
+	NULL
+};
+
+/* one mask per direction, reused across all 3 waddle frames */
+static const struct sprite_pair ducks[2][3] = {
+	{ { duck_image_0_0, duck_mask_0 }, { duck_image_0_1, duck_mask_0 }, { duck_image_0_2, duck_mask_0 } },
+	{ { duck_image_1_0, duck_mask_1 }, { duck_image_1_1, duck_mask_1 }, { duck_image_1_2, duck_mask_1 } },
+};
+
+#endif

@@ -1,0 +1,74 @@
+#!/bin/sh
+set -e
+
+prefix=/usr/local
+cc=${CC:-cc}
+static=1
+debug=0
+host=
+
+for arg in "$@"; do
+	case "$arg" in
+	--prefix=*) prefix="${arg#--prefix=}" ;;
+	--host=*) host="${arg#--host=}"; cc="${host}-gcc" ;;
+	--no-static) static=0 ;;
+	--debug) debug=1 ;;
+	--help)
+		echo "usage: ./configure [--prefix=DIR] [--host=TRIPLET] [--no-static] [--debug]"
+		echo ""
+		echo "  --prefix=DIR    install prefix (default: /usr/local)"
+		echo "  --host=TRIPLET  cross-compiler prefix, e.g. x86_64-w64-mingw32"
+		echo "  --no-static     do not pass -static to the linker"
+		echo "  --debug         build with -g -O0 and keep symbols (skip stripping)"
+		exit 0
+		;;
+	*)
+		echo "configure: unknown option '$arg'" >&2
+		exit 1
+		;;
+	esac
+done
+
+srcs="src/main.c src/canvas.c src/color.c src/rng.c src/entity.c src/scene.c"
+
+case "$host" in
+*mingw*) term_src="src/term/term_windows.c" ;;
+*)
+	case "$(uname -s 2>/dev/null)" in
+	*MINGW*|*MSYS*) term_src="src/term/term_windows.c" ;;
+	*) term_src="src/term/term_posix.c" ;;
+	esac
+	;;
+esac
+srcs="$srcs $term_src"
+
+cflags="-std=c11 -Wall -Wextra -Isrc"
+ldflags=""
+
+if [ "$debug" = "1" ]; then
+	cflags="$cflags -g -O0"
+else
+	cflags="$cflags -O2"
+	ldflags="$ldflags -s"
+fi
+
+if [ "$static" = "1" ]; then
+	case "$(uname -s 2>/dev/null)" in
+	Darwin) : ;; # macOS does not support fully static libSystem binaries
+	*) ldflags="$ldflags -static" ;;
+	esac
+	case "$host" in
+	*mingw*) ldflags="$ldflags -static" ;;
+	esac
+fi
+
+{
+	echo "CC = $cc"
+	echo "CFLAGS = $cflags"
+	echo "LDFLAGS = $ldflags"
+	echo "PREFIX = $prefix"
+	echo "SRCS = $srcs"
+} > config.mk
+
+echo "configured: CC=$cc static=$static debug=$debug prefix=$prefix"
+echo "run 'make' to build."
