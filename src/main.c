@@ -38,7 +38,8 @@ static char *owned_copy(const char *s) {
 }
 
 static char *read_all_stdin(void) {
-  size_t cap = 4096, len = 0;
+  size_t cap = 4096;
+  size_t len = 0;
   char *buf = xmalloc(cap);
   size_t n;
   while ((n = fread(buf + len, 1, cap - len, stdin)) > 0) {
@@ -53,15 +54,18 @@ static char *read_all_stdin(void) {
 }
 
 static int split_and_trim_lines(char *buf, char ***out_rows) {
-  int n = 1;
-  for (char *p = buf; *p != '\0'; p++) if (*p == '\n') n++;
-  char **rows = xmalloc((size_t)n * sizeof(*rows));
+  size_t cap = 16;
+  char **rows = xmalloc(cap * sizeof(*rows));
   int count = 0;
   char *start = buf;
   for (char *p = buf;; p++) {
     if (*p == '\n' || *p == '\0') {
       char end = *p;
       *p = '\0';
+      if ((size_t)count == cap) {
+        cap *= 2;
+        rows = xrealloc(rows, cap * sizeof(*rows));
+      }
       rows[count++] = start;
       if (end == '\0') break;
       start = p + 1;
@@ -75,10 +79,12 @@ static int split_and_trim_lines(char *buf, char ***out_rows) {
 int main(int argc, char **argv) {
   bool classic = false;
   const char *message_arg = NULL;
-  for (int i = 1; i < argc; i++) {
+  int i = 1;
+  while (i < argc) {
     const char *a = argv[i];
     if (strcmp(a, "-c") == 0 || strcmp(a, "--classic") == 0) {
       classic = true;
+      i++;
     } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
       print_help(argv[0]);
       return 0;
@@ -90,7 +96,8 @@ int main(int argc, char **argv) {
         fprintf(stderr, "%s: %s requires an argument\n", argv[0], a);
         return 2;
       }
-      message_arg = argv[++i];
+      message_arg = argv[i + 1];
+      i += 2;
     } else {
       fprintf(stderr, "%s: unknown option '%s'\n", argv[0], a);
       print_help(argv[0]);
@@ -120,10 +127,12 @@ int main(int argc, char **argv) {
   free(message_buf);
   struct canvas canvas;
   canvas_init(&canvas);
-  int last_w = -1, last_h = -1;
+  int last_w = -1;
+  int last_h = -1;
   bool paused = false;
   while (!g_should_quit) {
-    int w, h;
+    int w;
+    int h;
     term_size(&w, &h);
     if (w != last_w || h != last_h) {
       canvas_resize(&canvas, w, h);

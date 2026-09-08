@@ -14,7 +14,7 @@ struct kaiju_mask_ctx {
 };
 
 static void map_kaiju_colors(const char *in, char *out, void *ctx) {
-  struct kaiju_mask_ctx *k = ctx;
+  const struct kaiju_mask_ctx *k = ctx;
   size_t len = strlen(in);
   for (size_t j = 0; j < len; j++) {
     char ch = in[j];
@@ -56,11 +56,12 @@ void schedule_kaiju_return(struct scene *sc) {
   e->death_action = DEATH_ADD_KAIJU;
 }
 
-static bool find_kaiju_eye(const struct entity *kaiju, int *row_out, int *col_out) {
-  ascii_rows rows = entity_shape(kaiju);
+static bool find_kaiju_eye(const struct entity *kaiju_ent, int *row_out, int *col_out) {
+  ascii_rows rows = entity_shape(kaiju_ent);
   if (rows == NULL) return false;
   for (int r = 0; rows[r] != NULL; r++) {
-    int sum = 0, count = 0;
+    int sum = 0;
+    int count = 0;
     for (int c = 0; rows[r][c] != '\0'; c++) if (rows[r][c] == '0') {
       sum += c;
       count++;
@@ -100,7 +101,7 @@ static void spawn_laser(struct scene *sc, double eye_x, double eye_y, int z, int
 
 static void handle_castle_collision(struct scene *sc) {
   if (sc->castle_hidden_by != 0) return;
-  struct entity *kaiju_ent = entity_find_first(&sc->entities, ENT_KAIJU);
+  const struct entity *kaiju_ent = entity_find_first(&sc->entities, ENT_KAIJU);
   struct entity *castle_ent = entity_find_first(&sc->entities, ENT_CASTLE);
   if (kaiju_ent == NULL || castle_ent == NULL) return;
   if (!entity_glyph_overlap(kaiju_ent, castle_ent)) return;
@@ -116,9 +117,10 @@ static void handle_castle_collision(struct scene *sc) {
 
 static void update_active_laser(struct scene *sc, struct entity *laser) {
   struct entity *target = entity_find_by_id(&sc->entities, laser->splat_z);
-  struct entity *kaiju_ent = entity_find_first(&sc->entities, ENT_KAIJU);
+  const struct entity *kaiju_ent = entity_find_first(&sc->entities, ENT_KAIJU);
 
-  int eye_row, eye_col;
+  int eye_row;
+  int eye_col;
   if (kaiju_ent != NULL && find_kaiju_eye(kaiju_ent, &eye_row, &eye_col)) {
     laser->splat_x = kaiju_ent->x + eye_col;
     laser->y = kaiju_ent->y + eye_row;
@@ -143,17 +145,18 @@ static void update_active_laser(struct scene *sc, struct entity *laser) {
 }
 
 static void fire_laser_if_ready(struct scene *sc, int term_w) {
-  struct entity *kaiju_ent = entity_find_first(&sc->entities, ENT_KAIJU);
+  const struct entity *kaiju_ent = entity_find_first(&sc->entities, ENT_KAIJU);
   if (kaiju_ent == NULL) return;
 
-  int eye_row, eye_col;
+  int eye_row;
+  int eye_col;
   if (!find_kaiju_eye(kaiju_ent, &eye_row, &eye_col)) return;
   double eye_x = kaiju_ent->x + eye_col;
   double eye_y = kaiju_ent->y + eye_row;
   double dir_sign = (kaiju_ent->vx >= 0) ? 1.0 : -1.0;
 
   for (int i = 0; i < sc->entities.count; i++) {
-    struct entity *fish = &sc->entities.items[i];
+    const struct entity *fish = &sc->entities.items[i];
     if (fish->marked_dead || fish->type != ENT_FISH) continue;
     if (fish->z != kaiju_ent->z) continue;
     int fh = entity_height(fish);
@@ -181,7 +184,7 @@ static void handle_castle_reveal(struct scene *sc) {
 
   bool leaving = false;
   for (int i = 0; i < sc->entities.count; i++) {
-    struct entity *e = &sc->entities.items[i];
+    const struct entity *e = &sc->entities.items[i];
     if (e->marked_dead && e->type == ENT_KAIJU && e->id == sc->castle_hidden_by) {
       leaving = true;
       break;

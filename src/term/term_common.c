@@ -30,7 +30,7 @@ void term_present(const struct canvas *c) {
   for (int y = 0; y < c->height; y++) {
     int x = 0;
     while (x < c->width) {
-      struct cell *cur = &c->cells[(size_t)y * (size_t)c->width + (size_t)x];
+      const struct cell *cur = &c->cells[(size_t)y * (size_t)c->width + (size_t)x];
       struct cell *old = &prev.cells[(size_t)y * (size_t)c->width + (size_t)x];
       if (cur->glyph == old->glyph && cur->col == old->col && cur->bold == old->bold) {
         x++;

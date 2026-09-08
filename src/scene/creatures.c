@@ -61,21 +61,17 @@ static void spawn_fish_from_table(struct scene *sc, const struct sprite_pair *ta
   e->frames = &table[fish_num];
   e->frame_count = 1;
   if (table[fish_num].mask != NULL) randomize_fish_mask(e, table[fish_num].mask);
-
   int width = entity_width(e);
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = odd ? (double)(w - 2) : (double)(1 - width);
-
   finish_creature_spawn(e, ENT_FISH, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_FISH, (struct attr){COL_DEFAULT, false});
 }
 
 void spawn_fish(struct scene *sc, int w, int h) {
   bool use_new = !sc->classic_mode && rng_int(12) > 8;
-  if (use_new)
-    spawn_fish_from_table(sc, fish_new, 8, w, h);
-  else
-    spawn_fish_from_table(sc, fish_old, 16, w, h);
+  if (use_new) spawn_fish_from_table(sc, fish_new, 8, w, h);
+  else spawn_fish_from_table(sc, fish_old, 16, w, h);
 }
 
 static void spawn_big_fish_1(struct scene *sc, int w, int h) {
@@ -86,12 +82,10 @@ static void spawn_big_fish_1(struct scene *sc, int w, int h) {
   e->frames = &bigfish1[dir];
   e->frame_count = 1;
   entity_randomize_mask(e, bigfish1[dir].mask);
-
   int width = entity_width(e);
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = dir ? (double)(w - 1) : (double)(1 - width);
-
   finish_creature_spawn(e, ENT_BIGFISH, Z_BIGFISH, speed, 0, DEATH_RANDOM_OBJECT, color_from_name("YELLOW"));
 }
 
@@ -103,26 +97,24 @@ static void spawn_big_fish_2(struct scene *sc, int w, int h) {
   e->frames = &bigfish2[dir];
   e->frame_count = 1;
   entity_randomize_mask(e, bigfish2[dir].mask);
-
   int width = entity_width(e);
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = dir ? (double)(w - 1) : (double)(1 - width);
-
   finish_creature_spawn(e, ENT_BIGFISH, Z_BIGFISH, speed, 0, DEATH_RANDOM_OBJECT, color_from_name("YELLOW"));
 }
 
 static void spawn_big_fish(struct scene *sc, int w, int h) {
   bool use_2 = !sc->classic_mode && rng_int(3) > 1;
-  if (use_2)
-    spawn_big_fish_2(sc, w, h);
-  else
-    spawn_big_fish_1(sc, w, h);
+  if (use_2) spawn_big_fish_2(sc, w, h);
+  else spawn_big_fish_1(sc, w, h);
 }
 
 static void spawn_shark(struct scene *sc, int w, int h) {
   int dir = rng_int(2);
-  double x, tx, speed = 2.0;
+  double x;
+  double tx;
+  double speed = 2.0;
   int y = rng_int(h - 19) + 9;
   int ty = y + 7;
   if (dir) {
@@ -144,7 +136,6 @@ static void spawn_shark(struct scene *sc, int w, int h) {
   teeth->frames = teeth_frame;
   teeth->frame_count = 1;
   teeth->physical = true;
-
   struct entity *e = entity_spawn(&sc->entities);
   e->x = x;
   e->y = y;
@@ -163,7 +154,6 @@ static void spawn_ship(struct scene *sc, int w, int h) {
   e->frame_count = 1;
   e->y = 0;
   e->x = dir ? (double)(w - 2) : (double)(1 - entity_width(e));
-
   finish_creature_spawn(e, ENT_SHIP, Z_SHIP, speed, 0, DEATH_RANDOM_OBJECT, color_from_name("WHITE"));
 }
 
@@ -178,7 +168,6 @@ static void spawn_whale(struct scene *sc, int w, int h) {
   e->frame_interval = 10.0;
   e->y = 0;
   e->x = dir ? (double)(w - 2) : (double)(1 - entity_width(e));
-
   finish_creature_spawn(e, ENT_WHALE, Z_WHALE, speed, 0, DEATH_RANDOM_OBJECT, color_from_name("WHITE"));
 }
 
@@ -193,7 +182,6 @@ static void spawn_monster_new(struct scene *sc, int w, int h) {
   e->frame_interval = 2.5;
   e->y = 2;
   e->x = dir ? (double)(w - 2) : (double)(1 - entity_width(e));
-
   finish_creature_spawn(e, ENT_MONSTER, Z_MONSTER, speed, 0, DEATH_RANDOM_OBJECT, color_from_name("GREEN"));
 }
 
@@ -213,10 +201,8 @@ static void spawn_monster_old(struct scene *sc, int w, int h) {
 }
 
 static void spawn_monster(struct scene *sc, int w, int h) {
-  if (!sc->classic_mode)
-    spawn_monster_new(sc, w, h);
-  else
-    spawn_monster_old(sc, w, h);
+  if (!sc->classic_mode) spawn_monster_new(sc, w, h);
+  else spawn_monster_old(sc, w, h);
 }
 
 static void spawn_submarine(struct scene *sc, int w, int h) {
@@ -229,7 +215,6 @@ static void spawn_submarine(struct scene *sc, int w, int h) {
   e->frame_count = 9;
   e->y = 6;
   e->x = dir ? (double)(w - 2) : (double)(1 - entity_width(e));
-
   finish_creature_spawn(e, ENT_SUBMARINE, Z_SUBMARINE, speed, 0, DEATH_RANDOM_OBJECT, color_from_name("YELLOW"));
 }
 
@@ -241,7 +226,6 @@ static void spawn_swordfish(struct scene *sc, int w, int h) {
   e->frames = &swordfish[dir];
   e->frame_count = 1;
   entity_randomize_mask(e, swordfish[dir].mask);
-
   int width = entity_width(e);
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
@@ -325,7 +309,6 @@ static void spawn_crab(struct scene *sc, int w, int h) {
   int height = entity_height(e);
   e->y = h - height;
   e->x = dir ? (double)(w - 2) : (double)(1 - width);
-
   finish_creature_spawn(e, ENT_CRAB, Z_CRAB, speed, 0, DEATH_RANDOM_OBJECT, color_from_name(colors[rng_int(4)]));
 }
 
@@ -338,7 +321,6 @@ void spawn_jellyfish(struct scene *sc, int w, int h) {
   e->frames = jellyfish_frames;
   e->frame_count = 2;
   e->frame_interval = 6.0;
-
   int width = entity_width(e);
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
@@ -348,7 +330,7 @@ void spawn_jellyfish(struct scene *sc, int w, int h) {
 }
 
 void spawn_random_object(struct scene *sc, int w, int h) {
-  typedef void (*spawn_fn)(struct scene *sc, int w, int h);
+  typedef void (*spawn_fn)(struct scene *, int, int);
   static const spawn_fn table[] = {
       spawn_ship, spawn_whale, spawn_monster, spawn_big_fish, spawn_shark,
       spawn_submarine, spawn_swordfish, spawn_ducks, spawn_dolphins, spawn_swan,

@@ -314,7 +314,7 @@ void entity_collide_all(struct entity_list *list) {
     if (fish->marked_dead || !fish->physical || fish->type != ENT_FISH) continue;
     if (entity_height(fish) > 5) continue;
     for (int j = 0; j < list->count; j++) {
-      struct entity *teeth = &list->items[j];
+      const struct entity *teeth = &list->items[j];
       if (teeth->marked_dead || !teeth->physical || teeth->type != ENT_TEETH) continue;
       if (bbox_overlap(fish, teeth)) {
         fish->marked_dead = true;
@@ -330,7 +330,7 @@ void entity_collide_all(struct entity_list *list) {
     struct entity *bubble = &list->items[i];
     if (bubble->marked_dead || !bubble->physical || bubble->type != ENT_BUBBLE) continue;
     for (int j = 0; j < list->count; j++) {
-      struct entity *wl = &list->items[j];
+      const struct entity *wl = &list->items[j];
       if (wl->marked_dead || !wl->physical || wl->type != ENT_WATERLINE) continue;
       if (bbox_overlap(bubble, wl)) {
         bubble->marked_dead = true;
@@ -386,10 +386,14 @@ bool entity_glyph_overlap(const struct entity *a, const struct entity *b) {
   ascii_rows brows = entity_shape(b);
   if (arows == NULL || brows == NULL) return false;
 
-  int aw = entity_width(a), ah = entity_height(a);
-  int bw = entity_width(b), bh = entity_height(b);
-  int ax = round_to_int(a->x), ay = round_to_int(a->y);
-  int bx = round_to_int(b->x), by = round_to_int(b->y);
+  int aw = entity_width(a);
+  int ah = entity_height(a);
+  int bw = entity_width(b);
+  int bh = entity_height(b);
+  int ax = round_to_int(a->x);
+  int ay = round_to_int(a->y);
+  int bx = round_to_int(b->x);
+  int by = round_to_int(b->y);
 
   int x0 = ax > bx ? ax : bx;
   int x1 = (ax + aw) < (bx + bw) ? (ax + aw) : (bx + bw);

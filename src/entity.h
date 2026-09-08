@@ -47,9 +47,11 @@ enum death_action {
 struct entity {
   int id;
   enum entity_type type;
-  double x, y;
+  double x;
+  double y;
   int z;
-  double vx, vy;
+  double vx;
+  double vy;
   const struct sprite_pair *frames;
   int frame_count;
   int frame_cur;
@@ -70,7 +72,8 @@ struct entity {
   enum death_action death_action;
   bool marked_dead;
   bool spawn_splat;
-  double splat_x, splat_y;
+  double splat_x;
+  double splat_y;
   int splat_z;
 };
 
