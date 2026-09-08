@@ -3,6 +3,7 @@
 #include "scene.h"
 #include "term/term.h"
 #include "version.h"
+#include "xalloc.h"
 
 #include <signal.h>
 #include <stdbool.h>
@@ -31,20 +32,20 @@ static void print_help(const char *prog) {
 
 static char *owned_copy(const char *s) {
   size_t len = strlen(s);
-  char *p = malloc(len + 1);
+  char *p = xmalloc(len + 1);
   memcpy(p, s, len + 1);
   return p;
 }
 
 static char *read_all_stdin(void) {
   size_t cap = 4096, len = 0;
-  char *buf = malloc(cap);
+  char *buf = xmalloc(cap);
   size_t n;
   while ((n = fread(buf + len, 1, cap - len, stdin)) > 0) {
     len += n;
     if (len == cap) {
       cap *= 2;
-      buf = realloc(buf, cap);
+      buf = xrealloc(buf, cap);
     }
   }
   buf[len] = '\0';
@@ -54,7 +55,7 @@ static char *read_all_stdin(void) {
 static int split_and_trim_lines(char *buf, char ***out_rows) {
   int n = 1;
   for (char *p = buf; *p != '\0'; p++) if (*p == '\n') n++;
-  char **rows = malloc((size_t)n * sizeof(*rows));
+  char **rows = xmalloc((size_t)n * sizeof(*rows));
   int count = 0;
   char *start = buf;
   for (char *p = buf;; p++) {

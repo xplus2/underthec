@@ -13,8 +13,7 @@ cmake -B build
 cmake --build build
 ```
 
-The `Release` build type (the default) links statically wherever the
-target platform allows it, and strips the resulting binary.
+The `Release` build type (the default) links statically wherever the target platform allows it, and strips the resulting binary.
 
 Static musl build on Linux (requires `musl-gcc`):
 
@@ -71,12 +70,10 @@ Key bindings:
 
 ## Credits
 
-* The original asciiquarium program and most of its design are by Kirk Baucom.
-* Additional fish and sea monster species by Claudio Matsuoka.
-* Yellow Submarine by Carl Pilcher
-* Swordfish by ctr
-* Restored ducks, dolphins, swan and fishhook from previous versions
-* The ASCII art is by Joan Stark.
+* The original asciiquarium program and most of its design are by [Kirk Baucom](https://robobunny.com/projects/asciiquarium/html/)
+* A lot of the ASCII art is by [Joan Stark](http://www.geocities.com/SoHo/7373/)
+* This is a direct port of [cmatsuoka/asciiquarium](https://github.com/cmatsuoka/asciiquarium)
+* Jellyfish if from [nothub/asciiquarium](https://github.com/nothub/asciiquarium) 
 
 ## License
 

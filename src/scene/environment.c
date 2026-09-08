@@ -1,6 +1,7 @@
 #include "scene_internal.h"
 #include "color.h"
 #include "rng.h"
+#include "xalloc.h"
 
 #include "art/castle.h"
 #include "art/misc.h"
@@ -19,7 +20,7 @@ void add_environment(struct scene *sc, int w, int h) {
     int unit_len = (int)strlen(unit);
     int repeat = w / unit_len + 2;
 
-    char *tiled = malloc((size_t)unit_len * (size_t)repeat + 1);
+    char *tiled = xmalloc((size_t)unit_len * (size_t)repeat + 1);
     tiled[0] = '\0';
     for (int r = 0; r < repeat; r++) strcat(tiled, unit);
 
@@ -68,7 +69,7 @@ void add_castle_building(struct scene *sc, int w, int h) {
   int rows = 0;
   while (castle_image[rows] != NULL) rows++;
 
-  char ***frame_list = malloc((size_t)rows * sizeof(*frame_list));
+  char ***frame_list = xmalloc((size_t)rows * sizeof(*frame_list));
   for (int step = 0; step < rows; step++) {
     struct castle_reveal_ctx ctx = {rows - 1 - step, 0};
     frame_list[step] = entity_build_transformed_rows(castle_image, map_castle_reveal, &ctx);
@@ -100,13 +101,13 @@ void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle
 
 void add_seaweed(struct scene *sc, int w, int h) {
   int height = rng_int(4) + 3;
-  char **rows0 = malloc((size_t)(height + 1) * sizeof(*rows0));
-  char **rows1 = malloc((size_t)(height + 1) * sizeof(*rows1));
+  char **rows0 = xmalloc((size_t)(height + 1) * sizeof(*rows0));
+  char **rows1 = xmalloc((size_t)(height + 1) * sizeof(*rows1));
   for (int i = 1; i <= height; i++) {
     bool left = (i % 2) != 0;
-    char *paren = malloc(2);
+    char *paren = xmalloc(2);
     memcpy(paren, "(", 2);
-    char *gap = malloc(3);
+    char *gap = xmalloc(3);
     memcpy(gap, " )", 3);
     if (left) {
       rows0[i - 1] = paren;
@@ -132,7 +133,7 @@ void add_seaweed(struct scene *sc, int w, int h) {
   e->die_after = rng_double(4.0 * 60.0) + 8.0 * 60.0; /* 8-12 minutes */
   e->death_action = DEATH_ADD_SEAWEED;
 
-  char ***frame_list = malloc(2 * sizeof(*frame_list));
+  char ***frame_list = xmalloc(2 * sizeof(*frame_list));
   frame_list[0] = rows0;
   frame_list[1] = rows1;
   entity_set_owned_shape_frames(e, frame_list, 2, anim_speed * 10.0);

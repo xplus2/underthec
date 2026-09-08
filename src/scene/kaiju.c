@@ -1,6 +1,7 @@
 #include "scene_internal.h"
 #include "color.h"
 #include "rng.h"
+#include "xalloc.h"
 
 #include "art/kaiju.h"
 
@@ -76,7 +77,7 @@ static bool find_kaiju_eye(const struct entity *kaiju, int *row_out, int *col_ou
 static void update_laser_shape(struct entity *e, int length) {
   if (length < 1) length = 1;
   entity_clear_owned(e);
-  char *line = malloc((size_t)length + 1);
+  char *line = xmalloc((size_t)length + 1);
   memset(line, '=', (size_t)length);
   line[length] = '\0';
   entity_set_owned_single_row(e, line, 0.0);

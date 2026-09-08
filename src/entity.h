@@ -30,7 +30,8 @@ enum entity_type {
   ENT_SWAN,
   ENT_FISHHOOK,
   ENT_CRAB,
-  ENT_KAIJU_TIMER
+  ENT_KAIJU_TIMER,
+  ENT_JELLYFISH
 };
 
 enum death_action {

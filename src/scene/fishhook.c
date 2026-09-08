@@ -1,6 +1,7 @@
 #include "scene_internal.h"
 #include "color.h"
 #include "rng.h"
+#include "xalloc.h"
 
 #include "art/fishhook.h"
 
@@ -19,19 +20,19 @@ static void update_fishhook_shape(struct entity *e, int depth) {
   int hook_h = fishhook_body_height();
   int total = depth + hook_h;
 
-  char **rows = malloc((size_t)(total + 1) * sizeof(*rows));
+  char **rows = xmalloc((size_t)(total + 1) * sizeof(*rows));
   for (int i = 0; i < depth; i++) {
-    rows[i] = malloc(8);
+    rows[i] = xmalloc(8);
     memcpy(rows[i], "      |", 8);
   }
   for (int i = 0; i < hook_h; i++) {
     size_t len = strlen(fishhook_image[i]);
-    rows[depth + i] = malloc(len + 1);
+    rows[depth + i] = xmalloc(len + 1);
     memcpy(rows[depth + i], fishhook_image[i], len + 1);
   }
   rows[total] = NULL;
   entity_clear_owned(e);
-  char ***frame_list = malloc(1 * sizeof(*frame_list));
+  char ***frame_list = xmalloc(1 * sizeof(*frame_list));
   frame_list[0] = rows;
   entity_set_owned_shape_frames(e, frame_list, 1, 0.0);
 }

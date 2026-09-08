@@ -22,6 +22,7 @@
 #define Z_FISHHOOK 7
 #define Z_HOOKED 5
 #define Z_CRAB 21
+#define Z_JELLYFISH 4
 
 /* effects.c */
 void spawn_splat(struct scene *sc, double tx, double ty, int tz);
@@ -29,6 +30,7 @@ void spawn_bubble(struct scene *sc, double fish_x, double fish_y, int fish_z, in
 
 /* creatures.c */
 void spawn_fish(struct scene *sc, int w, int h);
+void spawn_jellyfish(struct scene *sc, int w, int h);
 void spawn_random_object(struct scene *sc, int w, int h);
 void finish_creature_spawn(struct entity *e, enum entity_type type, int z, double vx, double vy, enum death_action death, struct attr attr);
 int random_swim_y(int h, int sprite_height);

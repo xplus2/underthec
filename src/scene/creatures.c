@@ -7,6 +7,7 @@
 #include "art/dolphins.h"
 #include "art/ducks.h"
 #include "art/fish.h"
+#include "art/jellyfish.h"
 #include "art/misc.h"
 #include "art/monster.h"
 #include "art/shark.h"
@@ -328,12 +329,30 @@ static void spawn_crab(struct scene *sc, int w, int h) {
   finish_creature_spawn(e, ENT_CRAB, Z_CRAB, speed, 0, DEATH_RANDOM_OBJECT, color_from_name(colors[rng_int(4)]));
 }
 
+void spawn_jellyfish(struct scene *sc, int w, int h) {
+  int dir = rng_int(2);
+  double speed = rng_double(0.3) + 0.1;
+  if (dir) speed = -speed;
+
+  struct entity *e = entity_spawn(&sc->entities);
+  e->frames = jellyfish_frames;
+  e->frame_count = 2;
+  e->frame_interval = 6.0;
+
+  int width = entity_width(e);
+  int height = entity_height(e);
+  e->y = random_swim_y(h, height);
+  e->x = dir ? (double)(w - 2) : (double)(1 - width);
+
+  finish_creature_spawn(e, ENT_JELLYFISH, Z_JELLYFISH, speed, 0, DEATH_RANDOM_OBJECT, color_from_name("cyan"));
+}
+
 void spawn_random_object(struct scene *sc, int w, int h) {
   typedef void (*spawn_fn)(struct scene *sc, int w, int h);
   static const spawn_fn table[] = {
       spawn_ship, spawn_whale, spawn_monster, spawn_big_fish, spawn_shark,
       spawn_submarine, spawn_swordfish, spawn_ducks, spawn_dolphins, spawn_swan,
-      spawn_fishhook, spawn_crab,
+      spawn_fishhook, spawn_crab, spawn_jellyfish,
   };
   table[rng_int((int)(sizeof(table) / sizeof(table[0])))](sc, w, h);
 }

@@ -1,5 +1,6 @@
 #include "scene_internal.h"
 #include "rng.h"
+#include "xalloc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -65,6 +66,7 @@ void scene_reset(struct scene *sc, int term_w, int term_h) {
   add_all_fish(sc, term_w, term_h);
   spawn_kaiju(sc, term_w, term_h);
   spawn_random_object(sc, term_w, term_h);
+  spawn_jellyfish(sc, term_w, term_h);
 }
 
 void scene_tick(struct scene *sc, int term_w, int term_h) {
@@ -80,6 +82,8 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
       spawn_bubble(sc, fish->x, fish->y, fish->z, fw, fh, fish->vx);
     }
   }
+
+  if (rng_int(200) == 0) spawn_jellyfish(sc, term_w, term_h);
 
   kaiju_tick(sc, term_w);
   fishhook_tick(sc, term_h);
@@ -112,10 +116,10 @@ void scene_set_message(struct scene *sc, const char *const *rows, int row_count)
   }
 
   if (rows == NULL || row_count <= 0) return;
-  char **copy = malloc((size_t)(row_count + 1) * sizeof(*copy));
+  char **copy = xmalloc((size_t)(row_count + 1) * sizeof(*copy));
   for (int i = 0; i < row_count; i++) {
     size_t len = strlen(rows[i]);
-    copy[i] = malloc(len + 1);
+    copy[i] = xmalloc(len + 1);
     memcpy(copy[i], rows[i], len + 1);
   }
   copy[row_count] = NULL;

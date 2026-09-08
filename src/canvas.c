@@ -1,4 +1,5 @@
 #include "canvas.h"
+#include "xalloc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +23,8 @@ void canvas_resize(struct canvas *c, int width, int height) {
   if (width == c->width && height == c->height) return;
 
   free(c->cells);
-  c->cells = calloc((size_t)width * (size_t)height, sizeof(*c->cells));
+  size_t n = (size_t)width * (size_t)height;
+  c->cells = n > 0 ? xcalloc(n, sizeof(*c->cells)) : NULL;
   c->width = width;
   c->height = height;
   canvas_clear(c);

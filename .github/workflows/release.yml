@@ -14,7 +14,7 @@ jobs:
     outputs:
       version: ${{ steps.get.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - id: get
         run: |
           ver=$(grep -oP '(?<=TOOL_VERSION ")[^"]+' src/version.h)
@@ -31,7 +31,7 @@ jobs:
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - run: sudo apt-get update && sudo apt-get install -y musl-tools
       - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/musl-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build -j
@@ -39,9 +39,55 @@ jobs:
           ver=${{ needs.version.outputs.version }}
           name=underthec-${ver}-linux-${{ matrix.arch }}
           mkdir "$name"
-          cp build/underthec LICENSE README.md "$name"/
+          cp build/underthec LICENSE "$name"/
           tar -czf "${name}.tar.gz" "$name"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: linux-${{ matrix.arch }}
+          path: underthec-*-linux-${{ matrix.arch }}.tar.gz
+
+  linux-musl-cross:
+    needs: version
+    strategy:
+      matrix:
+        include:
+          - arch: armhf
+            compiler: arm-linux-musleabihf-gcc
+            zigtarget: arm-linux-musleabihf
+            toolchain: cmake/arm-linux-musleabihf-toolchain.cmake
+          - arch: armel
+            compiler: arm-linux-musleabi-gcc
+            zigtarget: arm-linux-musleabi
+            toolchain: cmake/arm-linux-musleabi-toolchain.cmake
+          - arch: i386
+            compiler: i686-linux-musl-gcc
+            zigtarget: x86-linux-musl
+            toolchain: cmake/i686-linux-musl-toolchain.cmake
+          - arch: riscv64
+            compiler: riscv64-linux-musl-gcc
+            zigtarget: riscv64-linux-musl
+            toolchain: cmake/riscv64-linux-musl-toolchain.cmake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: install zig cross toolchain
+        run: |
+          curl -sSLf -o zig.tar.xz "https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz"
+          echo "70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00  zig.tar.xz" | sha256sum -c -
+          sudo tar -xJf zig.tar.xz -C /opt
+          sudo mkdir -p /opt/zig-wrappers
+          printf '#!/bin/sh\nexec /opt/zig-x86_64-linux-0.16.0/zig cc -target %s "$@"\n' "${{ matrix.zigtarget }}" | sudo tee "/opt/zig-wrappers/${{ matrix.compiler }}" >/dev/null
+          sudo chmod +x "/opt/zig-wrappers/${{ matrix.compiler }}"
+          echo "/opt/zig-wrappers" >> "$GITHUB_PATH"
+      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=${{ matrix.toolchain }} -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j
+      - run: |
+          ver=${{ needs.version.outputs.version }}
+          name=underthec-${ver}-linux-${{ matrix.arch }}
+          mkdir "$name"
+          cp build/underthec LICENSE "$name"/
+          tar -czf "${name}.tar.gz" "$name"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: linux-${{ matrix.arch }}
           path: underthec-*-linux-${{ matrix.arch }}.tar.gz
@@ -50,7 +96,7 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - run: sudo apt-get update && sudo apt-get install -y mingw-w64
       - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build -j
@@ -58,21 +104,45 @@ jobs:
           ver=${{ needs.version.outputs.version }}
           name=underthec-${ver}-windows-amd64
           mkdir "$name"
-          cp build/underthec.exe LICENSE README.md "$name"/
+          cp build/underthec.exe LICENSE "$name"/
           zip -r "${name}.zip" "$name"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: windows-amd64
           path: underthec-*-windows-amd64.zip
 
-  release:
-    needs: [version, linux, windows-amd64]
+  windows-arm64:
+    needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: install llvm-mingw toolchain
+        run: |
+          curl -sSLf -o llvm-mingw.tar.xz "https://github.com/mstorsjo/llvm-mingw/releases/download/20260826/llvm-mingw-20260826-ucrt-ubuntu-22.04-x86_64.tar.xz"
+          echo "cee8d2ce3da5145ce4dc882e70d0b0719a783d53a99752c60948fc0659975a65  llvm-mingw.tar.xz" | sha256sum -c -
+          sudo tar -xJf llvm-mingw.tar.xz -C /opt
+          echo "/opt/llvm-mingw-20260826-ucrt-ubuntu-22.04-x86_64/bin" >> "$GITHUB_PATH"
+      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-w64-mingw32-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j
+      - run: |
+          ver=${{ needs.version.outputs.version }}
+          name=underthec-${ver}-windows-arm64
+          mkdir "$name"
+          cp build/underthec.exe LICENSE "$name"/
+          zip -r "${name}.zip" "$name"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: windows-arm64
+          path: underthec-*-windows-arm64.zip
+
+  release:
+    needs: [version, linux, linux-musl-cross, windows-amd64, windows-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: dist
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: dist/*

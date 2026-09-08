@@ -1,5 +1,6 @@
 #include "entity.h"
 #include "color.h"
+#include "xalloc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -51,7 +52,7 @@ static int next_entity_id = 1; /* 0 is a reserved "no entity" sentinel */
 struct entity *entity_spawn(struct entity_list *list) {
   if (list->count == list->capacity) {
     int newcap = list->capacity ? list->capacity * 2 : 32;
-    struct entity *grown = realloc(list->items, (size_t)newcap * sizeof(*grown));
+    struct entity *grown = xrealloc(list->items, (size_t)newcap * sizeof(*grown));
     list->items = grown;
     list->capacity = newcap;
   }
@@ -83,10 +84,10 @@ struct entity *entity_find_by_id(struct entity_list *list, int id) {
 char **entity_build_transformed_rows(ascii_rows tmpl, row_transform_fn fn, void *ctx) {
   int rows = 0;
   while (tmpl[rows] != NULL) rows++;
-  char **out = malloc((size_t)(rows + 1) * sizeof(*out));
+  char **out = xmalloc((size_t)(rows + 1) * sizeof(*out));
   for (int i = 0; i < rows; i++) {
     size_t len = strlen(tmpl[i]);
-    out[i] = malloc(len + 1);
+    out[i] = xmalloc(len + 1);
     fn(tmpl[i], out[i], ctx);
   }
   out[rows] = NULL;
@@ -105,16 +106,16 @@ void entity_randomize_mask(struct entity *e, ascii_rows mask_template) {
 }
 
 void entity_set_owned_single_row(struct entity *e, char *row, double frame_interval_ticks) {
-  char **rows = malloc(2 * sizeof(*rows));
+  char **rows = xmalloc(2 * sizeof(*rows));
   rows[0] = row;
   rows[1] = NULL;
-  char ***frame_list = malloc(1 * sizeof(*frame_list));
+  char ***frame_list = xmalloc(1 * sizeof(*frame_list));
   frame_list[0] = rows;
   entity_set_owned_shape_frames(e, frame_list, 1, frame_interval_ticks);
 }
 
 void entity_set_owned_shape_frames(struct entity *e, char ***rows, int frame_count, double frame_interval_ticks) {
-  struct sprite_pair *table = malloc((size_t)frame_count * sizeof(*table));
+  struct sprite_pair *table = xmalloc((size_t)frame_count * sizeof(*table));
   for (int i = 0; i < frame_count; i++) {
     table[i].shape = (ascii_rows)rows[i];
     table[i].mask = NULL;
@@ -199,6 +200,23 @@ static void tick_dolphin(struct entity *e) {
   e->age_ticks++;
 }
 
+static void tick_jellyfish(struct entity *e, int term_h) {
+  int phase = e->age_ticks % 60;
+  double dy;
+  if (phase < 20) dy = -0.15;
+  else if (phase < 30) dy = 0.0;
+  else if (phase < 50) dy = 0.15;
+  else dy = 0.0;
+
+  int height = entity_height(e);
+  if (e->y < 6.0) dy = 0.15;
+  else if (e->y + height > term_h - 2) dy = -0.15;
+
+  e->x += e->vx;
+  e->y += dy;
+  e->age_ticks++;
+}
+
 static void advance_frame(struct entity *e) {
   if (e->frame_count <= 1 || e->frame_interval <= 0.0) return;
   e->frame_timer += 1.0;
@@ -222,6 +240,10 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
       break;
     case ENT_DOLPHIN:
       tick_dolphin(e);
+      advance_frame(e);
+      break;
+    case ENT_JELLYFISH:
+      tick_jellyfish(e, term_h);
       advance_frame(e);
       break;
     case ENT_WATERLINE:
@@ -408,7 +430,7 @@ void entity_draw_all(const struct entity_list *list, struct canvas *c) {
   if (n <= 0) return;
 
   if (n > g_order_cap) {
-    int *grown = realloc(g_order_buf, (size_t)n * sizeof(*grown));
+    int *grown = xrealloc(g_order_buf, (size_t)n * sizeof(*grown));
     g_order_buf = grown;
     g_order_cap = n;
   }
