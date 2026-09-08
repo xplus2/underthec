@@ -42,9 +42,10 @@ static void on_death(const struct entity *dead, void *ctx) {
   }
 }
 
-void scene_init(struct scene *sc, bool classic_mode) {
+void scene_init(struct scene *sc, bool classic_mode, struct aquatic_life aquatic) {
   entity_list_init(&sc->entities);
   sc->classic_mode = classic_mode;
+  sc->aquatic = aquatic;
   sc->message_rows = NULL;
   sc->message_frame.shape = NULL;
   sc->message_frame.mask = NULL;

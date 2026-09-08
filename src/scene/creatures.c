@@ -313,6 +313,8 @@ static void spawn_crab(struct scene *sc, int w, int h) {
 }
 
 void spawn_jellyfish(struct scene *sc, int w, int h) {
+  if (!sc->aquatic.jellyfish) return;
+
   int dir = rng_int(2);
   double speed = rng_double(0.3) + 0.1;
   if (dir) speed = -speed;
@@ -331,10 +333,23 @@ void spawn_jellyfish(struct scene *sc, int w, int h) {
 
 void spawn_random_object(struct scene *sc, int w, int h) {
   typedef void (*spawn_fn)(struct scene *, int, int);
-  static const spawn_fn table[] = {
-      spawn_ship, spawn_whale, spawn_monster, spawn_big_fish, spawn_shark,
-      spawn_submarine, spawn_swordfish, spawn_ducks, spawn_dolphins, spawn_swan,
-      spawn_fishhook, spawn_crab, spawn_jellyfish,
+  struct candidate {
+    spawn_fn fn;
+    bool enabled;
   };
-  table[rng_int((int)(sizeof(table) / sizeof(table[0])))](sc, w, h);
+  const struct candidate table[] = {
+      {spawn_ship, sc->aquatic.ship},           {spawn_whale, sc->aquatic.whale},
+      {spawn_monster, sc->aquatic.monster},     {spawn_big_fish, sc->aquatic.bigfish},
+      {spawn_shark, sc->aquatic.shark},         {spawn_submarine, sc->aquatic.submarine},
+      {spawn_swordfish, sc->aquatic.swordfish}, {spawn_ducks, sc->aquatic.ducks},
+      {spawn_dolphins, sc->aquatic.dolphins},   {spawn_swan, sc->aquatic.swan},
+      {spawn_fishhook, sc->aquatic.fishhook},   {spawn_crab, sc->aquatic.crab},
+      {spawn_jellyfish, sc->aquatic.jellyfish},
+  };
+  const int count = (int)(sizeof(table) / sizeof(table[0]));
+  spawn_fn enabled[13];
+  int enabled_count = 0;
+  for (int i = 0; i < count; i++) if (table[i].enabled) enabled[enabled_count++] = table[i].fn;
+  if (enabled_count == 0) return;
+  enabled[rng_int(enabled_count)](sc, w, h);
 }

@@ -15,6 +15,8 @@ void term_size(int *cols, int *rows);
 
 bool term_has_color(void);
 
+void term_set_transparent(bool on);
+
 /* poll keypress */
 int term_poll_key(int timeout_ms);
 

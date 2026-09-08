@@ -3,74 +3,49 @@
 Asciiquarium is an aquarium/C animation in ASCII art.
 
 This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquarium), see "Credits" below for the original authors.
- 
-## Building
 
-### CMake (primary)
-
-```
-cmake -B build
-cmake --build build
-```
-
-The `Release` build type (the default) links statically wherever the target platform allows it, and strips the resulting binary.
-
-Static musl build on Linux (requires `musl-gcc`):
-
-```
-cmake -B build-musl -DCMAKE_TOOLCHAIN_FILE=cmake/musl-toolchain.cmake
-cmake --build build-musl
-```
-
-#### Windows
-Cross-compiling a static Windows build requires the `mingw-w64` cross toolchain:
-
-```
-cmake -B build-win -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-toolchain.cmake
-cmake --build build-win
-```
-
-#### macOS
-The CMake build above should natively work on macOS. 
-Apple's libSystem does not support fully static binaries.
-
-### configure + make (legacy)
-
-```
-./configure
-make
-make install
-```
-
-`./configure --help` lists the available options (`--prefix`, `--host`
-for cross-compiling, `--no-static`, `--debug`).
-Pass `--debug` for an unstripped `-g -O0` build.
+[Build your own](BUILD.md) or use one of the [releases](https://github.com/xplus2/underthec/releases).
 
 ## Usage
 
 ```
-underthec [-c] [-m text|-] [-M color]
+underthec [-c] [-s] [-t] [-m text|-] [-M color] [-a definition]
 underthec {-h|-v}
 ```
 
-| Option                          | Description                                |
-|---------------------------------|--------------------------------------------|
-| `-c`, `--classic`               | asciiquarium 1.0 mode                      |
-| `-m`, `--message <text>`        | background `text`. `-` to read from stdin  |
-| `-M`, `--message-color <color>` | `-m` text color*:                          |
-| `-h`, `--help`                  | Show usage and exit                        |
-| `-v`, `--version`               | Show version and exit                      |
+| Option                               | Description                                |
+|--------------------------------------|--------------------------------------------|
+| `-c`, `--classic`                    | asciiquarium 1.0 mode                      |
+| `-s`, `--screensaver`                | exit on any keypress                       |
+| `-t`, `--transparent`                | transparent background                     |
+| `-m`, `--message <text>`             | background `text`. `-` to read from stdin  |
+| `-M`, `--message-color <color>`      | `-m`'s text color (see below)              |
+| `-a`, `--aquatic-life <definition>`  | select which creatures show up (see below) |
+| `-h`, `--help`                       | show usage                                 |
+| `-v`, `--version`                    | show version                               |
 
-Valid text colors: `red`, `green`, `blue`, `yellow`, `magenta`, `cyan`, `white`, `black`.
-Capitalized first letter: bold.
+### Text colors `-M`|`--message-color`
+> Valid text colors: `red`, `green`, `blue`, `yellow`, `magenta`, `cyan`, `white`, `black`.
+> Capitalized first letter: bold.
 
-Key bindings:
+### Aquatic life `-a`/`--aquatic-life` 
+Define what's going on in your asciiquarium. It takes a comma-separated definition:
 
-| Key  | Action                                                   |
-|------|----------------------------------------------------------|
-| `q`  | Quit                                                     |
-| `r`  | Redraw (recreate everything with fresh random positions) |
-| `p`  | Pause / resume                                           |
+- `fish=<N|auto>`: number of fish (default: `auto`, sized to the terminal)
+- flags, present=on, omitted=off: `ducks`, `dolphins`, `ship`, `swan`, `kaiju`, `fishhook`,
+  `submarine`, `whale`, `shark`, `jellyfish`, `monster`, `bigfish`, `swordfish`, `crab`
+
+Default (no `-a`): every flag on, `fish=auto`. Example: `-a fish=10,jellyfish,dolphins`
+
+
+### Key bindings
+
+| Key          | Action                                                   |
+|--------------|----------------------------------------------------------|
+| `q` or `^C`  | Quit                                                     |
+| `r`          | Redraw (recreate everything with fresh random positions) |
+| `p`          | Pause / resume                                           |
+| `t`          | Toggle background transparency                           |
 
 ## Credits
 

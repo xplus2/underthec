@@ -145,8 +145,11 @@ void add_all_seaweed(struct scene *sc, int w, int h) {
 }
 
 void add_all_fish(struct scene *sc, int w, int h) {
-  int screen_size = (h - 9) * w;
-  int count = screen_size / 350;
+  int count;
+  if (sc->aquatic.fish_count < 0) {
+    int screen_size = (h - 9) * w;
+    count = screen_size / 350;
+  } else count = sc->aquatic.fish_count;
   for (int i = 0; i < count; i++) spawn_fish(sc, w, h);
 }
 

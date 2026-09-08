@@ -6,16 +6,23 @@
 
 static struct canvas prev;
 static bool prev_valid = false;
+static bool transparent = false;
 
 void term_common_shutdown(void) {
   canvas_free(&prev);
   prev_valid = false;
 }
 
+void term_set_transparent(bool on) {
+  transparent = on;
+  prev_valid = false; /* repaint bg */
+}
+
 static void write_sgr(enum color col, bool bold, bool mono) {
   if (mono) return;
   static const int fg[] = {39, 30, 31, 32, 33, 34, 35, 36, 37};
-  printf("\x1b[0;%s%dm", bold ? "1;" : "", fg[col]);
+  if (transparent) printf("\x1b[0;%s%dm", bold ? "1;" : "", fg[col]);
+  else             printf("\x1b[0;%s%d;40m", bold ? "1;" : "", fg[col]);
 }
 
 void term_present(const struct canvas *c) {

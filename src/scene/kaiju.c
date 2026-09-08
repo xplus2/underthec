@@ -33,6 +33,7 @@ static void randomize_kaiju_mask(struct entity *e, ascii_rows tmpl) {
 }
 
 void spawn_kaiju(struct scene *sc, int w, int h) {
+  if (!sc->aquatic.kaiju) return;
   int dir = rng_int(2);
   double speed = rng_double(2.0) + 0.25;
   if (dir) speed = -speed;
