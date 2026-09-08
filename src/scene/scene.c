@@ -48,6 +48,7 @@ void scene_init(struct scene *sc, bool classic_mode) {
   sc->message_rows = NULL;
   sc->message_frame.shape = NULL;
   sc->message_frame.mask = NULL;
+  sc->message_attr = color_from_name("blue");
 }
 
 void scene_free(struct scene *sc) {
@@ -127,6 +128,10 @@ void scene_set_message(struct scene *sc, const char *const *rows, int row_count)
   sc->message_rows = copy;
   sc->message_frame.shape = (ascii_rows)sc->message_rows;
   sc->message_frame.mask = NULL;
+}
+
+void scene_set_message_color(struct scene *sc, struct attr attr) {
+  sc->message_attr = attr;
 }
 
 void scene_draw(const struct scene *sc, struct canvas *c) {

@@ -168,7 +168,7 @@ void add_message(struct scene *sc, int w, int h) {
   e->frames = &sc->message_frame;
   e->frame_count = 1;
   e->sentinel = ' ';
-  e->default_attr = color_from_name("blue");
+  e->default_attr = sc->message_attr;
 }
 
 void environment_tick(struct scene *sc) {

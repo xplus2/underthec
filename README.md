@@ -2,7 +2,7 @@
 
 Asciiquarium is an aquarium/C animation in ASCII art.
 
-This is a port of [Asciiquarium v1.1](https://robobunny.com/projects/asciiquarium/), see "Credits" below for the original authors.
+This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquarium), see "Credits" below for the original authors.
  
 ## Building
 
@@ -49,16 +49,20 @@ Pass `--debug` for an unstripped `-g -O0` build.
 ## Usage
 
 ```
-underthec [-c] [-m text|-]
+underthec [-c] [-m text|-] [-M color]
 underthec {-h|-v}
 ```
 
-| Option                   | Description                               |
-|--------------------------|-------------------------------------------|
-| `-c`, `--classic`        | asciiquarium 1.0 mode                     |
-| `-m`, `--message <text>` | background `text`. `-` to read from stdin |
-| `-h`, `--help`           | Show usage and exit                       |
-| `-v`, `--version`        | Show version and exit                     |
+| Option                          | Description                                |
+|---------------------------------|--------------------------------------------|
+| `-c`, `--classic`               | asciiquarium 1.0 mode                      |
+| `-m`, `--message <text>`        | background `text`. `-` to read from stdin  |
+| `-M`, `--message-color <color>` | `-m` text color*:                          |
+| `-h`, `--help`                  | Show usage and exit                        |
+| `-v`, `--version`               | Show version and exit                      |
+
+Valid text colors: `red`, `green`, `blue`, `yellow`, `magenta`, `cyan`, `white`, `black`.
+Capitalized first letter: bold.
 
 Key bindings:
 

@@ -1,4 +1,5 @@
 #include "canvas.h"
+#include "color.h"
 #include "rng.h"
 #include "scene.h"
 #include "term/term.h"
@@ -25,6 +26,10 @@ static void print_help(const char *prog) {
   printf("  -c, --classic         classic mode (asciiquarium 1.0)\n");
   printf("  -m, --message <text>  show background text/ascii art\n");
   printf("                        ('-' reads it from stdin)\n");
+  printf("  -M, --message-color <color>\n");
+  printf("                        -m text color (default: blue)\n");
+  printf("                        red, green, blue, yellow, magenta, cyan, white, black\n");
+  printf("                        capitalized first letter=bold\n");
   printf("  -h, --help            show this help\n");
   printf("  -v, --version         show version\n\n");
   printf("keys while running: q quit, r redraw, p pause\n");
@@ -79,6 +84,7 @@ static int split_and_trim_lines(char *buf, char ***out_rows) {
 int main(int argc, char **argv) {
   bool classic = false;
   const char *message_arg = NULL;
+  const char *message_color_arg = NULL;
   int i = 1;
   while (i < argc) {
     const char *a = argv[i];
@@ -97,6 +103,17 @@ int main(int argc, char **argv) {
         return 2;
       }
       message_arg = argv[i + 1];
+      i += 2;
+    } else if (strcmp(a, "-M") == 0 || strcmp(a, "--message-color") == 0) {
+      if (i + 1 >= argc) {
+        fprintf(stderr, "%s: %s requires an argument\n", argv[0], a);
+        return 2;
+      }
+      if (!color_name_valid(argv[i + 1])) {
+        fprintf(stderr, "%s: invalid color '%s' for %s\n", argv[0], argv[i + 1], a);
+        return 2;
+      }
+      message_color_arg = argv[i + 1];
       i += 2;
     } else {
       fprintf(stderr, "%s: unknown option '%s'\n", argv[0], a);
@@ -122,6 +139,7 @@ int main(int argc, char **argv) {
   signal(SIGTERM, on_signal);
   struct scene scene;
   scene_init(&scene, classic);
+  if (message_color_arg != NULL) scene_set_message_color(&scene, color_from_name(message_color_arg));
   if (message_row_count > 0) scene_set_message(&scene, (const char *const *)message_rows, message_row_count);
   free(message_rows);
   free(message_buf);

@@ -39,15 +39,24 @@ struct attr color_from_mask_letter(char c) {
   return (struct attr){cols[idx / 2], (idx % 2) == 1};
 }
 
+static const char *const color_names[8] = {"black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"};
+static const enum color color_name_cols[8] = {COL_BLACK, COL_RED, COL_GREEN, COL_YELLOW, COL_BLUE, COL_MAGENTA, COL_CYAN, COL_WHITE};
+
 struct attr color_from_name(const char *name) {
-  static const char *const names[8] = {"black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"};
-  static const enum color cols[8] = {COL_BLACK, COL_RED, COL_GREEN, COL_YELLOW, COL_BLUE, COL_MAGENTA, COL_CYAN, COL_WHITE};
   if (name == NULL || name[0] == '\0') return (struct attr){COL_DEFAULT, false};
   bool bold = (name[0] >= 'A' && name[0] <= 'Z');
-  for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
-    if (strcasecmp(name, names[i]) == 0) return (struct attr){cols[i], bold};
+  for (size_t i = 0; i < sizeof(color_names) / sizeof(color_names[0]); i++) {
+    if (strcasecmp(name, color_names[i]) == 0) return (struct attr){color_name_cols[i], bold};
   }
   return (struct attr){COL_DEFAULT, false};
+}
+
+bool color_name_valid(const char *name) {
+  if (name == NULL || name[0] == '\0') return false;
+  for (size_t i = 0; i < sizeof(color_names) / sizeof(color_names[0]); i++) {
+    if (strcasecmp(name, color_names[i]) == 0) return true;
+  }
+  return false;
 }
 
 void color_randomize_mask(const char *in, char *out) {

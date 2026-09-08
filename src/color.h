@@ -26,6 +26,7 @@ bool color_supported(void);
 /* mask letters */
 struct attr color_from_mask_letter(char c);
 struct attr color_from_name(const char *name);
+bool color_name_valid(const char *name);
 void color_randomize_mask(const char *in, char *out);
 
 #endif
