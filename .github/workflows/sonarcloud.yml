@@ -25,6 +25,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args:
-            -Dsonar.projectKey=xplus2_underthec
+            -Dsonar.projectKey=underthec
             -Dsonar.organization=xplus2
           projectBaseDir: .
