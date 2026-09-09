@@ -6,7 +6,7 @@
 static const char *const kaiju_image_0[] = {
     "            _,-^^-,_",
     "           /\\  ### /\\",
-    "         _|{0\\  = /0}",
+    "         _|{o\\  = /o}",
     "        _|/  {~~°°~~}",
     "       |\\/     wwww",
     "  _   _\\|      \\NNN",
@@ -34,7 +34,7 @@ static const char *const kaiju_mask_0[] = {
 static const char *const kaiju_image_1[] = {
 	" _,-^^-,_",
 	"/\\ ###  /\\",
-	"{0\\ =  /0}|_",
+	"{o\\ =  /o}|_",
 	"{~~°°~~}  \\|_",
 	"  wwww     \\/|",
 	"  NNN/      |/_   _",

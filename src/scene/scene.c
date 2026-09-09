@@ -66,7 +66,6 @@ void scene_reset(struct scene *sc, int term_w, int term_h) {
 void scene_tick(struct scene *sc, int term_w, int term_h) {
   entity_tick_all(&sc->entities, term_w, term_h);
   environment_tick(sc);
-
   for (int i = 0; i < sc->entities.count; i++) {
     struct entity *fish = &sc->entities.items[i];
     if (fish->marked_dead || fish->type != ENT_FISH) continue;
@@ -77,7 +76,7 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
     }
   }
 
-  if (rng_int(200) == 0) spawn_jellyfish(sc, term_w, term_h);
+  if (rng_int(300) == 0) spawn_jellyfish(sc, term_w, term_h);
 
   kaiju_tick(sc, term_w);
   fishhook_tick(sc, term_h);
@@ -85,16 +84,13 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
   entity_collide_all(&sc->entities);
   bool shark_died = false;
   for (int i = 0; i < sc->entities.count; i++) {
-    if (sc->entities.items[i].marked_dead &&
-        sc->entities.items[i].type == ENT_SHARK) {
+    if (sc->entities.items[i].marked_dead && sc->entities.items[i].type == ENT_SHARK) {
       shark_died = true;
       break;
     }
   }
-  if (shark_died) {
-    for (int i = 0; i < sc->entities.count; i++) {
-      if (sc->entities.items[i].type == ENT_TEETH) sc->entities.items[i].marked_dead = true;
-    }
+  if (shark_died) for (int i = 0; i < sc->entities.count; i++) {
+    if (sc->entities.items[i].type == ENT_TEETH) sc->entities.items[i].marked_dead = true;
   }
 
   struct scene_ctx ctx = {sc, term_w, term_h};
