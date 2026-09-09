@@ -117,7 +117,7 @@ static bool aquatic_life_parse(const char *definition, struct aquatic_life *out,
   char *buf = owned_copy(definition);
   size_t len = strlen(buf);
   bool ok = true;
-  char *token = buf;
+  const char *token = buf;
   for (size_t i = 0; i <= len && ok; i++) {
     if (buf[i] != ',' && buf[i] != '\0') continue;
     buf[i] = '\0';

@@ -101,12 +101,12 @@ void entity_set_owned_single_row(struct entity *e, char *row, double frame_inter
 void entity_clear_owned(struct entity *e);
 ascii_rows entity_shape(const struct entity *e);
 ascii_rows entity_mask(const struct entity *e);
-int entity_width(const struct entity *e);
-int entity_height(const struct entity *e);
+int entity_width(struct entity *e);
+int entity_height(struct entity *e);
 void entity_shape_changed(struct entity *e);
 void entity_tick_all(struct entity_list *list, int term_w, int term_h);
 void entity_collide_all(struct entity_list *list);
-bool entity_glyph_overlap(const struct entity *a, const struct entity *b);
+bool entity_glyph_overlap(struct entity *a, struct entity *b);
 typedef void (*entity_death_fn)(const struct entity *dead, void *ctx);
 void entity_reap(struct entity_list *list, entity_death_fn fn, void *ctx);
 void entity_draw_all(const struct entity_list *list, struct canvas *c);

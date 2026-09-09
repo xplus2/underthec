@@ -28,7 +28,7 @@ static void grow_fishhook_rope(struct entity *e, int hook_h) {
   e->owned_frame_table[0].shape = (ascii_rows)rows;
 }
 
-static void shrink_fishhook_rope(struct entity *e, int hook_h) {
+static void shrink_fishhook_rope(const struct entity *e, int hook_h) {
   char **rows = e->owned_shape_rows[0];
   int old_total = 0;
   while (rows[old_total] != NULL) old_total++;

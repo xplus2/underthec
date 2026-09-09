@@ -114,7 +114,7 @@ static void spawn_laser(struct scene *sc, double eye_x, double eye_y, int z, int
 
 static void handle_castle_collision(struct scene *sc) {
   if (sc->castle_hidden_by != 0) return;
-  const struct entity *kaiju_ent = entity_find_first(&sc->entities, ENT_KAIJU);
+  struct entity *kaiju_ent = entity_find_first(&sc->entities, ENT_KAIJU);
   struct entity *castle_ent = entity_find_first(&sc->entities, ENT_CASTLE);
   if (kaiju_ent == NULL || castle_ent == NULL) return;
   if (!entity_glyph_overlap(kaiju_ent, castle_ent)) return;
@@ -168,7 +168,7 @@ static void fire_laser_if_ready(struct scene *sc, int term_w) {
   double dir_sign = (kaiju_ent->vx >= 0) ? 1.0 : -1.0;
 
   for (int i = 0; i < sc->entities.count; i++) {
-    const struct entity *fish = &sc->entities.items[i];
+    struct entity *fish = &sc->entities.items[i];
     if (fish->marked_dead || fish->type != ENT_FISH) continue;
     if (fish->z != kaiju_ent->z) continue;
     int fh = entity_height(fish);

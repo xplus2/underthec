@@ -77,7 +77,7 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
   environment_tick(sc);
 
   for (int i = 0; i < sc->entities.count; i++) {
-    const struct entity *fish = &sc->entities.items[i];
+    struct entity *fish = &sc->entities.items[i];
     if (fish->marked_dead || fish->type != ENT_FISH) continue;
     if (rng_int(100) > 97) {
       int fw = entity_width(fish);

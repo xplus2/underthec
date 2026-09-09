@@ -167,8 +167,7 @@ void entity_shape_changed(struct entity *e) {
   e->wh_valid = false;
 }
 
-static void compute_wh(const struct entity *ce) {
-  struct entity *e = (struct entity *)ce;
+static void compute_wh(struct entity *e) {
   ascii_rows rows = entity_shape(e);
   int w = 0;
   int h = 0;
@@ -183,12 +182,12 @@ static void compute_wh(const struct entity *ce) {
   e->wh_valid = true;
 }
 
-int entity_height(const struct entity *e) {
+int entity_height(struct entity *e) {
   if (!e->wh_valid) compute_wh(e);
   return e->cached_h;
 }
 
-int entity_width(const struct entity *e) {
+int entity_width(struct entity *e) {
   if (!e->wh_valid) compute_wh(e);
   return e->cached_w;
 }
@@ -317,7 +316,7 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
   }
 }
 
-static bool bbox_overlap(const struct entity *a, const struct entity *b) {
+static bool bbox_overlap(struct entity *a, struct entity *b) {
   int aw = entity_width(a);
   int ah = entity_height(a);
   int bw = entity_width(b);
@@ -331,7 +330,7 @@ void entity_collide_all(struct entity_list *list) {
     if (fish->marked_dead || !fish->physical || fish->type != ENT_FISH) continue;
     if (entity_height(fish) > 5) continue;
     for (int j = 0; j < list->count; j++) {
-      const struct entity *teeth = &list->items[j];
+      struct entity *teeth = &list->items[j];
       if (teeth->marked_dead || !teeth->physical || teeth->type != ENT_TEETH) continue;
       if (bbox_overlap(fish, teeth)) {
         fish->marked_dead = true;
@@ -347,7 +346,7 @@ void entity_collide_all(struct entity_list *list) {
     struct entity *bubble = &list->items[i];
     if (bubble->marked_dead || !bubble->physical || bubble->type != ENT_BUBBLE) continue;
     for (int j = 0; j < list->count; j++) {
-      const struct entity *wl = &list->items[j];
+      struct entity *wl = &list->items[j];
       if (wl->marked_dead || !wl->physical || wl->type != ENT_WATERLINE) continue;
       if (bbox_overlap(bubble, wl)) {
         bubble->marked_dead = true;
@@ -397,7 +396,7 @@ static bool cell_transparent(const struct entity *e, const char *srow, int len, 
   return false;
 }
 
-bool entity_glyph_overlap(const struct entity *a, const struct entity *b) {
+bool entity_glyph_overlap(struct entity *a, struct entity *b) {
   ascii_rows arows = entity_shape(a);
   ascii_rows brows = entity_shape(b);
   if (arows == NULL || brows == NULL) return false;
