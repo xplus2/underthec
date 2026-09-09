@@ -20,25 +20,16 @@ static void on_death(const struct entity *dead, void *ctx) {
     sctx->sc->castle_hidden_by = 0;
   }
   switch (dead->death_action) {
-  case DEATH_ADD_FISH:
-    spawn_fish(sctx->sc, sctx->w, sctx->h);
-    break;
-  case DEATH_ADD_SEAWEED:
-    add_seaweed(sctx->sc, sctx->w, sctx->h);
-    break;
-  case DEATH_ADD_KAIJU:
-    spawn_kaiju(sctx->sc, sctx->w, sctx->h);
-    break;
-  case DEATH_ADD_KAIJU_COOLDOWN:
-    schedule_kaiju_return(sctx->sc);
-    break;
-  case DEATH_RANDOM_OBJECT:
-  case DEATH_SHARK:
-    spawn_random_object(sctx->sc, sctx->w, sctx->h);
-    break;
-  case DEATH_NONE:
-  default:
-    break;
+    case DEATH_ADD_FISH:            spawn_fish(sctx->sc, sctx->w, sctx->h);          break;
+    case DEATH_ADD_SEAWEED:         add_seaweed(sctx->sc, sctx->w, sctx->h);         break;
+    /* respawn after a while: this is how actual sequels to kaiju movies work */
+    case DEATH_ADD_KAIJU:           spawn_kaiju(sctx->sc, sctx->w, sctx->h);         break;
+    case DEATH_ADD_KAIJU_COOLDOWN:  schedule_kaiju_return(sctx->sc);                 break;
+    case DEATH_RANDOM_OBJECT:
+    case DEATH_SHARK:               schedule_random_object_return(sctx->sc);         break;
+    case DEATH_ADD_RANDOM_OBJECT:   spawn_random_object(sctx->sc, sctx->w, sctx->h); break;
+    case DEATH_NONE:
+    default:                                                                         break;
   }
 }
 
@@ -67,7 +58,7 @@ void scene_reset(struct scene *sc, int term_w, int term_h) {
   add_castle(sc, term_w, term_h);
   add_all_seaweed(sc, term_w, term_h);
   add_all_fish(sc, term_w, term_h);
-  spawn_kaiju(sc, term_w, term_h);
+  if (sc->aquatic.kaiju) schedule_kaiju_return(sc);
   spawn_random_object(sc, term_w, term_h);
   spawn_jellyfish(sc, term_w, term_h);
 }

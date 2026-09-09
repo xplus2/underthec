@@ -101,6 +101,8 @@ void fishhook_tick(struct scene *sc, int term_h) {
       if (hook->splat_x < resting) {
         hook->splat_x += 1.0;
         update_fishhook_shape(hook, (int)hook->splat_x);
+      } else if (hook->die_after < 0.0) {
+        hook->die_after = rng_double(10.0) + 5.0; /* avoid stuck hook when nothing bites */
       }
       struct sprite_pair barb_pair = { entity_shape(hook) + (int)hook->splat_x, NULL };
       struct entity barb = *hook;
@@ -115,6 +117,7 @@ void fishhook_tick(struct scene *sc, int term_h) {
         if (candidate->type != ENT_FISH && candidate->type != ENT_KAIJU) continue;
         if (!entity_glyph_overlap(&barb, candidate)) continue;
         hook->physical = false;
+        hook->die_after = -1.0;
         candidate->physical = false;
         candidate->vx = 0;
         candidate->vy = -1;

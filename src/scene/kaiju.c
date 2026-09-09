@@ -46,14 +46,13 @@ void spawn_kaiju(struct scene *sc, int w, int h) {
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = dir ? (double)(w - 2) : (double)(1 - width);
-
   finish_creature_spawn(e, ENT_KAIJU, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_KAIJU_COOLDOWN, (struct attr){COL_DEFAULT, false});
 }
 
 void schedule_kaiju_return(struct scene *sc) {
   struct entity *e = entity_spawn(&sc->entities);
   e->type = ENT_KAIJU_TIMER;
-  e->die_after = rng_double(10.0) + 5.0;
+  e->die_after = rng_double(555.0) +45.0;
   e->death_action = DEATH_ADD_KAIJU;
 }
 
@@ -147,9 +146,12 @@ static void update_active_laser(struct scene *sc, struct entity *laser) {
   double dist = d < 0 ? -d : d;
   int new_len = laser->age_ticks + 5;
   if ((double)new_len >= dist) {
-    spawn_splat(sc, target->x, target->y, target->z);
+    double tx = target->x;
+    double ty = target->y;
+    int tz = target->z;
     target->marked_dead = true;
     laser->marked_dead = true;
+    spawn_splat(sc, tx, ty, tz);
     return;
   }
   laser->age_ticks = new_len;

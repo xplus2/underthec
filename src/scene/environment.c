@@ -40,7 +40,7 @@ void add_environment(struct scene *sc, int w, int h) {
 void add_castle(struct scene *sc, int w, int h) {
   struct entity *e = entity_spawn(&sc->entities);
   e->type = ENT_CASTLE;
-  e->x = w - 32;
+  e->x = w - CASTLE_X_OFFSET;
   e->y = h - 13;
   e->z = Z_CASTLE;
   e->frames = &castle;
@@ -77,7 +77,7 @@ void add_castle_building(struct scene *sc, int w, int h) {
 
   struct entity *e = entity_spawn(&sc->entities);
   e->type = ENT_CASTLE;
-  e->x = w - 32;
+  e->x = w - CASTLE_X_OFFSET;
   e->y = h - 13;
   e->z = Z_CASTLE;
   e->default_attr = color_from_name("BLACK");
@@ -92,7 +92,7 @@ void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle
   e->frame_count = 1;
   e->trim_edges = true;
   e->z = Z_CASTLE;
-  e->default_attr = color_from_name("yellow");
+  e->default_attr = color_from_name("BLACK");
 
   int rubble_height = entity_height(e);
   e->x = castle_x;
@@ -120,7 +120,20 @@ void add_seaweed(struct scene *sc, int w, int h) {
   rows0[height] = NULL;
   rows1[height] = NULL;
 
-  int x = rng_int(w - 2) + 1;
+  int castle_left = w - CASTLE_X_OFFSET;
+  int castle_right = castle_left + CASTLE_WIDTH - 1;
+  int left_lo = 1, left_hi = castle_left - 1;
+  int right_lo = castle_right + 1, right_hi = w - 2;
+  int left_span = left_hi >= left_lo ? left_hi - left_lo + 1 : 0;
+  int right_span = right_hi >= right_lo ? right_hi - right_lo + 1 : 0;
+  int total_span = left_span + right_span;
+  int x;
+  if (total_span <= 0) {
+    x = rng_int(w - 2) + 1;
+  } else {
+    int pick = rng_int(total_span);
+    x = pick < left_span ? left_lo + pick : right_lo + (pick - left_span);
+  }
   int y = h - height;
   double anim_speed = rng_double(0.05) + 0.25; /* seconds/frame */
 

@@ -259,7 +259,8 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
       case ENT_SUBMARINE:      tick_submarine(e, term_w);         break;
       case ENT_LASER:
       case ENT_FISHHOOK:
-      case ENT_KAIJU_TIMER:                                       break;
+      case ENT_KAIJU_TIMER:
+      case ENT_RANDOM_OBJECT_TIMER:                                break;
       case ENT_DOLPHIN:        tick_dolphin(e);
                                advance_frame(e);                  break;
       case ENT_JELLYFISH:      tick_jellyfish(e, term_h);

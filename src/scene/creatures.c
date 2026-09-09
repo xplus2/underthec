@@ -319,12 +319,18 @@ void spawn_random_object(struct scene *sc, int w, int h) {
       {spawn_swordfish, sc->aquatic.swordfish}, {spawn_ducks, sc->aquatic.ducks},
       {spawn_dolphins, sc->aquatic.dolphins},   {spawn_swan, sc->aquatic.swan},
       {spawn_fishhook, sc->aquatic.fishhook},   {spawn_crab, sc->aquatic.crab},
-      {spawn_jellyfish, sc->aquatic.jellyfish},
   };
   const int count = (int)(sizeof(table) / sizeof(table[0]));
-  spawn_fn enabled[13];
+  spawn_fn enabled[count];
   int enabled_count = 0;
   for (int i = 0; i < count; i++) if (table[i].enabled) enabled[enabled_count++] = table[i].fn;
   if (enabled_count == 0) return;
   enabled[rng_int(enabled_count)](sc, w, h);
+}
+
+void schedule_random_object_return(struct scene *sc) {
+  struct entity *e = entity_spawn(&sc->entities);
+  e->type = ENT_RANDOM_OBJECT_TIMER;
+  e->die_after = rng_double(12.0) + 3.0;
+  e->death_action = DEATH_ADD_RANDOM_OBJECT;
 }
