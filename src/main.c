@@ -8,6 +8,7 @@
 
 #include <signal.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,24 +22,51 @@ static void on_signal(int sig) {
   g_should_quit = 1;
 }
 
+static void append_bounded(char *dst, size_t dst_cap, size_t *pos, const char *src) {
+  size_t src_len = strlen(src);
+  size_t avail = dst_cap > *pos ? dst_cap - *pos : 0;
+  if (src_len > avail) src_len = avail;
+  memcpy(dst + *pos, src, src_len);
+  *pos += src_len;
+}
+
+static void write_parts(FILE *stream, const char *const *parts, size_t count) {
+  char buf[512];
+  size_t pos = 0;
+  for (size_t i = 0; i < count; i++) append_bounded(buf, sizeof(buf), &pos, parts[i]);
+  fwrite(buf, 1, pos, stream);
+}
+
 static void print_help(const char *prog) {
-  printf("usage: %s [options]\n\n", prog);
-  printf("  -c, --classic         classic mode (asciiquarium 1.0)\n");
-  printf("  -m, --message <text>  show background text/ascii art\n");
-  printf("                        ('-' reads it from stdin)\n");
-  printf("  -M, --message-color <color>\n");
-  printf("                        -m text color (default: blue)\n");
-  printf("                        red, green, blue, yellow, magenta, cyan, white, black\n");
-  printf("                        capitalized first letter=bold\n");
-  printf("  -a, --aquatic-life <definition>\n");
-  printf("                        comma-separated, default: all on, fish=auto\n");
-  printf("                        fish=<N|auto>,ducks,dolphins,ship,swan,kaiju,crab,shark,\n");
-  printf("                        submarine,whale,jellyfish,monster,bigfish,swordfish\n");
-  printf("  -s, --screensaver     exit on any keypress\n");
-  printf("  -t, --transparent     transparent background (default: opaque black)\n");
-  printf("  -h, --help            show this help\n");
-  printf("  -v, --version         show version\n\n");
-  printf("keys while running: q quit, r redraw, p pause, t toggle transparency\n");
+  write_parts(stdout, (const char *[]){"usage: ", prog, " [options]\n\n"}, 3);
+  fputs("  -c, --classic         classic mode (asciiquarium 1.0)\n"
+        "  -m, --message <text>  bg text/ascii art ('-' for stdin)\n"
+        "  -M, --message-color <color>\n"
+        "                        -m text color (default: blue)\n"
+        "                        red,green,blue,yellow,magenta,cyan,white,black\n"
+        "                        capitalized first letter=bold\n"
+        "  -a, --aquatic-life <definition>\n"
+        "                        comma-separated, default: all on, fish=auto\n"
+        "                        fish=<N|auto>,ducks,dolphins,ship,swan,kaiju,crab,shark,\n"
+        "                        submarine,whale,jellyfish,monster,bigfish,swordfish\n"
+        "  -s, --screensaver     exit on any keypress\n"
+        "  -t, --transparent     transparent background (default: opaque black)\n"
+        "  -h, --help            show this help\n"
+        "  -v, --version         show version\n\n"
+        "keys while running: q quit, r redraw, p pause, t toggle transparency\n",
+        stdout);
+}
+
+static void set_errbuf(char *errbuf, size_t errbuf_len, const char *const *parts, size_t count) {
+  if (errbuf_len == 0) return;
+  size_t pos = 0;
+  for (size_t i = 0; i < count; i++) append_bounded(errbuf, errbuf_len - 1, &pos, parts[i]);
+  errbuf[pos] = '\0';
+}
+
+static int err_requires_arg(const char *prog, const char *opt) {
+  write_parts(stderr, (const char *[]){prog, ": ", opt, " requires an argument\n"}, 4);
+  return 2;
 }
 
 static char *owned_copy(const char *s) {
@@ -48,62 +76,44 @@ static char *owned_copy(const char *s) {
   return p;
 }
 
+struct aquatic_life_flag {
+  const char *name;
+  size_t offset;
+};
+
+#define AQ_FLAG(field) {#field, offsetof(struct aquatic_life, field)}
+
+static const struct aquatic_life_flag aquatic_life_flags[] = {
+  AQ_FLAG(ducks),    AQ_FLAG(dolphins), AQ_FLAG(ship),     AQ_FLAG(swan), AQ_FLAG(kaiju),
+  AQ_FLAG(fishhook), AQ_FLAG(submarine),AQ_FLAG(whale),    AQ_FLAG(shark),AQ_FLAG(jellyfish),
+  AQ_FLAG(monster),  AQ_FLAG(bigfish),  AQ_FLAG(swordfish),AQ_FLAG(crab),
+};
+#define AQUATIC_LIFE_FLAG_COUNT (sizeof(aquatic_life_flags) / sizeof(aquatic_life_flags[0]))
+
+static bool *aquatic_life_field(struct aquatic_life *a, size_t offset) {
+  return (bool *)((char *)a + offset);
+}
+
 static struct aquatic_life aquatic_life_default(void) {
   struct aquatic_life a;
   a.fish_count = -1;
-  a.ducks = true;
-  a.dolphins = true;
-  a.ship = true;
-  a.swan = true;
-  a.kaiju = true;
-  a.fishhook = true;
-  a.submarine = true;
-  a.whale = true;
-  a.shark = true;
-  a.jellyfish = true;
-  a.monster = true;
-  a.bigfish = true;
-  a.swordfish = true;
-  a.crab = true;
+  for (size_t i = 0; i < AQUATIC_LIFE_FLAG_COUNT; i++) *aquatic_life_field(&a, aquatic_life_flags[i].offset) = true;
   return a;
 }
 
 static bool aquatic_life_set_flag(struct aquatic_life *out, const char *name) {
-  if (strcmp(name, "ducks") == 0)          out->ducks = true;
-  else if (strcmp(name, "dolphins") == 0)  out->dolphins = true;
-  else if (strcmp(name, "ship") == 0)      out->ship = true;
-  else if (strcmp(name, "swan") == 0)      out->swan = true;
-  else if (strcmp(name, "kaiju") == 0)     out->kaiju = true;
-  else if (strcmp(name, "fishhook") == 0)  out->fishhook = true;
-  else if (strcmp(name, "submarine") == 0) out->submarine = true;
-  else if (strcmp(name, "whale") == 0)     out->whale = true;
-  else if (strcmp(name, "shark") == 0)     out->shark = true;
-  else if (strcmp(name, "jellyfish") == 0) out->jellyfish = true;
-  else if (strcmp(name, "monster") == 0)   out->monster = true;
-  else if (strcmp(name, "bigfish") == 0)   out->bigfish = true;
-  else if (strcmp(name, "swordfish") == 0) out->swordfish = true;
-  else if (strcmp(name, "crab") == 0)      out->crab = true;
-  else return false;
-  return true;
+  for (size_t i = 0; i < AQUATIC_LIFE_FLAG_COUNT; i++) {
+    if (strcmp(name, aquatic_life_flags[i].name) == 0) {
+      *aquatic_life_field(out, aquatic_life_flags[i].offset) = true;
+      return true;
+    }
+  }
+  return false;
 }
 
 static bool aquatic_life_parse(const char *definition, struct aquatic_life *out, char *errbuf, size_t errbuf_len) {
   out->fish_count = -1;
-  out->ducks = false;
-  out->dolphins = false;
-  out->ship = false;
-  out->swan = false;
-  out->kaiju = false;
-  out->fishhook = false;
-  out->submarine = false;
-  out->whale = false;
-  out->shark = false;
-  out->jellyfish = false;
-  out->monster = false;
-  out->bigfish = false;
-  out->swordfish = false;
-  out->crab = false;
-
+  for (size_t i = 0; i < AQUATIC_LIFE_FLAG_COUNT; i++) *aquatic_life_field(out, aquatic_life_flags[i].offset) = false;
   char *buf = owned_copy(definition);
   size_t len = strlen(buf);
   bool ok = true;
@@ -112,7 +122,7 @@ static bool aquatic_life_parse(const char *definition, struct aquatic_life *out,
     if (buf[i] != ',' && buf[i] != '\0') continue;
     buf[i] = '\0';
     if (token[0] == '\0') {
-      snprintf(errbuf, errbuf_len, "empty entry in aquatic-life definition");
+      set_errbuf(errbuf, errbuf_len, (const char *[]){"empty entry in aquatic-life definition"}, 1);
       ok = false;
     } else if (strncmp(token, "fish=", 5) == 0) {
       const char *val = token + 5;
@@ -122,12 +132,12 @@ static bool aquatic_life_parse(const char *definition, struct aquatic_life *out,
         char *endptr = NULL;
         long n = strtol(val, &endptr, 10);
         if (val[0] == '\0' || *endptr != '\0' || n < 0 || n > 100000) {
-          snprintf(errbuf, errbuf_len, "invalid fish count '%s'", val);
+          set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid fish count '", val, "'"}, 3);
           ok = false;
         } else out->fish_count = (int)n;
       }
     } else if (!aquatic_life_set_flag(out, token)) {
-      snprintf(errbuf, errbuf_len, "unknown aquatic-life entry '%s'", token);
+      set_errbuf(errbuf, errbuf_len, (const char *[]){"unknown aquatic-life entry '", token, "'"}, 3);
       ok = false;
     }
     token = buf + i + 1;
@@ -198,39 +208,30 @@ int main(int argc, char **argv) {
       print_help(argv[0]);
       return 0;
     } else if (strcmp(a, "-v") == 0 || strcmp(a, "--version") == 0) {
-      printf("%s %s\n", TOOL_NAME, TOOL_VERSION);
+      write_parts(stdout, (const char *[]){TOOL_NAME, " ", TOOL_VERSION, "\n"}, 4);
       return 0;
     } else if (strcmp(a, "-m") == 0 || strcmp(a, "--message") == 0) {
-      if (i + 1 >= argc) {
-        fprintf(stderr, "%s: %s requires an argument\n", argv[0], a);
-        return 2;
-      }
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       message_arg = argv[i + 1];
       i += 2;
     } else if (strcmp(a, "-M") == 0 || strcmp(a, "--message-color") == 0) {
-      if (i + 1 >= argc) {
-        fprintf(stderr, "%s: %s requires an argument\n", argv[0], a);
-        return 2;
-      }
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       if (!color_name_valid(argv[i + 1])) {
-        fprintf(stderr, "%s: invalid color '%s' for %s\n", argv[0], argv[i + 1], a);
+        write_parts(stderr, (const char *[]){argv[0], ": invalid color '", argv[i + 1], "' for ", a, "\n"}, 6);
         return 2;
       }
       message_color_arg = argv[i + 1];
       i += 2;
     } else if (strcmp(a, "-a") == 0 || strcmp(a, "--aquatic-life") == 0) {
-      if (i + 1 >= argc) {
-        fprintf(stderr, "%s: %s requires an argument\n", argv[0], a);
-        return 2;
-      }
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       char errbuf[128];
       if (!aquatic_life_parse(argv[i + 1], &aquatic, errbuf, sizeof errbuf)) {
-        fprintf(stderr, "%s: %s for %s\n", argv[0], errbuf, a);
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
         return 2;
       }
       i += 2;
     } else {
-      fprintf(stderr, "%s: unknown option '%s'\n", argv[0], a);
+      write_parts(stderr, (const char *[]){argv[0], ": unknown option '", a, "'\n"}, 4);
       print_help(argv[0]);
       return 2;
     }
@@ -244,7 +245,7 @@ int main(int argc, char **argv) {
   }
   rng_seed((uint64_t)time(NULL) ^ ((uint64_t)clock() << 32));
   if (term_init() != 0) {
-    fprintf(stderr, "%s: failed to initialize the terminal\n", argv[0]);
+    write_parts(stderr, (const char *[]){argv[0], ": failed to initialize the terminal\n"}, 2);
     free(message_rows);
     free(message_buf);
     return 1;
@@ -273,7 +274,6 @@ int main(int argc, char **argv) {
       last_w = w;
       last_h = h;
     }
-
     int key = term_poll_key(100);
     if (key == 'q') break;
     if (screensaver && key != -1) break;
@@ -284,12 +284,10 @@ int main(int argc, char **argv) {
       term_set_transparent(transparent);
     }
     if (!paused)    scene_tick(&scene, w, h);
-
     canvas_clear(&canvas);
     scene_draw(&scene, &canvas);
     term_present(&canvas);
   }
-
   canvas_free(&canvas);
   scene_free(&scene);
   term_shutdown();

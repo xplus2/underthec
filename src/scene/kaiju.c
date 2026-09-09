@@ -78,12 +78,24 @@ static bool find_kaiju_eye(const struct entity *kaiju_ent, int *row_out, int *co
 
 static void update_laser_shape(struct entity *e, int length) {
   if (length < 1) length = 1;
-  entity_clear_owned(e);
-  char *line = xmalloc((size_t)length + 1);
-  memset(line, '=', (size_t)length);
-  line[length] = '\0';
-  entity_set_owned_single_row(e, line, 0.0);
 
+  if (e->owned_shape_rows != NULL) {
+    char *row = e->owned_shape_rows[0][0];
+    size_t old_len = strlen(row);
+    if ((size_t)length != old_len) {
+      row = xrealloc(row, (size_t)length + 1);
+      if ((size_t)length > old_len) memset(row + old_len, '=', (size_t)length - old_len);
+      row[length] = '\0';
+      e->owned_shape_rows[0][0] = row;
+      entity_shape_changed(e);
+    }
+  } else {
+    char *line = xmalloc((size_t)length + 1);
+    memset(line, '=', (size_t)length);
+    line[length] = '\0';
+    entity_set_owned_single_row(e, line, 0.0);
+    entity_shape_changed(e);
+  }
   e->x = (e->vx < 0) ? e->splat_x - (length - 1) : e->splat_x;
 }
 
@@ -106,7 +118,6 @@ static void handle_castle_collision(struct scene *sc) {
   struct entity *castle_ent = entity_find_first(&sc->entities, ENT_CASTLE);
   if (kaiju_ent == NULL || castle_ent == NULL) return;
   if (!entity_glyph_overlap(kaiju_ent, castle_ent)) return;
-
   int kaiju_id = kaiju_ent->id;
   double castle_x = castle_ent->x;
   double castle_y = castle_ent->y;

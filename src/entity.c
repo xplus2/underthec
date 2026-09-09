@@ -9,6 +9,26 @@ static int round_to_int(double v) {
   return (int)(v >= 0.0 ? v + 0.5 : v - 0.5);
 }
 
+static int utf8_seq_len(unsigned char lead) {
+  if ((lead & 0x80) == 0x00) return 1;
+  if ((lead & 0xE0) == 0xC0) return 2;
+  if ((lead & 0xF0) == 0xE0) return 3;
+  if ((lead & 0xF8) == 0xF0) return 4;
+  return 1;
+}
+
+static int utf8_col_width(const char *s) {
+  int cols = 0;
+  for (int i = 0; s[i] != '\0'; cols++) i += utf8_seq_len((unsigned char)s[i]);
+  return cols;
+}
+
+static int utf8_byte_offset(const char *s, int col) {
+  int i = 0;
+  for (int c = 0; c < col && s[i] != '\0'; c++) i += utf8_seq_len((unsigned char)s[i]);
+  return i;
+}
+
 void entity_free_owned_rows(char **rows) {
   if (rows == NULL) return;
   for (int i = 0; rows[i] != NULL; i++) free(rows[i]);
@@ -143,23 +163,34 @@ ascii_rows entity_mask(const struct entity *e) {
   return e->frames[idx].mask;
 }
 
-int entity_height(const struct entity *e) {
+void entity_shape_changed(struct entity *e) {
+  e->wh_valid = false;
+}
+
+static void compute_wh(const struct entity *ce) {
+  struct entity *e = (struct entity *)ce;
   ascii_rows rows = entity_shape(e);
-  if (rows == NULL) return 0;
+  int w = 0;
   int h = 0;
-  while (rows[h] != NULL) h++;
-  return h;
+  if (rows != NULL) {
+    for (; rows[h] != NULL; h++) {
+      int len = utf8_col_width(rows[h]);
+      if (len > w) w = len;
+    }
+  }
+  e->cached_w = w;
+  e->cached_h = h;
+  e->wh_valid = true;
+}
+
+int entity_height(const struct entity *e) {
+  if (!e->wh_valid) compute_wh(e);
+  return e->cached_h;
 }
 
 int entity_width(const struct entity *e) {
-  ascii_rows rows = entity_shape(e);
-  if (rows == NULL) return 0;
-  int w = 0;
-  for (int i = 0; rows[i] != NULL; i++) {
-    int len = (int)strlen(rows[i]);
-    if (len > w) w = len;
-  }
-  return w;
+  if (!e->wh_valid) compute_wh(e);
+  return e->cached_w;
 }
 
 static const int periscope_hold_ticks[9] = {1, 4, 4, 9, 9, 9, 4, 4, 1};
@@ -177,6 +208,7 @@ static void tick_submarine(struct entity *e, int term_w) {
     } else {
       e->frame_timer = 0.0;
       e->frame_cur++;
+      e->wh_valid = false;
     }
   } else {
     e->x += e->vx;
@@ -186,15 +218,10 @@ static void tick_submarine(struct entity *e, int term_w) {
 static void tick_dolphin(struct entity *e) {
   int phase = e->age_ticks % 36;
   double dy;
-  if (phase < 14)
-    dy = -0.5;
-  else if (phase < 16)
-    dy = 0.0;
-  else if (phase < 30)
-    dy = 0.5;
-  else
-    dy = 0.0;
-
+  if (phase < 14)       dy = -0.5;
+  else if (phase < 16)  dy = 0.0;
+  else if (phase < 30)  dy = 0.5;
+  else                  dy = 0.0;
   e->x += e->vx;
   e->y += dy;
   e->age_ticks++;
@@ -203,15 +230,13 @@ static void tick_dolphin(struct entity *e) {
 static void tick_jellyfish(struct entity *e, int term_h) {
   int phase = e->age_ticks % 60;
   double dy;
-  if (phase < 20) dy = -0.15;
+  if (phase < 20)      dy = -0.15;
   else if (phase < 30) dy = 0.0;
   else if (phase < 50) dy = 0.15;
-  else dy = 0.0;
-
+  else                 dy = 0.0;
   int height = entity_height(e);
   if (e->y < 6.0) dy = 0.15;
   else if (e->y + height > term_h - 2) dy = -0.15;
-
   e->x += e->vx;
   e->y += dy;
   e->age_ticks++;
@@ -223,6 +248,7 @@ static void advance_frame(struct entity *e) {
   if (e->frame_timer >= e->frame_interval) {
     e->frame_timer -= e->frame_interval;
     e->frame_cur = (e->frame_cur + 1) % e->frame_count;
+    e->wh_valid = false;
   }
 }
 
@@ -231,44 +257,35 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
     struct entity *e = &list->items[i];
     if (e->marked_dead) continue;
     switch (e->type) {
-    case ENT_SUBMARINE:
-      tick_submarine(e, term_w);
-      break;
-    case ENT_LASER:
-    case ENT_FISHHOOK:
-    case ENT_KAIJU_TIMER:
-      break;
-    case ENT_DOLPHIN:
-      tick_dolphin(e);
-      advance_frame(e);
-      break;
-    case ENT_JELLYFISH:
-      tick_jellyfish(e, term_h);
-      advance_frame(e);
-      break;
-    case ENT_WATERLINE:
-    case ENT_CASTLE:
-    case ENT_SEAWEED:
-    case ENT_FISH:
-    case ENT_BUBBLE:
-    case ENT_SPLAT:
-    case ENT_TEETH:
-    case ENT_SHARK:
-    case ENT_SHIP:
-    case ENT_WHALE:
-    case ENT_MONSTER:
-    case ENT_BIGFISH:
-    case ENT_MESSAGE:
-    case ENT_KAIJU:
-    case ENT_SWORDFISH:
-    case ENT_RUBBLE:
-    case ENT_DUCK:
-    case ENT_SWAN:
-    case ENT_CRAB:
-      e->x += e->vx;
-      e->y += e->vy;
-      advance_frame(e);
-      break;
+      case ENT_SUBMARINE:      tick_submarine(e, term_w);         break;
+      case ENT_LASER:
+      case ENT_FISHHOOK:
+      case ENT_KAIJU_TIMER:                                       break;
+      case ENT_DOLPHIN:        tick_dolphin(e);
+                               advance_frame(e);                  break;
+      case ENT_JELLYFISH:      tick_jellyfish(e, term_h);
+                               advance_frame(e);                  break;
+      case ENT_WATERLINE:
+      case ENT_CASTLE:
+      case ENT_SEAWEED:
+      case ENT_FISH:
+      case ENT_BUBBLE:
+      case ENT_SPLAT:
+      case ENT_TEETH:
+      case ENT_SHARK:
+      case ENT_SHIP:
+      case ENT_WHALE:
+      case ENT_MONSTER:
+      case ENT_BIGFISH:
+      case ENT_MESSAGE:
+      case ENT_KAIJU:
+      case ENT_SWORDFISH:
+      case ENT_RUBBLE:
+      case ENT_DUCK:
+      case ENT_SWAN:
+      case ENT_CRAB:           e->x += e->vx;
+                               e->y += e->vy;
+                               advance_frame(e);                  break;
     }
     if (e->type == ENT_CASTLE && e->frame_cur == e->frame_count - 1) e->frame_interval = 0.0;
     if (e->die_frame >= 0) {
@@ -354,7 +371,6 @@ void entity_reap(struct entity_list *list, entity_death_fn fn, void *ctx) {
     if (write != read) list->items[write] = list->items[read];
     write++;
   }
-
   int extra = list->count - original_count;
   if (extra > 0 && write != original_count) memmove(&list->items[write], &list->items[original_count], (size_t)extra * sizeof(*list->items));
   list->count = write + extra;
@@ -406,14 +422,18 @@ bool entity_glyph_overlap(const struct entity *a, const struct entity *b) {
     const char *asrow = arows[arow];
     const char *bsrow = brows[brow];
     if (asrow == NULL || bsrow == NULL) continue;
-    int alen = (int)strlen(asrow);
-    int blen = (int)strlen(bsrow);
+    int abytes = (int)strlen(asrow);
+    int bbytes = (int)strlen(bsrow);
+    int acols = utf8_col_width(asrow);
+    int bcols = utf8_col_width(bsrow);
     for (int wx = x0; wx < x1; wx++) {
       int acol = wx - ax;
       int bcol = wx - bx;
-      if (acol < 0 || acol >= alen || bcol < 0 || bcol >= blen) continue;
-      if (cell_transparent(a, asrow, alen, acol)) continue;
-      if (cell_transparent(b, bsrow, blen, bcol)) continue;
+      if (acol < 0 || acol >= acols || bcol < 0 || bcol >= bcols) continue;
+      int aoff = utf8_byte_offset(asrow, acol);
+      int boff = utf8_byte_offset(bsrow, bcol);
+      if (cell_transparent(a, asrow, abytes, aoff)) continue;
+      if (cell_transparent(b, bsrow, bbytes, boff)) continue;
       return true;
     }
   }
@@ -452,14 +472,19 @@ void entity_draw_all(const struct entity_list *list, struct canvas *c) {
     int base_y = round_to_int(e->y);
     for (int row = 0; rows[row] != NULL; row++) {
       const char *srow = rows[row];
-      int len = (int)strlen(srow);
+      int byte_len = (int)strlen(srow);
       const char *mrow = (mrows != NULL && row < mask_height) ? mrows[row] : NULL;
       int mlen = mrow != NULL ? (int)strlen(mrow) : 0;
-      for (int col = 0; col < len; col++) {
-        if (cell_transparent(e, srow, len, col)) continue;
-        struct attr a = e->default_attr;
-        if (mrow != NULL && col < mlen && mrow[col] != ' ') a = color_from_mask_letter(mrow[col]);
-        canvas_put(c, base_x + col, base_y + row, (unsigned char)srow[col], a);
+      int col = 0;
+      for (int byte_idx = 0; byte_idx < byte_len; col++) {
+        int seq_len = utf8_seq_len((unsigned char)srow[byte_idx]);
+        if (byte_idx + seq_len > byte_len) seq_len = byte_len - byte_idx;
+        if (!cell_transparent(e, srow, byte_len, byte_idx)) {
+          struct attr a = e->default_attr;
+          if (mrow != NULL && col < mlen && mrow[col] != ' ') a = color_from_mask_letter(mrow[col]);
+          canvas_put(c, base_x + col, base_y + row, srow + byte_idx, seq_len, a);
+        }
+        byte_idx += seq_len;
       }
     }
   }

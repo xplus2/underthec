@@ -57,6 +57,9 @@ struct entity {
   int frame_cur;
   double frame_interval;
   double frame_timer;
+  int cached_w;
+  int cached_h;
+  bool wh_valid;
 
   char sentinel;
   bool trim_edges;
@@ -100,6 +103,7 @@ ascii_rows entity_shape(const struct entity *e);
 ascii_rows entity_mask(const struct entity *e);
 int entity_width(const struct entity *e);
 int entity_height(const struct entity *e);
+void entity_shape_changed(struct entity *e);
 void entity_tick_all(struct entity_list *list, int term_w, int term_h);
 void entity_collide_all(struct entity_list *list);
 bool entity_glyph_overlap(const struct entity *a, const struct entity *b);

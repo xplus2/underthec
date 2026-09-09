@@ -7,7 +7,7 @@
 static inline void *xmalloc(size_t size) {
   void *p = malloc(size);
   if (p == NULL) {
-    fprintf(stderr, "out of memory\n");
+    fputs("out of memory\n", stderr);
     exit(1);
   }
   return p;
@@ -16,7 +16,7 @@ static inline void *xmalloc(size_t size) {
 static inline void *xcalloc(size_t nmemb, size_t size) {
   void *p = calloc(nmemb, size);
   if (p == NULL) {
-    fprintf(stderr, "out of memory\n");
+    fputs("out of memory\n", stderr);
     exit(1);
   }
   return p;
@@ -25,7 +25,7 @@ static inline void *xcalloc(size_t nmemb, size_t size) {
 static inline void *xrealloc(void *ptr, size_t size) {
   void *p = realloc(ptr, size);
   if (p == NULL) {
-    fprintf(stderr, "out of memory\n");
+    fputs("out of memory\n", stderr);
     exit(1);
   }
   return p;

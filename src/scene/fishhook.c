@@ -14,27 +14,66 @@ static int fishhook_body_height(void) {
   return n;
 }
 
+static void grow_fishhook_rope(struct entity *e, int hook_h) {
+  char **rows = e->owned_shape_rows[0];
+  int old_total = 0;
+  while (rows[old_total] != NULL) old_total++;
+  int old_depth = old_total - hook_h;
+  rows = xrealloc(rows, (size_t)(old_total + 2) * sizeof(*rows));
+  memmove(&rows[old_depth + 1], &rows[old_depth], (size_t)(hook_h + 1) * sizeof(*rows));
+  char *seg = xmalloc(8);
+  memcpy(seg, "      |", 8);
+  rows[old_depth] = seg;
+  e->owned_shape_rows[0] = rows;
+  e->owned_frame_table[0].shape = (ascii_rows)rows;
+}
+
+static void shrink_fishhook_rope(struct entity *e, int hook_h) {
+  char **rows = e->owned_shape_rows[0];
+  int old_total = 0;
+  while (rows[old_total] != NULL) old_total++;
+  int old_depth = old_total - hook_h;
+  free(rows[old_depth - 1]);
+  memmove(&rows[old_depth - 1], &rows[old_depth], (size_t)(hook_h + 1) * sizeof(*rows));
+}
+
 static void update_fishhook_shape(struct entity *e, int depth) {
   if (depth < 0) depth = 0;
-
   int hook_h = fishhook_body_height();
-  int total = depth + hook_h;
 
-  char **rows = xmalloc((size_t)(total + 1) * sizeof(*rows));
-  for (int i = 0; i < depth; i++) {
-    rows[i] = xmalloc(8);
-    memcpy(rows[i], "      |", 8);
+  if (e->owned_shape_rows == NULL) {
+    int total = depth + hook_h;
+    char **rows = xmalloc((size_t)(total + 1) * sizeof(*rows));
+    for (int i = 0; i < depth; i++) {
+      rows[i] = xmalloc(8);
+      memcpy(rows[i], "      |", 8);
+    }
+    for (int i = 0; i < hook_h; i++) {
+      size_t len = strlen(fishhook_image[i]);
+      rows[depth + i] = xmalloc(len + 1);
+      memcpy(rows[depth + i], fishhook_image[i], len + 1);
+    }
+    rows[total] = NULL;
+    char ***frame_list = xmalloc(1 * sizeof(*frame_list));
+    frame_list[0] = rows;
+    entity_set_owned_shape_frames(e, frame_list, 1, 0.0);
+    entity_shape_changed(e);
+    return;
   }
-  for (int i = 0; i < hook_h; i++) {
-    size_t len = strlen(fishhook_image[i]);
-    rows[depth + i] = xmalloc(len + 1);
-    memcpy(rows[depth + i], fishhook_image[i], len + 1);
+
+  char **rows = e->owned_shape_rows[0];
+  int total = 0;
+  while (rows[total] != NULL) total++;
+  int cur_depth = total - hook_h;
+  while (cur_depth < depth) {
+    grow_fishhook_rope(e, hook_h);
+    cur_depth++;
   }
-  rows[total] = NULL;
-  entity_clear_owned(e);
-  char ***frame_list = xmalloc(1 * sizeof(*frame_list));
-  frame_list[0] = rows;
-  entity_set_owned_shape_frames(e, frame_list, 1, 0.0);
+  while (cur_depth > depth) {
+    shrink_fishhook_rope(e, hook_h);
+    cur_depth--;
+  }
+  if (total != depth + hook_h) entity_shape_changed(e);
 }
 
 void spawn_fishhook(struct scene *sc, int w, int h) {
@@ -68,6 +107,7 @@ void fishhook_tick(struct scene *sc, int term_h) {
       barb.frames = &barb_pair;
       barb.frame_count = 1;
       barb.frame_cur = 0;
+      barb.wh_valid = false;
       barb.y = hook->y + hook->splat_x;
       for (int j = 0; j < sc->entities.count; j++) {
         struct entity *candidate = &sc->entities.items[j];
