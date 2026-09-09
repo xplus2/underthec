@@ -31,7 +31,7 @@ static void append_bounded(char *dst, size_t dst_cap, size_t *pos, const char *s
 }
 
 static void write_parts(FILE *stream, const char *const *parts, size_t count) {
-  char buf[512];
+  char buf[512] = {0};
   size_t pos = 0;
   for (size_t i = 0; i < count; i++) append_bounded(buf, sizeof(buf), &pos, parts[i]);
   fwrite(buf, 1, pos, stream);
