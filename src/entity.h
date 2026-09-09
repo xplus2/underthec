@@ -104,6 +104,7 @@ void entity_clear_owned(struct entity *e);
 ascii_rows entity_shape(const struct entity *e);
 ascii_rows entity_mask(const struct entity *e);
 int entity_width(struct entity *e);
+int entity_utf8_display_width(const char *s);
 int entity_height(struct entity *e);
 void entity_shape_changed(struct entity *e);
 void entity_tick_all(struct entity_list *list, int term_w, int term_h);

@@ -7,6 +7,7 @@ struct cell {
   char glyph[5];
   enum color col;
   bool bold;
+  bool cont; /* 2nd multibyte */
 };
 
 struct canvas {
@@ -20,6 +21,6 @@ void canvas_init(struct canvas *c);
 void canvas_free(struct canvas *c);
 void canvas_resize(struct canvas *c, int width, int height);
 void canvas_clear(struct canvas *c);
-void canvas_put(struct canvas *c, int x, int y, const char *glyph, int glyph_len, struct attr a);
+void canvas_put(struct canvas *c, int x, int y, const char *glyph, int glyph_len, struct attr a, int cols);
 
 #endif

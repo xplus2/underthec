@@ -31,18 +31,27 @@ void canvas_resize(struct canvas *c, int width, int height) {
 }
 
 void canvas_clear(struct canvas *c) {
-  struct cell blank = {{' ', '\0'}, COL_DEFAULT, false};
+  struct cell blank = {{' ', '\0'}, COL_DEFAULT, false, false};
   int n = c->width * c->height;
   for (int i = 0; i < n; i++) c->cells[i] = blank;
 }
 
-void canvas_put(struct canvas *c, int x, int y, const char *glyph, int glyph_len, struct attr a) {
+void canvas_put(struct canvas *c, int x, int y, const char *glyph, int glyph_len, struct attr a, int cols) {
   if (x < 0 || y < 0 || x >= c->width || y >= c->height) return;
   if (glyph_len < 1) glyph_len = 1;
   if (glyph_len > 4) glyph_len = 4;
+  if (cols < 1) cols = 1;
   struct cell *cell = &c->cells[(size_t)y * (size_t)c->width + (size_t)x];
   memcpy(cell->glyph, glyph, (size_t)glyph_len);
   cell->glyph[glyph_len] = '\0';
   cell->col = a.col;
   cell->bold = a.bold;
+  cell->cont = false;
+  if (cols >= 2 && x + 1 < c->width) {
+    struct cell *next = &c->cells[(size_t)y * (size_t)c->width + (size_t)(x + 1)];
+    next->glyph[0] = '\0';
+    next->col = a.col;
+    next->bold = a.bold;
+    next->cont = true;
+  }
 }

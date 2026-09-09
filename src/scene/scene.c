@@ -76,7 +76,7 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
     }
   }
 
-  if (rng_int(300) == 0) spawn_jellyfish(sc, term_w, term_h);
+  if (rng_int(1200) == 0) spawn_jellyfish(sc, term_w, term_h);
 
   kaiju_tick(sc, term_w);
   fishhook_tick(sc, term_h);

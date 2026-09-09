@@ -172,7 +172,7 @@ void add_message(struct scene *sc, int w, int h) {
   if (rows == 0) return;
   int block_w = 0;
   for (int i = 0; i < rows; i++) {
-    int len = (int)strlen(sc->message_rows[i]);
+    int len = entity_utf8_display_width(sc->message_rows[i]);
     if (len > block_w) block_w = len;
   }
 

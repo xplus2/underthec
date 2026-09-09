@@ -58,6 +58,10 @@ static void write_cursor_pos(int row, int col) {
   fwrite(buf, 1, (size_t)(p - buf), stdout);
 }
 
+static bool cells_equal(const struct cell *a, const struct cell *b) {
+  return a->cont == b->cont && a->col == b->col && a->bold == b->bold && strcmp(a->glyph, b->glyph) == 0;
+}
+
 void term_present(const struct canvas *c) {
   bool mono = !term_has_color();
   if (!prev_valid || prev.width != c->width || prev.height != c->height) {
@@ -72,18 +76,25 @@ void term_present(const struct canvas *c) {
     while (x < c->width) {
       const struct cell *cur = &c->cells[(size_t)y * (size_t)c->width + (size_t)x];
       struct cell *old = &prev.cells[(size_t)y * (size_t)c->width + (size_t)x];
-      if (strcmp(cur->glyph, old->glyph) == 0 && cur->col == old->col && cur->bold == old->bold) {
+      if (cells_equal(cur, old)) {
         x++;
         continue;
       }
-      write_cursor_pos(y + 1, x + 1);
+      int start = (cur->cont && x > 0) ? x - 1 : x;
+      write_cursor_pos(y + 1, start + 1);
+      x = start;
       enum color last_col = COL_DEFAULT;
       bool last_bold = false;
       bool first = true;
       while (x < c->width) {
         cur = &c->cells[(size_t)y * (size_t)c->width + (size_t)x];
         old = &prev.cells[(size_t)y * (size_t)c->width + (size_t)x];
-        if (strcmp(cur->glyph, old->glyph) == 0 && cur->col == old->col && cur->bold == old->bold) break;
+        if (cur->cont) {
+          *old = *cur;
+          x++;
+          continue;
+        }
+        if (x != start && cells_equal(cur, old)) break;
         if (first || cur->col != last_col || cur->bold != last_bold) {
           write_sgr(cur->col, cur->bold, mono);
           last_col = cur->col;
