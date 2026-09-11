@@ -9,13 +9,13 @@ This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquariu
 ## Usage
 
 ```
-underthec [-c] [-s] [-t] [-m text|-] [-M color] [-a definition]
+underthec [-c [1.0|1.1]] [-s] [-t] [-m text|-] [-M color] [-a definition]
 underthec {-h|-v}
 ```
 
 | Option                               | Description                                |
 |--------------------------------------|--------------------------------------------|
-| `-c`, `--classic`                    | asciiquarium 1.0 mode                      |
+| `-c`, `--classic [1.0\|1.1]`         | asciiquarium 1.0 / 1.1 modes               |
 | `-s`, `--screensaver`                | exit on any keypress                       |
 | `-t`, `--transparent`                | transparent background                     |
 | `-m`, `--message <text>`             | background `text`. `-` to read from stdin  |
@@ -23,6 +23,12 @@ underthec {-h|-v}
 | `-a`, `--aquatic-life <definition>`  | select which creatures show up (see below) |
 | `-h`, `--help`                       | show usage                                 |
 | `-v`, `--version`                    | show version                               |
+
+### Classic mode `-c`/`--classic`
+- `-c 1.0` (or bare `-c`): original 1.0 fish/monster look
+- `-c 1.1`: upstream 1.1 fish/monster look, restricted to upstream's species
+
+Not combinable with `-a`.
 
 ### Text colors `-M`|`--message-color`
 > Valid text colors: `red`, `green`, `blue`, `yellow`, `magenta`, `cyan`, `white`, `black`.

@@ -39,7 +39,8 @@ static void write_parts(FILE *stream, const char *const *parts, size_t count) {
 
 static void print_help(const char *prog) {
   write_parts(stdout, (const char *[]){"usage: ", prog, " [options]\n\n"}, 3);
-  fputs("  -c, --classic         classic mode (asciiquarium 1.0)\n"
+  fputs("  -c, --classic [1.0|1.1]\n"
+        "                        classic mode, no arg = 1.0\n"
         "  -m, --message <text>  bg text/ascii art ('-' for stdin)\n"
         "  -M, --message-color <color>\n"
         "                        -m text color (default: blue)\n"
@@ -186,7 +187,9 @@ static int split_and_trim_lines(char *buf, char ***out_rows) {
 }
 
 int main(int argc, char **argv) {
-  bool classic = false;
+  bool c_flag = false;
+  bool a_flag = false;
+  int classic_ver = 0; /* 0=off, 1=1.0, 2=1.1 */
   bool screensaver = false;
   bool transparent = false;
   const char *message_arg = NULL;
@@ -196,8 +199,15 @@ int main(int argc, char **argv) {
   while (i < argc) {
     const char *a = argv[i];
     if (strcmp(a, "-c") == 0 || strcmp(a, "--classic") == 0) {
-      classic = true;
+      c_flag = true;
+      classic_ver = 1;
       i++;
+      if (i < argc && strcmp(argv[i], "1.1") == 0) {
+        classic_ver = 2;
+        i++;
+      } else if (i < argc && strcmp(argv[i], "1.0") == 0) {
+        i++;
+      }
     } else if (strcmp(a, "-s") == 0 || strcmp(a, "--screensaver") == 0) {
       screensaver = true;
       i++;
@@ -208,7 +218,12 @@ int main(int argc, char **argv) {
       print_help(argv[0]);
       return 0;
     } else if (strcmp(a, "-v") == 0 || strcmp(a, "--version") == 0) {
-      write_parts(stdout, (const char *[]){TOOL_NAME, " ", TOOL_VERSION, "\n"}, 4);
+      write_parts(stdout, (const char *[]){
+        TOOL_NAME, " v", TOOL_VERSION, "\n",
+        "License GPLv2: GNU GPL version 2 <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>\n",
+        "This is free software; you are free to change and redistribute it.\n",
+        "There is NO WARRANTY, to the extent permitted by law.\n"
+      }, 7);
       return 0;
     } else if (strcmp(a, "-m") == 0 || strcmp(a, "--message") == 0) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
@@ -223,6 +238,7 @@ int main(int argc, char **argv) {
       message_color_arg = argv[i + 1];
       i += 2;
     } else if (strcmp(a, "-a") == 0 || strcmp(a, "--aquatic-life") == 0) {
+      a_flag = true;
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       char errbuf[128];
       if (!aquatic_life_parse(argv[i + 1], &aquatic, errbuf, sizeof errbuf)) {
@@ -235,6 +251,21 @@ int main(int argc, char **argv) {
       print_help(argv[0]);
       return 2;
     }
+  }
+  if (c_flag && a_flag) {
+    write_parts(stderr, (const char *[]){argv[0], ": -c/--classic and -a/--aquatic-life are mutually exclusive\n"}, 2);
+    return 2;
+  }
+  bool classic = (classic_ver == 1);
+  if (classic_ver == 2) {
+    aquatic = (struct aquatic_life){
+        .fish_count = -1,
+        .ship = true,
+        .whale = true,
+        .monster = true,
+        .bigfish = true,
+        .shark = true,
+    };
   }
   char *message_buf = NULL;
   char **message_rows = NULL;
