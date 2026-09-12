@@ -2,6 +2,6 @@
 #define UNDERTHEC_VERSION_H
 
 #define TOOL_NAME "underthec"
-#define TOOL_VERSION "0.4.3"
+#define TOOL_VERSION "0.4.4"
 
 #endif

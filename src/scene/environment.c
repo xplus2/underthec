@@ -122,8 +122,10 @@ void add_seaweed(struct scene *sc, int w, int h) {
 
   int castle_left = w - CASTLE_X_OFFSET;
   int castle_right = castle_left + CASTLE_WIDTH - 1;
-  int left_lo = 1, left_hi = castle_left - 1;
-  int right_lo = castle_right + 1, right_hi = w - 2;
+  int left_lo = 1;
+  int left_hi = castle_left - 1;
+  int right_lo = castle_right + 1;
+  int right_hi = w - 2;
   int left_span = left_hi >= left_lo ? left_hi - left_lo + 1 : 0;
   int right_span = right_hi >= right_lo ? right_hi - right_lo + 1 : 0;
   int total_span = left_span + right_span;
