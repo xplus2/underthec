@@ -39,24 +39,34 @@ static void write_parts(FILE *stream, const char *const *parts, size_t count) {
 
 static void print_help(const char *prog) {
   write_parts(stdout, (const char *[]){"usage: ", prog, " [options]\n\n"}, 3);
-  fputs("  -c, --classic [1.0|1.1]\n"
-        "                        classic mode, no arg = 1.0\n"
-        "  -m, --message <text>  bg text/ascii art ('-' for stdin)\n"
-        "  -M, --message-color <color>\n"
-        "                        -m text color (default: blue)\n"
-        "                        red,green,blue,yellow,magenta,cyan,white,black\n"
-        "                        capitalized first letter=bold\n"
-        "  -a, --aquatic-life <definition>\n"
-        "                        comma-separated, default: all on, fish=auto\n"
-        "                        fish=<N|auto>,ducks,dolphins,ship,swan,kaiju,crab,shark,\n"
-        "                        submarine,whale,jellyfish,monster,bigfish,swordfish\n"
-        "  -s, --screensaver     exit on any keypress\n"
-        "  -t, --transparent     transparent background (default: opaque black)\n"
-        "  -p, --pace <pace>     speed multiplier, 0.01-10 (default: 1)\n"
-        "  -h, --help            show this help\n"
-        "  -v, --version         show version\n\n"
-        "keys while running: q quit, r redraw, p pause, t toggle transparency\n",
-        stdout);
+  fputs(
+    "  -a, --aquatic-life <definition>\n"
+    "                        comma-separated, default: all on, fish=auto\n"
+    "                        fish=<N|auto>,ducks,dolphins,ship,swan,kaiju,crab,shark,\n"
+    "                        submarine,whale,jellyfish,monster,bigfish,swordfish\n"
+    "  -c, --classic [1.0|1.1]\n"
+    "                        classic mode, no arg = 1.0\n"
+    "  -m, --message <text>  bg text/ascii art ('-' for stdin)\n"
+    "  -M, --message-color <color>\n"
+    "                        -m text color (default: blue)\n"
+    "                        red,green,blue,yellow,magenta,cyan,white,black\n"
+    "                        capitalized first letter=bold\n"
+    "  -p, --pace <pace>     speed multiplier, 0.01-10 (default: 1)\n"
+    "  -s, --screensaver     exit on any keypress\n"
+    "  -t, --transparent     transparent background (default: opaque black)\n"
+    "  -h, --help            show this help\n"
+    "  -v, --version         show version\n\n"
+    "keys while running: q quit, r redraw, p pause, t toggle transparency\n\n"
+    "environment variables:\n"
+    "  UNDERTHEC_FISH=auto|number       like -a's fish=\n"
+    "  UNDERTHEC_AQUATIC_LIFE=<def>     like -a, except for fish=\n"
+    "  UNDERTHEC_CLASSIC=1.0|1.1        like -c\n"
+    "  UNDERTHEC_MESSAGE=<text>         like -m\n"
+    "  UNDERTHEC_MESSAGE_COLOR=<color>  like -M\n"
+    "  UNDERTHEC_PACE=<pace>            like -p\n",
+    "  UNDERTHEC_SCREENSAVER=0|1        like -s\n"
+    "  UNDERTHEC_TRANSPARENT=0|1        like -t\n"
+    stdout);
 }
 
 static void set_errbuf(char *errbuf, size_t errbuf_len, const char *const *parts, size_t count) {
@@ -113,8 +123,22 @@ static bool aquatic_life_set_flag(struct aquatic_life *out, const char *name) {
   return false;
 }
 
-static bool aquatic_life_parse(const char *definition, struct aquatic_life *out, char *errbuf, size_t errbuf_len) {
-  out->fish_count = -1;
+static bool parse_fish_count(const char *val, int *out, char *errbuf, size_t errbuf_len) {
+  if (strcmp(val, "auto") == 0) {
+    *out = -1;
+    return true;
+  }
+  char *endptr = NULL;
+  long n = strtol(val, &endptr, 10);
+  if (val[0] == '\0' || *endptr != '\0' || n < 0 || n > 100000) {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid fish count '", val, "'"}, 3);
+    return false;
+  }
+  *out = (int)n;
+  return true;
+}
+
+static bool aquatic_life_parse(const char *definition, struct aquatic_life *out, bool allow_fish, bool *fish_set, char *errbuf, size_t errbuf_len) {
   for (size_t i = 0; i < AQUATIC_LIFE_FLAG_COUNT; i++) *aquatic_life_field(out, aquatic_life_flags[i].offset) = false;
   char *buf = owned_copy(definition);
   size_t len = strlen(buf);
@@ -127,16 +151,13 @@ static bool aquatic_life_parse(const char *definition, struct aquatic_life *out,
       set_errbuf(errbuf, errbuf_len, (const char *[]){"empty entry in aquatic-life definition"}, 1);
       ok = false;
     } else if (strncmp(token, "fish=", 5) == 0) {
-      const char *val = token + 5;
-      if (strcmp(val, "auto") == 0) {
-        out->fish_count = -1;
+      if (!allow_fish) {
+        set_errbuf(errbuf, errbuf_len, (const char *[]){"fish must be set via UNDERTHEC_FISH, not here"}, 1);
+        ok = false;
+      } else if (!parse_fish_count(token + 5, &out->fish_count, errbuf, errbuf_len)) {
+        ok = false;
       } else {
-        char *endptr = NULL;
-        long n = strtol(val, &endptr, 10);
-        if (val[0] == '\0' || *endptr != '\0' || n < 0 || n > 100000) {
-          set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid fish count '", val, "'"}, 3);
-          ok = false;
-        } else out->fish_count = (int)n;
+        *fish_set = true;
       }
     } else if (!aquatic_life_set_flag(out, token)) {
       set_errbuf(errbuf, errbuf_len, (const char *[]){"unknown aquatic-life entry '", token, "'"}, 3);
@@ -146,6 +167,37 @@ static bool aquatic_life_parse(const char *definition, struct aquatic_life *out,
   }
   free(buf);
   return ok;
+}
+
+static int err_env_bad(const char *prog, const char *name, const char *errbuf) {
+  write_parts(stderr, (const char *[]){prog, ": ", errbuf, " for ", name, "\n"}, 6);
+  return 2;
+}
+
+static bool parse_bool_env(const char *val, bool *out, char *errbuf, size_t errbuf_len) {
+  if (strcmp(val, "0") == 0) {
+    *out = false;
+    return true;
+  }
+  if (strcmp(val, "1") == 0) {
+    *out = true;
+    return true;
+  }
+  set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid value '", val, "', expected 0 or 1"}, 3);
+  return false;
+}
+
+static bool parse_classic_env(const char *val, int *out_ver, char *errbuf, size_t errbuf_len) {
+  if (val[0] == '\0' || strcmp(val, "1.0") == 0) {
+    *out_ver = 1;
+    return true;
+  }
+  if (strcmp(val, "1.1") == 0) {
+    *out_ver = 2;
+    return true;
+  }
+  set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid value '", val, "', expected 1.0 or 1.1"}, 3);
+  return false;
 }
 
 static bool parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len) {
@@ -221,8 +273,12 @@ static int split_and_trim_lines(char *buf, char ***out_rows) {
 }
 
 int main(int argc, char **argv) {
-  bool c_flag = false;
-  bool a_flag = false;
+  bool c_given = false;
+  bool a_given = false;
+  bool t_given = false;
+  bool s_given = false;
+  bool p_given = false;
+  bool fish_given = false;
   int classic_ver = 0; /* 0=off, 1=1.0, 2=1.1 */
   bool screensaver = false;
   bool transparent = false;
@@ -234,7 +290,7 @@ int main(int argc, char **argv) {
   while (i < argc) {
     const char *a = argv[i];
     if (strcmp(a, "-c") == 0 || strcmp(a, "--classic") == 0) {
-      c_flag = true;
+      c_given = true;
       classic_ver = 1;
       i++;
       if (i < argc && strcmp(argv[i], "1.1") == 0) {
@@ -245,9 +301,11 @@ int main(int argc, char **argv) {
       }
     } else if (strcmp(a, "-s") == 0 || strcmp(a, "--screensaver") == 0) {
       screensaver = true;
+      s_given = true;
       i++;
     } else if (strcmp(a, "-t") == 0 || strcmp(a, "--transparent") == 0) {
       transparent = true;
+      t_given = true;
       i++;
     } else if (strcmp(a, "-p") == 0 || strcmp(a, "--pace") == 0) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
@@ -256,6 +314,7 @@ int main(int argc, char **argv) {
         write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
         return 2;
       }
+      p_given = true;
       i += 2;
     } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
       print_help(argv[0]);
@@ -281,13 +340,15 @@ int main(int argc, char **argv) {
       message_color_arg = argv[i + 1];
       i += 2;
     } else if (strcmp(a, "-a") == 0 || strcmp(a, "--aquatic-life") == 0) {
-      a_flag = true;
+      a_given = true;
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       char errbuf[128];
-      if (!aquatic_life_parse(argv[i + 1], &aquatic, errbuf, sizeof errbuf)) {
+      bool fish_set = false;
+      if (!aquatic_life_parse(argv[i + 1], &aquatic, true, &fish_set, errbuf, sizeof errbuf)) {
         write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
         return 2;
       }
+      if (fish_set) fish_given = true;
       i += 2;
     } else {
       write_parts(stderr, (const char *[]){argv[0], ": unknown option '", a, "'\n"}, 4);
@@ -295,6 +356,83 @@ int main(int argc, char **argv) {
       return 2;
     }
   }
+
+  bool c_flag = c_given;
+  bool a_flag = a_given;
+  if (!t_given) {
+    const char *env_val = getenv("UNDERTHEC_TRANSPARENT");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_bool_env(env_val, &transparent, errbuf, sizeof errbuf)) {
+        return err_env_bad(argv[0], "UNDERTHEC_TRANSPARENT", errbuf);
+      }
+    }
+  }
+  if (!s_given) {
+    const char *env_val = getenv("UNDERTHEC_SCREENSAVER");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_bool_env(env_val, &screensaver, errbuf, sizeof errbuf)) {
+        return err_env_bad(argv[0], "UNDERTHEC_SCREENSAVER", errbuf);
+      }
+    }
+  }
+  if (!p_given) {
+    const char *env_val = getenv("UNDERTHEC_PACE");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_pace(env_val, &pace, errbuf, sizeof errbuf)) {
+        return err_env_bad(argv[0], "UNDERTHEC_PACE", errbuf);
+      }
+    }
+  }
+  if (message_arg == NULL) {
+    const char *env_val = getenv("UNDERTHEC_MESSAGE");
+    if (env_val != NULL) message_arg = env_val;
+  }
+  if (message_color_arg == NULL) {
+    const char *env_val = getenv("UNDERTHEC_MESSAGE_COLOR");
+    if (env_val != NULL) {
+      if (!color_name_valid(env_val)) {
+        char errbuf[128];
+        set_errbuf(errbuf, sizeof errbuf, (const char *[]){"invalid color '", env_val, "'"}, 3);
+        return err_env_bad(argv[0], "UNDERTHEC_MESSAGE_COLOR", errbuf);
+      }
+      message_color_arg = env_val;
+    }
+  }
+  if (!fish_given) {
+    const char *env_val = getenv("UNDERTHEC_FISH");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_fish_count(env_val, &aquatic.fish_count, errbuf, sizeof errbuf)) {
+        return err_env_bad(argv[0], "UNDERTHEC_FISH", errbuf);
+      }
+      a_flag = true;
+    }
+  }
+  if (!a_given) {
+    const char *env_val = getenv("UNDERTHEC_AQUATIC_LIFE");
+    if (env_val != NULL) {
+      char errbuf[128];
+      bool fish_set = false;
+      if (!aquatic_life_parse(env_val, &aquatic, false, &fish_set, errbuf, sizeof errbuf)) {
+        return err_env_bad(argv[0], "UNDERTHEC_AQUATIC_LIFE", errbuf);
+      }
+      a_flag = true;
+    }
+  }
+  if (!c_given) {
+    const char *env_val = getenv("UNDERTHEC_CLASSIC");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_classic_env(env_val, &classic_ver, errbuf, sizeof errbuf)) {
+        return err_env_bad(argv[0], "UNDERTHEC_CLASSIC", errbuf);
+      }
+      c_flag = true;
+    }
+  }
+
   if (c_flag && a_flag) {
     write_parts(stderr, (const char *[]){argv[0], ": -c/--classic and -a/--aquatic-life are mutually exclusive\n"}, 2);
     return 2;

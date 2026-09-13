@@ -1,4 +1,4 @@
-# Under The C
+# Asciiquarium - Under The C
 
 Asciiquarium is an aquarium/C animation in ASCII art.
 
@@ -15,13 +15,13 @@ underthec {-h|-v}
 
 | Option                               | Description                                |
 |--------------------------------------|--------------------------------------------|
+| `-a`, `--aquatic-life <definition>`  | select which creatures show up (see below) |
 | `-c`, `--classic [1.0\|1.1]`         | asciiquarium 1.0 / 1.1 modes               |
-| `-s`, `--screensaver`                | exit on any keypress                       |
-| `-t`, `--transparent`                | transparent background                     |
-| `-p`, `--pace <pace>`                | speed multiplier, 0.01-10 (default: 1)     |
 | `-m`, `--message <text>`             | background `text`. `-` to read from stdin  |
 | `-M`, `--message-color <color>`      | `-m`'s text color (see below)              |
-| `-a`, `--aquatic-life <definition>`  | select which creatures show up (see below) |
+| `-p`, `--pace <pace>`                | speed multiplier, 0.01-10 (default: 1)     |
+| `-s`, `--screensaver`                | exit on any keypress                       |
+| `-t`, `--transparent`                | transparent background                     |
 | `-h`, `--help`                       | show usage                                 |
 | `-v`, `--version`                    | show version                               |
 
@@ -44,6 +44,20 @@ Define what's going on in your asciiquarium. It takes a comma-separated definiti
 
 Default (no `-a`): every flag on, `fish=auto`. Example: `-a fish=10,jellyfish,dolphins`
 
+### Environment variables
+Each mirrors a command-line option.
+If both an env var and its cmdline option are given, the cmdline option wins.
+
+| Variable                          | Mirrors           |
+|-----------------------------------|-------------------|
+| `UNDERTHEC_FISH=auto\|number`     | `fish=` from `-a` |
+| `UNDERTHEC_AQUATIC_LIFE=<def>`    | `-a`, except fish |
+| `UNDERTHEC_CLASSIC=1.0\|1.1`      | `-c`              |
+| `UNDERTHEC_MESSAGE=<text>`        | `-m`              |
+| `UNDERTHEC_MESSAGE_COLOR=<color>` | `-M`              |
+| `UNDERTHEC_PACE=<pace>`           | `-p`              |
+| `UNDERTHEC_SCREENSAVER=0\|1`      | `-s`              |
+| `UNDERTHEC_TRANSPARENT=0\|1`      | `-t`              |
 
 ### Key bindings
 
