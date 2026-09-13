@@ -63,9 +63,9 @@ static void print_help(const char *prog) {
     "  UNDERTHEC_CLASSIC=1.0|1.1        like -c\n"
     "  UNDERTHEC_MESSAGE=<text>         like -m\n"
     "  UNDERTHEC_MESSAGE_COLOR=<color>  like -M\n"
-    "  UNDERTHEC_PACE=<pace>            like -p\n",
+    "  UNDERTHEC_PACE=<pace>            like -p\n"
     "  UNDERTHEC_SCREENSAVER=0|1        like -s\n"
-    "  UNDERTHEC_TRANSPARENT=0|1        like -t\n"
+    "  UNDERTHEC_TRANSPARENT=0|1        like -t\n",
     stdout);
 }
 
