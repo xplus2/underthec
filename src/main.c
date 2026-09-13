@@ -52,6 +52,7 @@ static void print_help(const char *prog) {
         "                        submarine,whale,jellyfish,monster,bigfish,swordfish\n"
         "  -s, --screensaver     exit on any keypress\n"
         "  -t, --transparent     transparent background (default: opaque black)\n"
+        "  -p, --pace <pace>     speed multiplier, 0.01-10 (default: 1)\n"
         "  -h, --help            show this help\n"
         "  -v, --version         show version\n\n"
         "keys while running: q quit, r redraw, p pause, t toggle transparency\n",
@@ -147,6 +148,39 @@ static bool aquatic_life_parse(const char *definition, struct aquatic_life *out,
   return ok;
 }
 
+static bool parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len) {
+  size_t dot_count = 0;
+  for (const char *p = s; *p != '\0'; p++) {
+    if (*p == '.') {
+      dot_count++;
+      if (dot_count > 1) {
+        set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid pace '", s, "'"}, 3);
+        return false;
+      }
+    } else if (*p < '0' || *p > '9') {
+      set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid pace '", s, "'"}, 3);
+      return false;
+    }
+  }
+  const char *dot = strchr(s, '.');
+  if (dot != NULL && strlen(dot + 1) > 2) {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"pace '", s, "' has more than 2 decimal digits"}, 3);
+    return false;
+  }
+  char *endptr = NULL;
+  double val = strtod(s, &endptr);
+  if (s[0] == '\0' || *endptr != '\0') {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid pace '", s, "'"}, 3);
+    return false;
+  }
+  if (val < 0.01 - 1e-9 || val > 10.0 + 1e-9) {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"pace '", s, "' out of range 0.01-10"}, 3);
+    return false;
+  }
+  *out = val;
+  return true;
+}
+
 static char *read_all_stdin(void) {
   size_t cap = 4096;
   size_t len = 0;
@@ -192,6 +226,7 @@ int main(int argc, char **argv) {
   int classic_ver = 0; /* 0=off, 1=1.0, 2=1.1 */
   bool screensaver = false;
   bool transparent = false;
+  double pace = 1.0;
   const char *message_arg = NULL;
   const char *message_color_arg = NULL;
   struct aquatic_life aquatic = aquatic_life_default();
@@ -214,6 +249,14 @@ int main(int argc, char **argv) {
     } else if (strcmp(a, "-t") == 0 || strcmp(a, "--transparent") == 0) {
       transparent = true;
       i++;
+    } else if (strcmp(a, "-p") == 0 || strcmp(a, "--pace") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      char errbuf[128];
+      if (!parse_pace(argv[i + 1], &pace, errbuf, sizeof errbuf)) {
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
+        return 2;
+      }
+      i += 2;
     } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
       print_help(argv[0]);
       return 0;
@@ -295,6 +338,7 @@ int main(int argc, char **argv) {
   int last_w = -1;
   int last_h = -1;
   bool paused = false;
+  double tick_accum = 0.0;
   while (!g_should_quit) {
     int w;
     int h;
@@ -314,7 +358,13 @@ int main(int argc, char **argv) {
       transparent = !transparent;
       term_set_transparent(transparent);
     }
-    if (!paused)    scene_tick(&scene, w, h);
+    if (!paused) {
+      tick_accum += pace;
+      while (tick_accum >= 1.0) {
+        scene_tick(&scene, w, h);
+        tick_accum -= 1.0;
+      }
+    }
     canvas_clear(&canvas);
     scene_draw(&scene, &canvas);
     term_present(&canvas);

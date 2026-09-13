@@ -9,7 +9,7 @@ This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquariu
 ## Usage
 
 ```
-underthec [-c [1.0|1.1]] [-s] [-t] [-m text|-] [-M color] [-a definition]
+underthec [-c [1.0|1.1]] [-s] [-t] [-p pace] [-m text|-] [-M color] [-a definition]
 underthec {-h|-v}
 ```
 
@@ -18,6 +18,7 @@ underthec {-h|-v}
 | `-c`, `--classic [1.0\|1.1]`         | asciiquarium 1.0 / 1.1 modes               |
 | `-s`, `--screensaver`                | exit on any keypress                       |
 | `-t`, `--transparent`                | transparent background                     |
+| `-p`, `--pace <pace>`                | speed multiplier, 0.01-10 (default: 1)     |
 | `-m`, `--message <text>`             | background `text`. `-` to read from stdin  |
 | `-M`, `--message-color <color>`      | `-m`'s text color (see below)              |
 | `-a`, `--aquatic-life <definition>`  | select which creatures show up (see below) |
