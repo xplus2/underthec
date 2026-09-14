@@ -22,6 +22,14 @@ struct aquatic_life {
   bool crab;
 };
 
+enum message_position {
+  MSG_POS_MIDDLE,
+  MSG_POS_CENTER,
+  MSG_POS_MARQUEE,
+  MSG_POS_SWIM,
+  MSG_POS_EVENT
+};
+
 struct scene {
   struct entity_list entities;
   bool classic_mode;
@@ -29,6 +37,7 @@ struct scene {
   char **message_rows;
   struct sprite_pair message_frame;
   struct attr message_attr;
+  enum message_position message_position;
   int castle_hidden_by;
 };
 
@@ -38,6 +47,7 @@ void scene_reset(struct scene *sc, int term_w, int term_h);
 void scene_tick(struct scene *sc, int term_w, int term_h);
 void scene_set_message(struct scene *sc, const char *const *rows, int row_count);
 void scene_set_message_color(struct scene *sc, struct attr attr);
+void scene_set_message_position(struct scene *sc, enum message_position pos);
 void scene_draw(const struct scene *sc, struct canvas *c);
 
 #endif

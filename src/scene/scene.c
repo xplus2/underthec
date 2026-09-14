@@ -28,6 +28,7 @@ static void on_death(const struct entity *dead, void *ctx) {
     case DEATH_RANDOM_OBJECT:
     case DEATH_SHARK:               schedule_random_object_return(sctx->sc);         break;
     case DEATH_ADD_RANDOM_OBJECT:   spawn_random_object(sctx->sc, sctx->w, sctx->h); break;
+    case DEATH_ADD_MESSAGE:         add_message(sctx->sc, sctx->w, sctx->h);         break;
     case DEATH_NONE:
     default:                                                                         break;
   }
@@ -41,6 +42,7 @@ void scene_init(struct scene *sc, bool classic_mode, struct aquatic_life aquatic
   sc->message_frame.shape = NULL;
   sc->message_frame.mask = NULL;
   sc->message_attr = color_from_name("blue");
+  sc->message_position = MSG_POS_MIDDLE;
 }
 
 void scene_free(struct scene *sc) {
@@ -120,6 +122,10 @@ void scene_set_message(struct scene *sc, const char *const *rows, int row_count)
 
 void scene_set_message_color(struct scene *sc, struct attr attr) {
   sc->message_attr = attr;
+}
+
+void scene_set_message_position(struct scene *sc, enum message_position pos) {
+  sc->message_position = pos;
 }
 
 void scene_draw(const struct scene *sc, struct canvas *c) {

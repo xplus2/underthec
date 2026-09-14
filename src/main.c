@@ -51,6 +51,13 @@ static void print_help(const char *prog) {
     "                        -m text color (default: blue)\n"
     "                        red,green,blue,yellow,magenta,cyan,white,black\n"
     "                        capitalized first letter=bold\n"
+    "  -P, --message-position [middle|center|marquee|swim|event]\n"
+    "                        -m placement (default: middle)\n"
+    "                        middle: horizontally+vertically centered\n"
+    "                        center: horizontally centered, vertical top\n"
+    "                        marquee: centered scrolling\n"
+    "                        swim: top row, scrolls right to left\n"
+    "                        event: like swim, but random\n"
     "  -p, --pace <pace>     speed multiplier, 0.01-10 (default: 1)\n"
     "  -s, --screensaver     exit on any keypress\n"
     "  -t, --transparent     transparent background (default: opaque black)\n"
@@ -63,6 +70,7 @@ static void print_help(const char *prog) {
     "  UNDERTHEC_CLASSIC=1.0|1.1        like -c\n"
     "  UNDERTHEC_MESSAGE=<text>         like -m\n"
     "  UNDERTHEC_MESSAGE_COLOR=<color>  like -M\n"
+    "  UNDERTHEC_MESSAGE_POSITION=<pos> like -P\n"
     "  UNDERTHEC_PACE=<pace>            like -p\n"
     "  UNDERTHEC_SCREENSAVER=0|1        like -s\n"
     "  UNDERTHEC_TRANSPARENT=0|1        like -t\n",
@@ -200,6 +208,19 @@ static bool parse_classic_env(const char *val, int *out_ver, char *errbuf, size_
   return false;
 }
 
+static bool parse_message_position(const char *val, enum message_position *out, char *errbuf, size_t errbuf_len) {
+  if (strcmp(val, "middle") == 0) *out = MSG_POS_MIDDLE;
+  else if (strcmp(val, "center") == 0) *out = MSG_POS_CENTER;
+  else if (strcmp(val, "marquee") == 0) *out = MSG_POS_MARQUEE;
+  else if (strcmp(val, "swim") == 0) *out = MSG_POS_SWIM;
+  else if (strcmp(val, "event") == 0) *out = MSG_POS_EVENT;
+  else {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid message position '", val, "'"}, 3);
+    return false;
+  }
+  return true;
+}
+
 static bool parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len) {
   size_t dot_count = 0;
   for (const char *p = s; *p != '\0'; p++) {
@@ -283,8 +304,10 @@ int main(int argc, char **argv) {
   bool screensaver = false;
   bool transparent = false;
   double pace = 1.0;
+  bool message_position_given = false;
   const char *message_arg = NULL;
   const char *message_color_arg = NULL;
+  enum message_position message_position = MSG_POS_MIDDLE;
   struct aquatic_life aquatic = aquatic_life_default();
   int i = 1;
   while (i < argc) {
@@ -338,6 +361,15 @@ int main(int argc, char **argv) {
         return 2;
       }
       message_color_arg = argv[i + 1];
+      i += 2;
+    } else if (strcmp(a, "-P") == 0 || strcmp(a, "--message-position") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      char errbuf[128];
+      if (!parse_message_position(argv[i + 1], &message_position, errbuf, sizeof errbuf)) {
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
+        return 2;
+      }
+      message_position_given = true;
       i += 2;
     } else if (strcmp(a, "-a") == 0 || strcmp(a, "--aquatic-life") == 0) {
       a_given = true;
@@ -399,6 +431,15 @@ int main(int argc, char **argv) {
         return err_env_bad(argv[0], "UNDERTHEC_MESSAGE_COLOR", errbuf);
       }
       message_color_arg = env_val;
+    }
+  }
+  if (!message_position_given) {
+    const char *env_val = getenv("UNDERTHEC_MESSAGE_POSITION");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_message_position(env_val, &message_position, errbuf, sizeof errbuf)) {
+        return err_env_bad(argv[0], "UNDERTHEC_MESSAGE_POSITION", errbuf);
+      }
     }
   }
   if (!fish_given) {
@@ -468,6 +509,7 @@ int main(int argc, char **argv) {
   struct scene scene;
   scene_init(&scene, classic, aquatic);
   if (message_color_arg != NULL) scene_set_message_color(&scene, color_from_name(message_color_arg));
+  scene_set_message_position(&scene, message_position);
   if (message_row_count > 0) scene_set_message(&scene, (const char *const *)message_rows, message_row_count);
   free(message_rows);
   free(message_buf);

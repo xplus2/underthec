@@ -25,6 +25,10 @@
 #define Z_JELLYFISH 4
 #define CASTLE_X_OFFSET 32
 #define CASTLE_WIDTH 31
+#define MESSAGE_TOP_ROW 1
+#define MESSAGE_SCROLL_SPEED 1.0
+#define WATER_SURFACE_ROW 5
+#define Z_MESSAGE_SURFACE 1
 
 /* effects.c */
 void spawn_splat(struct scene *sc, double tx, double ty, int tz);
@@ -47,6 +51,7 @@ void add_seaweed(struct scene *sc, int w, int h);
 void add_all_seaweed(struct scene *sc, int w, int h);
 void add_all_fish(struct scene *sc, int w, int h);
 void add_message(struct scene *sc, int w, int h);
+void spawn_message_event(struct scene *sc, int w, int h);
 void environment_tick(struct scene *sc);
 
 /* kaiju.c */

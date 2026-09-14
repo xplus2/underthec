@@ -168,25 +168,79 @@ void add_all_fish(struct scene *sc, int w, int h) {
   for (int i = 0; i < count; i++) spawn_fish(sc, w, h);
 }
 
-void add_message(struct scene *sc, int w, int h) {
+static int message_row_count(struct scene *sc) {
   int rows = 0;
   while (sc->message_rows[rows] != NULL) rows++;
-  if (rows == 0) return;
+  return rows;
+}
+
+static int message_block_width(struct scene *sc, int rows) {
   int block_w = 0;
   for (int i = 0; i < rows; i++) {
     int len = entity_utf8_display_width(sc->message_rows[i]);
     if (len > block_w) block_w = len;
   }
+  return block_w;
+}
 
+static int message_surface_y(int rows) {
+  if (rows < WATER_SURFACE_ROW) return WATER_SURFACE_ROW - rows;
+  return MESSAGE_TOP_ROW;
+}
+
+static struct entity *spawn_message_entity(struct scene *sc, double x, double y) {
   struct entity *e = entity_spawn(&sc->entities);
   e->type = ENT_MESSAGE;
-  e->x = (w - block_w) / 2;
-  e->y = (h - rows) / 2;
+  e->x = x;
+  e->y = y;
   e->z = Z_MESSAGE;
   e->frames = &sc->message_frame;
   e->frame_count = 1;
   e->sentinel = ' ';
   e->default_attr = sc->message_attr;
+  return e;
+}
+
+void add_message(struct scene *sc, int w, int h) {
+  int rows = message_row_count(sc);
+  if (rows == 0) return;
+  int block_w = message_block_width(sc, rows);
+  int y_mid = (h - rows) / 2;
+
+  switch (sc->message_position) {
+    case MSG_POS_EVENT:
+      break; /* spawned via spawn_message_event, part of the random-object rotation */
+    case MSG_POS_CENTER:
+      spawn_message_entity(sc, (w - block_w) / 2, message_surface_y(rows));
+      break;
+    case MSG_POS_MARQUEE:
+    case MSG_POS_SWIM: {
+      bool swim = sc->message_position == MSG_POS_SWIM;
+      double y = swim ? MESSAGE_TOP_ROW : y_mid;
+      struct entity *e = spawn_message_entity(sc, w, y);
+      if (swim) e->z = Z_MESSAGE_SURFACE;
+      e->vx = -MESSAGE_SCROLL_SPEED;
+      e->die_offscreen = true;
+      e->death_action = DEATH_ADD_MESSAGE;
+      break;
+    }
+    case MSG_POS_MIDDLE:
+    default:
+      spawn_message_entity(sc, (w - block_w) / 2, y_mid);
+      break;
+  }
+}
+
+void spawn_message_event(struct scene *sc, int w, int h) {
+  (void)h;
+  int rows = message_row_count(sc);
+  if (rows == 0) return;
+
+  struct entity *e = spawn_message_entity(sc, w, message_surface_y(rows));
+  e->z = Z_MESSAGE_SURFACE;
+  e->vx = -MESSAGE_SCROLL_SPEED;
+  e->die_offscreen = true;
+  e->death_action = DEATH_RANDOM_OBJECT;
 }
 
 void environment_tick(struct scene *sc) {

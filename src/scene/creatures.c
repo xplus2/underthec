@@ -319,6 +319,7 @@ void spawn_random_object(struct scene *sc, int w, int h) {
       {spawn_swordfish, sc->aquatic.swordfish}, {spawn_ducks, sc->aquatic.ducks},
       {spawn_dolphins, sc->aquatic.dolphins},   {spawn_swan, sc->aquatic.swan},
       {spawn_fishhook, sc->aquatic.fishhook},   {spawn_crab, sc->aquatic.crab},
+      {spawn_message_event, sc->message_rows != NULL && sc->message_position == MSG_POS_EVENT},
   };
   const int count = (int)(sizeof(table) / sizeof(table[0]));
   spawn_fn enabled[count];

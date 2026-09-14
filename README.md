@@ -9,7 +9,7 @@ This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquariu
 ## Usage
 
 ```
-underthec [-c [1.0|1.1]] [-s] [-t] [-p pace] [-m text|-] [-M color] [-a definition]
+underthec [-c [1.0|1.1]] [-s] [-t] [-p pace] [-m text|-] [-M color] [-P position] [-a definition]
 underthec {-h|-v}
 ```
 
@@ -19,6 +19,7 @@ underthec {-h|-v}
 | `-c`, `--classic [1.0\|1.1]`         | asciiquarium 1.0 / 1.1 modes               |
 | `-m`, `--message <text>`             | background `text`. `-` to read from stdin  |
 | `-M`, `--message-color <color>`      | `-m`'s text color (see below)              |
+| `-P`, `--message-position <pos>`     | `-m`'s placement (see below)               |
 | `-p`, `--pace <pace>`                | speed multiplier, 0.01-10 (default: 1)     |
 | `-s`, `--screensaver`                | exit on any keypress                       |
 | `-t`, `--transparent`                | transparent background                     |
@@ -34,6 +35,15 @@ Not combinable with `-a`.
 ### Text colors `-M`|`--message-color`
 > Valid text colors: `red`, `green`, `blue`, `yellow`, `magenta`, `cyan`, `white`, `black`.
 > Capitalized first letter: bold.
+
+### Message position `-P`|`--message-position`
+| Value     | Placement                                               |
+|-----------|---------------------------------------------------------|
+| `middle`  | horizontally+vertically centered (default)              |
+| `center`  | horizontally centered, vertical top                     |
+| `marquee` | vertically centered, scrolls right to left, repeats     |
+| `swim`    | top row, scrolls right to left, repeats                 |
+| `event`   | like `swim`, but takes turns with ducks/swans/ship/etc  |
 
 ### Aquatic life `-a`/`--aquatic-life` 
 Define what's going on in your asciiquarium. It takes a comma-separated definition:
@@ -55,6 +65,7 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 | `UNDERTHEC_CLASSIC=1.0\|1.1`      | `-c`              |
 | `UNDERTHEC_MESSAGE=<text>`        | `-m`              |
 | `UNDERTHEC_MESSAGE_COLOR=<color>` | `-M`              |
+| `UNDERTHEC_MESSAGE_POSITION=<pos>`| `-P`              |
 | `UNDERTHEC_PACE=<pace>`           | `-p`              |
 | `UNDERTHEC_SCREENSAVER=0\|1`      | `-s`              |
 | `UNDERTHEC_TRANSPARENT=0\|1`      | `-t`              |
