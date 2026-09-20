@@ -8,6 +8,7 @@
 #define MASK_ALL 7
 
 #define GFX_BASE 0x10
+#define ALPHA_WHITE 0x07
 #define MOSAIC_BLANK 0x20
 
 struct mcell {
@@ -72,10 +73,11 @@ static struct mcell mosaic_cell(const struct canvas *c, int x, int y) {
   return m;
 }
 
-static void render_row(const struct canvas *c, int y, uint8_t out[TT_COLS]) {
+static void render_row(const struct canvas *c, int y, int first, uint8_t out[TT_COLS]) {
   struct mcell cells[TT_COLS - 1];
   memset(out, MOSAIC_BLANK, TT_COLS);
   for (int i = 0; i < TT_COLS - 1; i++) cells[i] = mosaic_cell(c, i * 2, y);
+  for (int i = 0; i < first; i++) cells[i].ink = false;
   /* run of ink gets one color, control goes in blank cell before it */
   for (int i = 0; i < TT_COLS - 1;) {
     if (!cells[i].ink) {
@@ -93,6 +95,23 @@ static void render_row(const struct canvas *c, int y, uint8_t out[TT_COLS]) {
   }
 }
 
+static void overlay_title(uint8_t row[TT_COLS]) {
+  const char title[] = TT_TITLE;
+  bool gfx = false;
+  for (int c = TT_HDR_COL; c < TT_COLS; c++) {
+    if (row[c] > GFX_BASE && row[c] <= GFX_BASE + 7) gfx = true;
+    int t = c - TT_HDR_COL;
+    if (t >= (int)sizeof(title) - 1 || row[c] != MOSAIC_BLANK) continue;
+    if (gfx) {
+      row[c] = ALPHA_WHITE;
+      gfx = false;
+    } else {
+      row[c] = (uint8_t)title[t];
+    }
+  }
+}
+
 void tt_render(const struct canvas *c, struct tt_page *p) {
-  for (int y = 0; y < TT_CANVAS_H; y++) render_row(c, y, p->row[y + 1]);
+  for (int y = 0; y < TT_CANVAS_H; y++) render_row(c, y, y == 0 ? TT_HDR_COL : 0, p->row[y]);
+  overlay_title(p->row[0]);
 }

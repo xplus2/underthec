@@ -15,7 +15,6 @@
 #include <unistd.h>
 #endif
 
-#define HEADER_TEXT_LEN 32
 #define TT_MAG 1
 #define TT_PAGE 0x00
 #define TT_PAGE_FILL 0xFF
@@ -37,7 +36,7 @@ static void put_address(uint8_t out[TT_PACKET_LEN], int mag, int row) {
   out[1] = ham84[(row >> 1) & 15];
 }
 
-void tt_t42_header(uint8_t out[TT_PACKET_LEN], int mag, int page, bool erase, const char *text) {
+void tt_t42_header(uint8_t out[TT_PACKET_LEN], int mag, int page, bool erase, const uint8_t text[TT_HDR_LEN]) {
   put_address(out, mag, 0);
   out[2] = ham84[page & 15];
   out[3] = ham84[(page >> 4) & 15];
@@ -47,8 +46,7 @@ void tt_t42_header(uint8_t out[TT_PACKET_LEN], int mag, int page, bool erase, co
   out[7] = ham84[0];
   out[8] = ham84[0];
   out[9] = ham84[0];
-  size_t len = strlen(text);
-  for (size_t i = 0; i < HEADER_TEXT_LEN; i++) out[10 + i] = odd_parity(i < len ? (uint8_t)text[i] : ' ');
+  for (int i = 0; i < TT_HDR_LEN; i++) out[10 + i] = odd_parity(text[i]);
 }
 
 void tt_t42_row(uint8_t out[TT_PACKET_LEN], int mag, int row, const uint8_t data[TT_COLS]) {
@@ -113,12 +111,15 @@ static int emit(struct tt_stream *s, const uint8_t *buf, size_t len) {
 
 static int packetize(struct tt_stream *s, bool key) {
   int n = 0;
-  tt_t42_header(s->pk[n++], TT_MAG, TT_PAGE, s->frame == 0, "UNDERTHEC");
+  uint8_t fill[TT_HDR_LEN];
+  memset(fill, ' ', sizeof fill);
+  memcpy(fill, TT_TITLE, sizeof(TT_TITLE) - 1);
+  tt_t42_header(s->pk[n++], TT_MAG, TT_PAGE, s->frame == 0, s->cur.row[0] + TT_HDR_COL);
   for (int r = 1; r < TT_ROWS; r++) {
     if (key || memcmp(s->cur.row[r], s->prev.row[r], TT_COLS) != 0) tt_t42_row(s->pk[n++], TT_MAG, r, s->cur.row[r]);
   }
   /* page ends at next header with other page number: filler page FF */
-  tt_t42_header(s->pk[n++], TT_MAG, TT_PAGE_FILL, false, "UNDERTHEC");
+  tt_t42_header(s->pk[n++], TT_MAG, TT_PAGE_FILL, false, fill);
   return n;
 }
 

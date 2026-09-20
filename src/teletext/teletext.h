@@ -8,13 +8,17 @@
 #include "../canvas.h"
 
 #define TT_COLS 40
-#define TT_ROWS 24
+#define TT_ROWS 25
 #define TT_PACKET_LEN 42
-/* header + rows 1-23 + terminating filler header */
+/* header + rows 1-24 + terminating filler header */
 #define TT_MAX_PACKETS (TT_ROWS + 1)
-/* tank size: col 0 control cell, row 0 header */
+/* row 0: decoder takes cols 0-7, stream owns TT_HDR_LEN */
+#define TT_HDR_COL 8
+#define TT_HDR_LEN (TT_COLS - TT_HDR_COL)
+#define TT_TITLE "UNDERTHEC"
+/* tank size: canvas row = page row, col 0 control cell */
 #define TT_CANVAS_W ((TT_COLS - 1) * 2)
-#define TT_CANVAS_H (TT_ROWS - 1)
+#define TT_CANVAS_H TT_ROWS
 
 enum tt_mode {
   TT_T42,
@@ -27,11 +31,11 @@ struct tt_page {
 
 struct tt_net;
 
-/* rows 1-23 from canvas (TT_CANVAS_W x TT_CANVAS_H) */
+/* rows 0-24 from canvas (TT_CANVAS_W x TT_CANVAS_H) */
 void tt_render(const struct canvas *c, struct tt_page *p);
 
-/* mag 1-8, page BCD 0x00-0x99. text: up to 32c */
-void tt_t42_header(uint8_t out[TT_PACKET_LEN], int mag, int page, bool erase, const char *text);
+/* mag 1-8, page BCD 0x00-0x99. text: TT_HDR_LEN page bytes for cols 8-39 */
+void tt_t42_header(uint8_t out[TT_PACKET_LEN], int mag, int page, bool erase, const uint8_t text[TT_HDR_LEN]);
 void tt_t42_row(uint8_t out[TT_PACKET_LEN], int mag, int row, const uint8_t data[TT_COLS]);
 
 /* ts mux state */
