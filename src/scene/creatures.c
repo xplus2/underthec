@@ -39,10 +39,7 @@ void finish_creature_spawn(struct entity *e, enum entity_type type, int z, doubl
 }
 
 static void randomize_fish_row(const char *in, char *out, void *ctx) {
-  (void)ctx;
-  static const char letters[] = {'c', 'C', 'r', 'R', 'y', 'Y', 'b', 'B', 'g', 'G', 'm', 'M'};
-  char pick[10];
-  for (int digit = 1; digit <= 9; digit++) pick[digit] = letters[rng_int((int)(sizeof(letters) / sizeof(letters[0])))];
+  const char *pick = ctx;
   size_t len = strlen(in);
   for (size_t j = 0; j < len; j++) {
     unsigned char c = (unsigned char)in[j];
@@ -53,8 +50,13 @@ static void randomize_fish_row(const char *in, char *out, void *ctx) {
   out[len] = '\0';
 }
 
-static void randomize_fish_mask(struct entity *e, ascii_rows tmpl) {
-  char **owned = entity_build_transformed_rows(tmpl, randomize_fish_row, NULL);
+static void roll_fish_colors(struct entity *e) {
+  static const char letters[] = {'c', 'C', 'r', 'R', 'y', 'Y', 'b', 'B', 'g', 'G', 'm', 'M'};
+  for (int digit = 1; digit <= 9; digit++) e->color_pick[digit] = letters[rng_int((int)(sizeof(letters) / sizeof(letters[0])))];
+}
+
+static void apply_fish_colors(struct entity *e, ascii_rows tmpl) {
+  char **owned = entity_build_transformed_rows(tmpl, randomize_fish_row, e->color_pick);
   entity_clear_owned(e);
   e->owned_mask = owned;
 }
@@ -69,7 +71,8 @@ static void spawn_fish_from_table(struct scene *sc, const struct sprite_pair *ta
   e->frames = &table[fish_num];
   e->frame_count = 1;
   e->turn_frames = &table[fish_num ^ 1];
-  if (table[fish_num].mask != NULL) randomize_fish_mask(e, table[fish_num].mask);
+  roll_fish_colors(e);
+  if (table[fish_num].mask != NULL) apply_fish_colors(e, table[fish_num].mask);
   int width = entity_width(e);
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
@@ -103,7 +106,7 @@ static void swap_turn_frames(struct entity *e) {
   e->frames = e->turn_frames;
   e->turn_frames = old;
   entity_shape_changed(e);
-  if (e->frames->mask != NULL) randomize_fish_mask(e, e->frames->mask);
+  if (e->frames->mask != NULL) apply_fish_colors(e, e->frames->mask);
   int new_w = entity_width(e);
   e->x += (old_w - new_w) / 2.0;
   e->vx = e->turn_vx;

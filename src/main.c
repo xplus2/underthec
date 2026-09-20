@@ -2,6 +2,7 @@
 #include "color.h"
 #include "rng.h"
 #include "scene.h"
+#include "teletext/teletext.h"
 #include "term/term.h"
 #include "version.h"
 #include "xalloc.h"
@@ -63,6 +64,11 @@ static void print_help(const char *prog) {
     "  -f, --fps <N>           render frames per second, 1-120 (default: 10)\n"
     "  -s, --screensaver       exit on any keypress\n"
     "  -t, --transparent       transparent background (default: opaque black)\n"
+    "      --teletext <t42|ts> binary teletext stream to stdout instead of the terminal\n"
+    "                          t42: raw 42-byte packets, ts: MPEG-TS with teletext PES\n"
+    "      --mcast <IP:PORT>   send MPEG-TS teletext to a multicast group, [GROUP]:PORT for IPv6\n"
+    "      --ttl <N>           multicast TTL/hops, 1-255 (default: 1)\n"
+    "      --iface <if>        multicast interface: local address (IPv4) or name (IPv6)\n"
     "  -h, --help              show this help\n"
     "  -v, --version           show version\n\n"
     "keys while running: q quit, r redraw, p pause, t toggle transparency\n\n"
@@ -77,7 +83,11 @@ static void print_help(const char *prog) {
     "  UNDERTHEC_FPS=<N>                like -f\n"
     "  UNDERTHEC_SCREENSAVER=0|1        like -s\n"
     "  UNDERTHEC_UTURN_CHANCE=<N>  like -u\n"
-    "  UNDERTHEC_TRANSPARENT=0|1        like -t\n",
+    "  UNDERTHEC_TRANSPARENT=0|1        like -t\n"
+    "  UNDERTHEC_TELETEXT=t42|ts        like --teletext\n"
+    "  UNDERTHEC_MCAST=<GROUP:PORT>     like --mcast\n"
+    "  UNDERTHEC_MCAST_TTL=<N>          like --ttl\n"
+    "  UNDERTHEC_MCAST_IFACE=<if>       like --iface\n",
     stdout);
 }
 
@@ -247,6 +257,27 @@ static bool parse_fps(const char *val, int *out, char *errbuf, size_t errbuf_len
   return true;
 }
 
+static bool parse_teletext_mode(const char *val, enum tt_mode *out, char *errbuf, size_t errbuf_len) {
+  if (strcmp(val, "t42") == 0) *out = TT_T42;
+  else if (strcmp(val, "ts") == 0) *out = TT_TS;
+  else {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid teletext format '", val, "', expected t42 or ts"}, 3);
+    return false;
+  }
+  return true;
+}
+
+static bool parse_ttl(const char *val, int *out, char *errbuf, size_t errbuf_len) {
+  char *endptr = NULL;
+  long n = strtol(val, &endptr, 10);
+  if (val[0] == '\0' || *endptr != '\0' || n < 1 || n > 255) {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid ttl '", val, "', expected 1-255"}, 3);
+    return false;
+  }
+  *out = (int)n;
+  return true;
+}
+
 static double now_seconds(void) {
   struct timespec ts;
   timespec_get(&ts, TIME_UTC);
@@ -343,6 +374,11 @@ int main(int argc, char **argv) {
   int uturn_chance = 200;
   const char *message_arg = NULL;
   const char *message_color_arg = NULL;
+  const char *teletext_arg = NULL;
+  const char *mcast_arg = NULL;
+  const char *iface_arg = NULL;
+  int mcast_ttl = 1;
+  bool ttl_given = false;
   enum message_position message_position = MSG_POS_MIDDLE;
   struct aquatic_life aquatic = aquatic_life_default();
   int i = 1;
@@ -392,6 +428,30 @@ int main(int argc, char **argv) {
         return 2;
       }
       f_given = true;
+      i += 2;
+    } else if (strncmp(a, "--teletext=", 11) == 0) {
+      teletext_arg = a + 11;
+      i++;
+    } else if (strcmp(a, "--teletext") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      teletext_arg = argv[i + 1];
+      i += 2;
+    } else if (strcmp(a, "--mcast") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      mcast_arg = argv[i + 1];
+      i += 2;
+    } else if (strcmp(a, "--iface") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      iface_arg = argv[i + 1];
+      i += 2;
+    } else if (strcmp(a, "--ttl") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      char errbuf[128];
+      if (!parse_ttl(argv[i + 1], &mcast_ttl, errbuf, sizeof errbuf)) {
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
+        return 2;
+      }
+      ttl_given = true;
       i += 2;
     } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
       print_help(argv[0]);
@@ -485,6 +545,17 @@ int main(int argc, char **argv) {
         return err_env_bad(argv[0], "UNDERTHEC_UTURN_CHANCE", errbuf);
     }
   }
+  if (teletext_arg == NULL) teletext_arg = getenv("UNDERTHEC_TELETEXT");
+  if (mcast_arg == NULL) mcast_arg = getenv("UNDERTHEC_MCAST");
+  if (iface_arg == NULL) iface_arg = getenv("UNDERTHEC_MCAST_IFACE");
+  if (!ttl_given) {
+    const char *env_val = getenv("UNDERTHEC_MCAST_TTL");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_ttl(env_val, &mcast_ttl, errbuf, sizeof errbuf))
+        return err_env_bad(argv[0], "UNDERTHEC_MCAST_TTL", errbuf);
+    }
+  }
   if (message_arg == NULL) {
     const char *env_val = getenv("UNDERTHEC_MESSAGE");
     if (env_val != NULL) message_arg = env_val;
@@ -553,6 +624,38 @@ int main(int argc, char **argv) {
         .shark = true,
     };
   }
+  struct tt_stream *tt = NULL;
+  struct tt_net *tt_net = NULL;
+  if (teletext_arg != NULL || mcast_arg != NULL) {
+    enum tt_mode tt_mode = TT_TS;
+    char errbuf[128];
+    if (teletext_arg != NULL && !parse_teletext_mode(teletext_arg, &tt_mode, errbuf, sizeof errbuf)) {
+      write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, "\n"}, 4);
+      return 2;
+    }
+    if (mcast_arg != NULL) {
+      if (tt_mode == TT_T42) {
+        write_parts(stderr, (const char *[]){argv[0], ": --mcast requires the ts format\n"}, 2);
+        return 2;
+      }
+      tt_net = tt_net_open(mcast_arg, mcast_ttl, iface_arg, errbuf, sizeof errbuf);
+      if (tt_net == NULL) {
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, "\n"}, 4);
+        return 2;
+      }
+    } else if (tt_stdout_is_tty()) {
+      write_parts(stderr, (const char *[]){argv[0], ": refusing to write binary teletext to a terminal\n"}, 2);
+      return 2;
+    }
+    tt = tt_stream_open(tt_mode, tt_net, fps);
+    if (tt == NULL) {
+      write_parts(stderr, (const char *[]){argv[0], ": failed to open the teletext output\n"}, 2);
+      return 1;
+    }
+#ifdef SIGPIPE
+    signal(SIGPIPE, SIG_IGN);
+#endif
+  }
   char *message_buf = NULL;
   char **message_rows = NULL;
   int message_row_count = 0;
@@ -561,13 +664,13 @@ int main(int argc, char **argv) {
     message_row_count = split_and_trim_lines(message_buf, &message_rows);
   }
   rng_seed((uint64_t)time(NULL) ^ ((uint64_t)clock() << 32));
-  if (term_init() != 0) {
+  if (tt == NULL && term_init() != 0) {
     write_parts(stderr, (const char *[]){argv[0], ": failed to initialize the terminal\n"}, 2);
     free(message_rows);
     free(message_buf);
     return 1;
   }
-  term_set_transparent(transparent);
+  if (tt == NULL) term_set_transparent(transparent);
   signal(SIGINT, on_signal);
   signal(SIGTERM, on_signal);
   struct scene scene;
@@ -583,6 +686,7 @@ int main(int argc, char **argv) {
   int last_w = -1;
   int last_h = -1;
   bool paused = false;
+  int exit_code = 0;
   double tick_accum = 0.0;
   double tick_hz = 10.0 * pace;
   double frame_period = 1.0 / (double)fps;
@@ -591,7 +695,12 @@ int main(int argc, char **argv) {
   while (!g_should_quit) {
     int w;
     int h;
-    term_size(&w, &h);
+    if (tt != NULL) {
+      w = TT_CANVAS_W;
+      h = TT_CANVAS_H;
+    } else {
+      term_size(&w, &h);
+    }
     if (w != last_w || h != last_h) {
       canvas_resize(&canvas, w, h);
       scene_reset(&scene, w, h);
@@ -601,7 +710,10 @@ int main(int argc, char **argv) {
     deadline += frame_period;
     double wait = deadline - now_seconds();
     if (wait < -frame_period) deadline = now_seconds();
-    int key = term_poll_key(wait > 0.0 ? (int)(wait * 1000.0 + 0.999) : 0);
+    int wait_ms = wait > 0.0 ? (int)(wait * 1000.0 + 0.999) : 0;
+    int key = -1;
+    if (tt != NULL) tt_sleep_ms(wait_ms);
+    else key = term_poll_key(wait_ms);
     if (key == 'q') break;
     if (screensaver && key != -1) break;
     if (key == 'r') scene_reset(&scene, w, h);
@@ -624,10 +736,25 @@ int main(int argc, char **argv) {
     }
     canvas_clear(&canvas);
     scene_draw(&scene, &canvas, tick_accum);
-    term_present(&canvas);
+    if (tt != NULL) {
+      if (tt_stream_present(tt, &canvas) != 0) {
+        if (tt_net != NULL) {
+          write_parts(stderr, (const char *[]){argv[0], ": multicast send failed\n"}, 2);
+          exit_code = 1;
+        }
+        break;
+      }
+    } else {
+      term_present(&canvas);
+    }
   }
   canvas_free(&canvas);
   scene_free(&scene);
-  term_shutdown();
-  return 0;
+  if (tt != NULL) {
+    tt_stream_close(tt);
+    if (tt_net != NULL) tt_net_close(tt_net);
+  } else {
+    term_shutdown();
+  }
+  return exit_code;
 }

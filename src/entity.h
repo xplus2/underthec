@@ -95,6 +95,7 @@ struct entity {
   int turn_step;
   double turn_vx;
   const struct sprite_pair *turn_frames;
+  char color_pick[10];
   bool hidden;
   int hide_x0;
   int hide_x1;

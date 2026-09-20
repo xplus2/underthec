@@ -24,6 +24,10 @@ set(UNDERTHEC_SOURCES
         src/scene/kaiju.c
         src/scene/fishhook.c
         src/term/term_common.c
+        src/teletext/tt_render.c
+        src/teletext/tt_t42.c
+        src/teletext/tt_ts.c
+        src/teletext/tt_net.c
 )
 
 if (WIN32)

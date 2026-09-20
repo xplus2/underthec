@@ -25,6 +25,10 @@ underthec {-h|-v}
 | `-f`, `--fps <N>`                    | render fps, 1-120 (default: 10)            |
 | `-s`, `--screensaver`                | exit on any keypress                       |
 | `-t`, `--transparent`                | transparent background                     |
+| `--teletext <t42\|ts>`               | EBU Teletext stream to stdout (sea below)  |
+| `--mcast <GROUP:PORT>`               | MPEG-TS teletext to a multicast group      |
+| `--ttl <N>`                          | multicast TTL/hops, 1-255 (default: 1)     |
+| `--iface <if>`                       | multicast interface                        |
 | `-h`, `--help`                       | show usage                                 |
 | `-v`, `--version`                    | show version                               |
 
@@ -73,6 +77,11 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 | `UNDERTHEC_SCREENSAVER=0\|1`      | `-s`              |
 | `UNDERTHEC_UTURN_CHANCE=<N>`      | `-u`              |
 | `UNDERTHEC_TRANSPARENT=0\|1`      | `-t`              |
+| `UNDERTHEC_TELETEXT=t42\|ts`      | `--teletext`      |
+| `UNDERTHEC_MCAST=<GROUP:PORT>`    | `--mcast`         |
+| `UNDERTHEC_MCAST_TTL=<N>`         | `--ttl`           |
+| `UNDERTHEC_MCAST_IFACE=<if>`      | `--iface`         |
+
 
 ### Key bindings
 
@@ -82,6 +91,40 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 | `r`          | Redraw (recreate everything with fresh random positions) |
 | `p`          | Pause / resume                                           |
 | `t`          | Toggle background transparency                           |
+
+### Teletext output
+
+Instead of the terminal, output can be rendered as an EBU Teletext page (page 100) and streamed:
+
+* `--teletext t42`: raw 42-byte teletext packets to stdout (t42)
+* `--teletext ts`: MPEG-TS to stdout, teletext as private PES (EN 300 472) on PID 0x100, with PAT, PMT and PCR
+* `--mcast GROUP:PORT`: the same MPEG-TS over UDP multicast
+  IPv6 groups are written `[GROUP]:PORT`. 
+* `--iface` takes a local address (IPv4) or an interface name (IPv6). Not available on Windows.
+
+Binary output is refused when stdout is a terminal.
+Output is paced by `-f` (default 10 frames/s).
+The tank is fixed at 78x23 cells, drawn as 2x3 mosaic blocks in the 7 teletext colors.
+Bold is ignored, gray ("bold black" is mapped to white).
+Each second, the whole page is retransmitted, in between only changed rows.
+
+Examples:
+* Generate a ready-made: `underthec --teletext ts > aquarium.ts`
+* Multicast: `underthec --mcast 239.1.1.1:5004`
+
+If you want to test it locally in VLC, it will need an alibi-video ES:
+
+* `underthec --mcast 239.1.1.1:5000 --iface 127.0.0.1`
+* ```sh 
+  ffmpeg -f lavfi -i color=c=black:s=720x576:r=25 -i udp://239.1.1.1:5000 \
+    -map 0:v -map 1:s -c:v mpeg2video -b:v 500k -c:s copy \
+    -f mpegts "udp://239.1.1.2:5000?ttl=1"
+  ```
+* Wait until ffmpeg produces an output
+* and launch VLC like this:
+  `vlc udp://@239.1.1.2:5000` (or open VLC, ^N and enter `udp://@239.1.1.2:5000`)
+* Press the Teletext button, stay on page 100
+
 
 ## Credits
 
