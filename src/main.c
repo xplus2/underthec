@@ -1,3 +1,5 @@
+#define _DEFAULT_SOURCE
+
 #include "canvas.h"
 #include "color.h"
 #include "rng.h"
@@ -17,10 +19,16 @@
 #include <time.h>
 
 static volatile sig_atomic_t g_should_quit = 0;
+static volatile sig_atomic_t g_feed_signal = 0;
 
 static void on_signal(int sig) {
   (void)sig;
   g_should_quit = 1;
+}
+
+static void on_feed_signal(int sig) {
+  (void)sig;
+  g_feed_signal = 1;
 }
 
 static void append_bounded(char *dst, size_t dst_cap, size_t *pos, const char *src) {
@@ -74,7 +82,8 @@ static void print_help(const char *prog) {
     "      --iface <if>        multicast interface: local address (IPv4) or name (IPv6)\n"
     "  -h, --help              show this help\n"
     "  -v, --version           show version\n\n"
-    "keys while running: q quit, r redraw, p pause, t toggle transparency\n\n"
+    "keys while running:\n"
+    "  q quit, r redraw, p pause, t toggle transparency, f feed\n\n"
     "environment variables:\n"
     "  UNDERTHEC_FISH=auto|number          like -a's fish=\n"
     "  UNDERTHEC_AQUATIC_LIFE=<def>        like -a, except for fish=\n"
@@ -708,6 +717,13 @@ int main(int argc, char **argv) {
   if (tt == NULL) term_set_transparent(transparent);
   signal(SIGINT, on_signal);
   signal(SIGTERM, on_signal);
+#ifdef SIGUSR1
+  struct sigaction feed_sa;
+  memset(&feed_sa, 0, sizeof(feed_sa));
+  feed_sa.sa_handler = on_feed_signal;
+  feed_sa.sa_flags = SA_RESTART;
+  sigaction(SIGUSR1, &feed_sa, NULL);
+#endif
   struct scene scene;
   scene_init(&scene, classic, aquatic);
   if (message_color_arg != NULL) scene_set_message_color(&scene, color_from_name(message_color_arg));
@@ -756,6 +772,11 @@ int main(int argc, char **argv) {
     if (key == 't') {
       transparent = !transparent;
       term_set_transparent(transparent);
+    }
+    if (key == 'f') scene_feed(&scene, w, h);
+    if (g_feed_signal) {
+      g_feed_signal = 0;
+      scene_feed(&scene, w, h);
     }
     double now = now_seconds();
     double dt = now - last;

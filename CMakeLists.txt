@@ -23,6 +23,7 @@ set(UNDERTHEC_SOURCES
         src/scene/environment.c
         src/scene/kaiju.c
         src/scene/fishhook.c
+        src/scene/feed.c
         src/term/term_common.c
         src/teletext/tt_render.c
         src/teletext/tt_t42.c

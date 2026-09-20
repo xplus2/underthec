@@ -44,6 +44,7 @@ void scene_init(struct scene *sc, bool classic_mode, struct aquatic_life aquatic
   sc->message_attr = color_from_name("blue");
   sc->message_position = MSG_POS_MIDDLE;
   sc->uturn_chance = 200;
+  sc->feed_alerted = true;
 }
 
 void scene_free(struct scene *sc) {
@@ -55,7 +56,7 @@ void scene_free(struct scene *sc) {
 void scene_reset(struct scene *sc, int term_w, int term_h) {
   entity_list_clear(&sc->entities);
   sc->castle_hidden_by = 0;
-
+  sc->feed_alerted = true;
   if (sc->message_rows != NULL) add_message(sc, term_w, term_h);
   add_environment(sc, term_w, term_h);
   add_castle(sc, term_w, term_h);
@@ -81,10 +82,9 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
   }
 
   if (rng_int(1200) == 0) spawn_jellyfish(sc, term_w, term_h);
-
   kaiju_tick(sc, term_w);
   fishhook_tick(sc, term_h);
-
+  feed_tick(sc, term_w, term_h);
   entity_collide_all(&sc->entities);
   bool shark_died = false;
   for (int i = 0; i < sc->entities.count; i++) {
@@ -93,10 +93,8 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
       break;
     }
   }
-  if (shark_died) for (int i = 0; i < sc->entities.count; i++) {
+  if (shark_died) for (int i = 0; i < sc->entities.count; i++)
     if (sc->entities.items[i].type == ENT_TEETH) sc->entities.items[i].marked_dead = true;
-  }
-
   struct scene_ctx ctx = {sc, term_w, term_h};
   entity_reap(&sc->entities, on_death, &ctx);
 }
@@ -128,6 +126,10 @@ void scene_set_message_color(struct scene *sc, struct attr attr) {
 
 void scene_set_uturn_chance(struct scene *sc, int one_in) {
   sc->uturn_chance = one_in;
+}
+
+void scene_feed(struct scene *sc, int w, int h) {
+  feed_trigger(sc, w, h);
 }
 
 void scene_set_message_position(struct scene *sc, enum message_position pos) {

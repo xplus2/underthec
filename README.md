@@ -2,7 +2,8 @@
 
 Asciiquarium is an aquarium/C animation in ASCII art.
 
-This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquarium), see "Credits" below for the original authors.
+This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquarium),
+see "Credits" below for the original authors.
 
 [Build your own](BUILD.md) or use one of the [releases](https://github.com/xplus2/underthec/releases).
 
@@ -93,6 +94,9 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 | `r`          | Redraw (recreate everything with fresh random positions) |
 | `p`          | Pause / resume                                           |
 | `t`          | Toggle background transparency                           |
+| `f`          | Feed: drop flakes for the fish                           |
+
+`SIGUSR1` also triggers a feed.
 
 ### Teletext output
 

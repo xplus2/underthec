@@ -32,7 +32,8 @@ enum entity_type {
   ENT_CRAB,
   ENT_KAIJU_TIMER,
   ENT_JELLYFISH,
-  ENT_RANDOM_OBJECT_TIMER
+  ENT_RANDOM_OBJECT_TIMER,
+  ENT_FLAKE
 };
 
 enum death_action {
@@ -99,6 +100,12 @@ struct entity {
   bool hidden;
   int hide_x0;
   int hide_x1;
+
+  double feed_speed_mult;
+  bool feed_heading;
+  bool feed_wait;
+  int feed_target_col;
+  double feed_resume_vx;
 };
 
 struct entity_list {

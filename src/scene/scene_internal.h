@@ -23,11 +23,13 @@
 #define Z_HOOKED 5
 #define Z_CRAB 21
 #define Z_JELLYFISH 4
+#define Z_FLAKE 1
 #define CASTLE_X_OFFSET 32
 #define CASTLE_WIDTH 31
 #define MESSAGE_TOP_ROW 1
 #define MESSAGE_SCROLL_SPEED 1.0
 #define WATER_SURFACE_ROW 5
+#define MAIN_REGION_TOP_ROW 9
 #define Z_MESSAGE_SURFACE 1
 
 /* effects.c */
@@ -63,5 +65,9 @@ void schedule_kaiju_return(struct scene *sc);
 /* fishhook.c */
 void spawn_fishhook(struct scene *sc, int w, int h);
 void fishhook_tick(struct scene *sc, int term_h);
+
+/* feed.c */
+void feed_trigger(struct scene *sc, int w, int h);
+void feed_tick(struct scene *sc, int w, int h);
 
 #endif

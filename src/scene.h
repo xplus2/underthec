@@ -40,6 +40,7 @@ struct scene {
   enum message_position message_position;
   int castle_hidden_by;
   int uturn_chance;
+  bool feed_alerted;
 };
 
 void scene_init(struct scene *sc, bool classic_mode, struct aquatic_life aquatic);
@@ -50,6 +51,7 @@ void scene_set_message(struct scene *sc, const char *const *rows, int row_count)
 void scene_set_message_color(struct scene *sc, struct attr attr);
 void scene_set_message_position(struct scene *sc, enum message_position pos);
 void scene_set_uturn_chance(struct scene *sc, int one_in);
+void scene_feed(struct scene *sc, int w, int h);
 void scene_draw(const struct scene *sc, struct canvas *c, double alpha);
 
 #endif

@@ -21,7 +21,7 @@
 #include <string.h>
 
 int random_swim_y(int h, int sprite_height) {
-  int max_height = 9;
+  int max_height = MAIN_REGION_TOP_ROW;
   int min_height = h - sprite_height;
   return rng_int(min_height - max_height) + max_height;
 }
@@ -133,7 +133,7 @@ void fish_turn_tick(struct entity *e, int term_w, int uturn_one_in) {
     set_turn_hide(e);
     return;
   }
-  if (e->turn_frames == NULL || e->vy != 0.0 || e->vx == 0.0) return;
+  if (e->turn_frames == NULL || e->vy != 0.0 || e->vx == 0.0 || e->feed_heading) return;
   int w = entity_width(e);
   if (e->x < 0.0 || e->x + w > term_w) return;
   if (uturn_one_in <= 0 || rng_int(uturn_one_in) != 0) return;
@@ -346,7 +346,6 @@ static void spawn_crab(struct scene *sc, int w, int h) {
   e->frames = crab_frames;
   e->frame_count = 2;
   e->frame_interval = 3.0;
-
   int width = entity_width(e);
   int height = entity_height(e);
   e->y = h - height;
@@ -369,7 +368,6 @@ void spawn_jellyfish(struct scene *sc, int w, int h) {
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = dir ? (double)(w - 2) : (double)(1 - width);
-
   finish_creature_spawn(e, ENT_JELLYFISH, Z_JELLYFISH, speed, 0, DEATH_NONE, color_from_name("cyan"));
 }
 
@@ -380,13 +378,13 @@ void spawn_random_object(struct scene *sc, int w, int h) {
     bool enabled;
   };
   const struct candidate table[] = {
-      {spawn_ship, sc->aquatic.ship},           {spawn_whale, sc->aquatic.whale},
-      {spawn_monster, sc->aquatic.monster},     {spawn_big_fish, sc->aquatic.bigfish},
-      {spawn_shark, sc->aquatic.shark},         {spawn_submarine, sc->aquatic.submarine},
-      {spawn_swordfish, sc->aquatic.swordfish}, {spawn_ducks, sc->aquatic.ducks},
-      {spawn_dolphins, sc->aquatic.dolphins},   {spawn_swan, sc->aquatic.swan},
-      {spawn_fishhook, sc->aquatic.fishhook},   {spawn_crab, sc->aquatic.crab},
-      {spawn_message_event, sc->message_rows != NULL && sc->message_position == MSG_POS_EVENT},
+  {spawn_ship, sc->aquatic.ship},           {spawn_whale, sc->aquatic.whale},
+  {spawn_monster, sc->aquatic.monster},     {spawn_big_fish, sc->aquatic.bigfish},
+  {spawn_shark, sc->aquatic.shark},         {spawn_submarine, sc->aquatic.submarine},
+  {spawn_swordfish, sc->aquatic.swordfish}, {spawn_ducks, sc->aquatic.ducks},
+  {spawn_dolphins, sc->aquatic.dolphins},   {spawn_swan, sc->aquatic.swan},
+  {spawn_fishhook, sc->aquatic.fishhook},   {spawn_crab, sc->aquatic.crab},
+  {spawn_message_event, sc->message_rows != NULL && sc->message_position == MSG_POS_EVENT},
   };
   const int count = (int)(sizeof(table) / sizeof(table[0]));
   spawn_fn enabled[count];

@@ -320,15 +320,16 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
     e->prev_y = e->y;
     e->has_prev = true;
     switch (e->type) {
-      case ENT_SUBMARINE:      tick_submarine(e, term_w);         break;
+      case ENT_SUBMARINE:      tick_submarine(e, term_w);   break;
       case ENT_LASER:
       case ENT_FISHHOOK:
       case ENT_KAIJU_TIMER:
-      case ENT_RANDOM_OBJECT_TIMER:                                break;
+      case ENT_RANDOM_OBJECT_TIMER:
+      case ENT_FLAKE:                                       break;
       case ENT_DOLPHIN:        tick_dolphin(e);
-                               advance_frame(e);                  break;
+                               advance_frame(e);            break;
       case ENT_JELLYFISH:      tick_jellyfish(e, term_h);
-                               advance_frame(e);                  break;
+                               advance_frame(e);            break;
       case ENT_WATERLINE:
       case ENT_CASTLE:
       case ENT_SEAWEED:
@@ -349,7 +350,7 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
       case ENT_SWAN:
       case ENT_CRAB:           e->x += e->vx;
                                e->y += e->vy;
-                               advance_frame(e);                  break;
+                               advance_frame(e);            break;
     }
     if (e->type == ENT_CASTLE && e->frame_cur == e->frame_count - 1) e->frame_interval = 0.0;
     if (e->die_frame >= 0) {
