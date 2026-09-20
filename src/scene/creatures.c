@@ -79,10 +79,14 @@ static void spawn_fish_from_table(struct scene *sc, const struct sprite_pair *ta
 
 #define TURN_STEP_COLS 4
 
+static int turn_max_band(int w) {
+  return w > 2 ? w - 2 : 0;
+}
+
 static void set_turn_hide(struct entity *e) {
   int w = entity_width(e);
   int band = 2 * e->turn_step;
-  if (band > w) band = w;
+  if (band > turn_max_band(w)) band = turn_max_band(w);
   e->hidden = true;
   e->hide_x0 = (w - band) / 2;
   e->hide_x1 = e->hide_x0 + band;
@@ -103,7 +107,7 @@ static void swap_turn_frames(struct entity *e) {
   int new_w = entity_width(e);
   e->x += (old_w - new_w) / 2.0;
   e->vx = e->turn_vx;
-  e->turn_step = (new_w + 1) / 2;
+  e->turn_step = (turn_max_band(new_w) + 1) / 2;
   e->turn_state = TURN_GROW;
 }
 
@@ -115,7 +119,7 @@ void fish_turn_tick(struct entity *e, int term_w, int uturn_one_in) {
     }
     if (e->turn_state == TURN_SHRINK) {
       e->turn_step += TURN_STEP_COLS;
-      if (2 * e->turn_step >= entity_width(e)) swap_turn_frames(e);
+      if (2 * e->turn_step >= turn_max_band(entity_width(e))) swap_turn_frames(e);
     } else {
       e->turn_step -= TURN_STEP_COLS;
       if (e->turn_step <= 0) {

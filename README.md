@@ -22,6 +22,7 @@ underthec {-h|-v}
 | `-P`, `--message-position <pos>`     | `-m`'s placement (see below)               |
 | `-p`, `--pace <pace>`                | speed multiplier, 0.01-10 (default: 1)     |
 | `-u`, `--uturn-chance <N>`           | fish turn once per N ticks (default: 200)  |
+| `-f`, `--fps <N>`                    | render fps, 1-120 (default: 10)            |
 | `-s`, `--screensaver`                | exit on any keypress                       |
 | `-t`, `--transparent`                | transparent background                     |
 | `-h`, `--help`                       | show usage                                 |
@@ -68,6 +69,7 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 | `UNDERTHEC_MESSAGE_COLOR=<color>` | `-M`              |
 | `UNDERTHEC_MESSAGE_POSITION=<pos>`| `-P`              |
 | `UNDERTHEC_PACE=<pace>`           | `-p`              |
+| `UNDERTHEC_FPS=<N>`               | `-f`              |
 | `UNDERTHEC_SCREENSAVER=0\|1`      | `-s`              |
 | `UNDERTHEC_UTURN_CHANCE=<N>`      | `-u`              |
 | `UNDERTHEC_TRANSPARENT=0\|1`      | `-t`              |

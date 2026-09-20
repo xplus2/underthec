@@ -134,6 +134,6 @@ void scene_set_message_position(struct scene *sc, enum message_position pos) {
   sc->message_position = pos;
 }
 
-void scene_draw(const struct scene *sc, struct canvas *c) {
-  entity_draw_all(&sc->entities, c);
+void scene_draw(const struct scene *sc, struct canvas *c, double alpha) {
+  entity_draw_all(&sc->entities, c, alpha);
 }

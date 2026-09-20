@@ -58,6 +58,9 @@ struct entity {
   enum entity_type type;
   double x;
   double y;
+  double prev_x;
+  double prev_y;
+  bool has_prev;
   int z;
   double vx;
   double vy;
@@ -127,7 +130,7 @@ void entity_collide_all(struct entity_list *list);
 bool entity_glyph_overlap(struct entity *a, struct entity *b);
 typedef void (*entity_death_fn)(const struct entity *dead, void *ctx);
 void entity_reap(struct entity_list *list, entity_death_fn fn, void *ctx);
-void entity_draw_all(const struct entity_list *list, struct canvas *c);
+void entity_draw_all(const struct entity_list *list, struct canvas *c, double alpha);
 void entity_draw_shutdown(void);
 
 #endif

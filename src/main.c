@@ -60,6 +60,7 @@ static void print_help(const char *prog) {
     "  -p, --pace <pace>       speed multiplier, 0.01-10 (default: 1)\n"
     "  -u, --uturn-chance <N>  fish turn around once per N ticks on average\n"
     "                          (default: 200, 0 = never)\n"
+    "  -f, --fps <N>           render frames per second, 1-120 (default: 10)\n"
     "  -s, --screensaver       exit on any keypress\n"
     "  -t, --transparent       transparent background (default: opaque black)\n"
     "  -h, --help              show this help\n"
@@ -73,6 +74,7 @@ static void print_help(const char *prog) {
     "  UNDERTHEC_MESSAGE_COLOR=<color>  like -M\n"
     "  UNDERTHEC_MESSAGE_POSITION=<pos> like -P\n"
     "  UNDERTHEC_PACE=<pace>            like -p\n"
+    "  UNDERTHEC_FPS=<N>                like -f\n"
     "  UNDERTHEC_SCREENSAVER=0|1        like -s\n"
     "  UNDERTHEC_UTURN_CHANCE=<N>  like -u\n"
     "  UNDERTHEC_TRANSPARENT=0|1        like -t\n",
@@ -234,6 +236,23 @@ static bool parse_uturn_chance(const char *val, int *out, char *errbuf, size_t e
   return true;
 }
 
+static bool parse_fps(const char *val, int *out, char *errbuf, size_t errbuf_len) {
+  char *endptr = NULL;
+  long n = strtol(val, &endptr, 10);
+  if (val[0] == '\0' || *endptr != '\0' || n < 1 || n > 120) {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid fps '", val, "', expected 1-120"}, 3);
+    return false;
+  }
+  *out = (int)n;
+  return true;
+}
+
+static double now_seconds(void) {
+  struct timespec ts;
+  timespec_get(&ts, TIME_UTC);
+  return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
+}
+
 static bool parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len) {
   size_t dot_count = 0;
   for (const char *p = s; *p != '\0'; p++) {
@@ -319,6 +338,8 @@ int main(int argc, char **argv) {
   double pace = 1.0;
   bool message_position_given = false;
   bool u_given = false;
+  bool f_given = false;
+  int fps = 10;
   int uturn_chance = 200;
   const char *message_arg = NULL;
   const char *message_color_arg = NULL;
@@ -362,6 +383,15 @@ int main(int argc, char **argv) {
         return 2;
       }
       u_given = true;
+      i += 2;
+    } else if (strcmp(a, "-f") == 0 || strcmp(a, "--fps") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      char errbuf[128];
+      if (!parse_fps(argv[i + 1], &fps, errbuf, sizeof errbuf)) {
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
+        return 2;
+      }
+      f_given = true;
       i += 2;
     } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
       print_help(argv[0]);
@@ -419,36 +449,40 @@ int main(int argc, char **argv) {
     const char *env_val = getenv("UNDERTHEC_TRANSPARENT");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_bool_env(env_val, &transparent, errbuf, sizeof errbuf)) {
+      if (!parse_bool_env(env_val, &transparent, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_TRANSPARENT", errbuf);
-      }
     }
   }
   if (!s_given) {
     const char *env_val = getenv("UNDERTHEC_SCREENSAVER");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_bool_env(env_val, &screensaver, errbuf, sizeof errbuf)) {
+      if (!parse_bool_env(env_val, &screensaver, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_SCREENSAVER", errbuf);
-      }
     }
   }
   if (!p_given) {
     const char *env_val = getenv("UNDERTHEC_PACE");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_pace(env_val, &pace, errbuf, sizeof errbuf)) {
+      if (!parse_pace(env_val, &pace, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_PACE", errbuf);
-      }
+    }
+  }
+  if (!f_given) {
+    const char *env_val = getenv("UNDERTHEC_FPS");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_fps(env_val, &fps, errbuf, sizeof errbuf))
+        return err_env_bad(argv[0], "UNDERTHEC_FPS", errbuf);
     }
   }
   if (!u_given) {
     const char *env_val = getenv("UNDERTHEC_UTURN_CHANCE");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_uturn_chance(env_val, &uturn_chance, errbuf, sizeof errbuf)) {
+      if (!parse_uturn_chance(env_val, &uturn_chance, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_UTURN_CHANCE", errbuf);
-      }
     }
   }
   if (message_arg == NULL) {
@@ -470,18 +504,16 @@ int main(int argc, char **argv) {
     const char *env_val = getenv("UNDERTHEC_MESSAGE_POSITION");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_message_position(env_val, &message_position, errbuf, sizeof errbuf)) {
+      if (!parse_message_position(env_val, &message_position, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_MESSAGE_POSITION", errbuf);
-      }
     }
   }
   if (!fish_given) {
     const char *env_val = getenv("UNDERTHEC_FISH");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_fish_count(env_val, &aquatic.fish_count, errbuf, sizeof errbuf)) {
+      if (!parse_fish_count(env_val, &aquatic.fish_count, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_FISH", errbuf);
-      }
       a_flag = true;
     }
   }
@@ -490,9 +522,8 @@ int main(int argc, char **argv) {
     if (env_val != NULL) {
       char errbuf[128];
       bool fish_set = false;
-      if (!aquatic_life_parse(env_val, &aquatic, false, &fish_set, errbuf, sizeof errbuf)) {
+      if (!aquatic_life_parse(env_val, &aquatic, false, &fish_set, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_AQUATIC_LIFE", errbuf);
-      }
       a_flag = true;
     }
   }
@@ -553,6 +584,10 @@ int main(int argc, char **argv) {
   int last_h = -1;
   bool paused = false;
   double tick_accum = 0.0;
+  double tick_hz = 10.0 * pace;
+  double frame_period = 1.0 / (double)fps;
+  double last = now_seconds();
+  double deadline = last;
   while (!g_should_quit) {
     int w;
     int h;
@@ -563,7 +598,10 @@ int main(int argc, char **argv) {
       last_w = w;
       last_h = h;
     }
-    int key = term_poll_key(100);
+    deadline += frame_period;
+    double wait = deadline - now_seconds();
+    if (wait < -frame_period) deadline = now_seconds();
+    int key = term_poll_key(wait > 0.0 ? (int)(wait * 1000.0 + 0.999) : 0);
     if (key == 'q') break;
     if (screensaver && key != -1) break;
     if (key == 'r') scene_reset(&scene, w, h);
@@ -572,15 +610,20 @@ int main(int argc, char **argv) {
       transparent = !transparent;
       term_set_transparent(transparent);
     }
+    double now = now_seconds();
+    double dt = now - last;
+    last = now;
+    if (dt < 0.0) dt = 0.0;
+    if (dt > 0.5) dt = 0.5;
     if (!paused) {
-      tick_accum += pace;
+      tick_accum += dt * tick_hz;
       while (tick_accum >= 1.0) {
         scene_tick(&scene, w, h);
         tick_accum -= 1.0;
       }
     }
     canvas_clear(&canvas);
-    scene_draw(&scene, &canvas);
+    scene_draw(&scene, &canvas, tick_accum);
     term_present(&canvas);
   }
   canvas_free(&canvas);

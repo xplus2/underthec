@@ -316,6 +316,9 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
   for (int i = 0; i < list->count; i++) {
     struct entity *e = &list->items[i];
     if (e->marked_dead) continue;
+    e->prev_x = e->x;
+    e->prev_y = e->y;
+    e->has_prev = true;
     switch (e->type) {
       case ENT_SUBMARINE:      tick_submarine(e, term_w);         break;
       case ENT_LASER:
@@ -541,7 +544,7 @@ static void draw_turn_seam(struct canvas *c, const struct entity *e, ascii_rows 
   }
 }
 
-void entity_draw_all(const struct entity_list *list, struct canvas *c) {
+void entity_draw_all(const struct entity_list *list, struct canvas *c, double alpha) {
   int n = list->count;
   if (n <= 0) return;
 
@@ -560,8 +563,10 @@ void entity_draw_all(const struct entity_list *list, struct canvas *c) {
     ascii_rows mrows = entity_mask(e);
     int mask_height = 0;
     if (mrows != NULL) while (mrows[mask_height] != NULL) mask_height++;
-    int base_x = round_to_int(e->x);
-    int base_y = round_to_int(e->y);
+    double draw_x = e->has_prev ? e->prev_x + (e->x - e->prev_x) * alpha : e->x;
+    double draw_y = e->has_prev ? e->prev_y + (e->y - e->prev_y) * alpha : e->y;
+    int base_x = round_to_int(draw_x);
+    int base_y = round_to_int(draw_y);
     for (int row = 0; rows[row] != NULL; row++) {
       const char *srow = rows[row];
       int byte_len = (int)strlen(srow);
