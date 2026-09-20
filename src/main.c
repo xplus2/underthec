@@ -66,6 +66,9 @@ static void print_help(const char *prog) {
     "  -t, --transparent       transparent background (default: opaque black)\n"
     "      --teletext <t42|ts> binary teletext stream to stdout instead of the terminal\n"
     "                          t42: raw 42-byte packets, ts: MPEG-TS with teletext PES\n"
+    "      --teletext-mode <text|mosaic>\n"
+    "                          text: real characters, 39 columns, exact ASCII via X/26\n"
+    "                          mosaic: 2x3 blocks, 78 columns (default: text)\n"
     "      --mcast <IP:PORT>   send MPEG-TS teletext to a multicast group, [GROUP]:PORT for IPv6\n"
     "      --ttl <N>           multicast TTL/hops, 1-255 (default: 1)\n"
     "      --iface <if>        multicast interface: local address (IPv4) or name (IPv6)\n"
@@ -73,21 +76,22 @@ static void print_help(const char *prog) {
     "  -v, --version           show version\n\n"
     "keys while running: q quit, r redraw, p pause, t toggle transparency\n\n"
     "environment variables:\n"
-    "  UNDERTHEC_FISH=auto|number       like -a's fish=\n"
-    "  UNDERTHEC_AQUATIC_LIFE=<def>     like -a, except for fish=\n"
-    "  UNDERTHEC_CLASSIC=1.0|1.1        like -c\n"
-    "  UNDERTHEC_MESSAGE=<text>         like -m\n"
-    "  UNDERTHEC_MESSAGE_COLOR=<color>  like -M\n"
-    "  UNDERTHEC_MESSAGE_POSITION=<pos> like -P\n"
-    "  UNDERTHEC_PACE=<pace>            like -p\n"
-    "  UNDERTHEC_FPS=<N>                like -f\n"
-    "  UNDERTHEC_SCREENSAVER=0|1        like -s\n"
-    "  UNDERTHEC_UTURN_CHANCE=<N>  like -u\n"
-    "  UNDERTHEC_TRANSPARENT=0|1        like -t\n"
-    "  UNDERTHEC_TELETEXT=t42|ts        like --teletext\n"
-    "  UNDERTHEC_MCAST=<GROUP:PORT>     like --mcast\n"
-    "  UNDERTHEC_MCAST_TTL=<N>          like --ttl\n"
-    "  UNDERTHEC_MCAST_IFACE=<if>       like --iface\n",
+    "  UNDERTHEC_FISH=auto|number          like -a's fish=\n"
+    "  UNDERTHEC_AQUATIC_LIFE=<def>        like -a, except for fish=\n"
+    "  UNDERTHEC_CLASSIC=1.0|1.1           like -c\n"
+    "  UNDERTHEC_MESSAGE=<text>            like -m\n"
+    "  UNDERTHEC_MESSAGE_COLOR=<color>     like -M\n"
+    "  UNDERTHEC_MESSAGE_POSITION=<pos>    like -P\n"
+    "  UNDERTHEC_PACE=<pace>               like -p\n"
+    "  UNDERTHEC_FPS=<N>                   like -f\n"
+    "  UNDERTHEC_SCREENSAVER=0|1           like -s\n"
+    "  UNDERTHEC_UTURN_CHANCE=<N>          like -u\n"
+    "  UNDERTHEC_TRANSPARENT=0|1           like -t\n"
+    "  UNDERTHEC_TELETEXT=t42|ts           like --teletext\n"
+    "  UNDERTHEC_TELETEXT_MODE=text|mosaic like --teletext-mode\n"
+    "  UNDERTHEC_MCAST=<GROUP:PORT>        like --mcast\n"
+    "  UNDERTHEC_MCAST_TTL=<N>             like --ttl\n"
+    "  UNDERTHEC_MCAST_IFACE=<if>          like --iface\n",
     stdout);
 }
 
@@ -267,6 +271,16 @@ static bool parse_teletext_mode(const char *val, enum tt_mode *out, char *errbuf
   return true;
 }
 
+static bool parse_teletext_glyphs(const char *val, enum tt_glyphs *out, char *errbuf, size_t errbuf_len) {
+  if (strcmp(val, "text") == 0) *out = TT_TEXT;
+  else if (strcmp(val, "mosaic") == 0) *out = TT_MOSAIC;
+  else {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid teletext mode '", val, "', expected text or mosaic"}, 3);
+    return false;
+  }
+  return true;
+}
+
 static bool parse_ttl(const char *val, int *out, char *errbuf, size_t errbuf_len) {
   char *endptr = NULL;
   long n = strtol(val, &endptr, 10);
@@ -375,6 +389,8 @@ int main(int argc, char **argv) {
   const char *message_arg = NULL;
   const char *message_color_arg = NULL;
   const char *teletext_arg = NULL;
+  const char *glyphs_arg = NULL;
+  bool glyphs_given = false;
   const char *mcast_arg = NULL;
   const char *iface_arg = NULL;
   int mcast_ttl = 1;
@@ -435,6 +451,15 @@ int main(int argc, char **argv) {
     } else if (strcmp(a, "--teletext") == 0) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       teletext_arg = argv[i + 1];
+      i += 2;
+    } else if (strncmp(a, "--teletext-mode=", 16) == 0) {
+      glyphs_arg = a + 16;
+      glyphs_given = true;
+      i++;
+    } else if (strcmp(a, "--teletext-mode") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      glyphs_arg = argv[i + 1];
+      glyphs_given = true;
       i += 2;
     } else if (strcmp(a, "--mcast") == 0) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
@@ -546,6 +571,7 @@ int main(int argc, char **argv) {
     }
   }
   if (teletext_arg == NULL) teletext_arg = getenv("UNDERTHEC_TELETEXT");
+  if (glyphs_arg == NULL) glyphs_arg = getenv("UNDERTHEC_TELETEXT_MODE");
   if (mcast_arg == NULL) mcast_arg = getenv("UNDERTHEC_MCAST");
   if (iface_arg == NULL) iface_arg = getenv("UNDERTHEC_MCAST_IFACE");
   if (!ttl_given) {
@@ -626,10 +652,19 @@ int main(int argc, char **argv) {
   }
   struct tt_stream *tt = NULL;
   struct tt_net *tt_net = NULL;
+  enum tt_glyphs tt_glyphs = TT_TEXT;
+  if (glyphs_given && teletext_arg == NULL && mcast_arg == NULL) {
+    write_parts(stderr, (const char *[]){argv[0], ": --teletext-mode requires --teletext or --mcast\n"}, 2);
+    return 2;
+  }
   if (teletext_arg != NULL || mcast_arg != NULL) {
     enum tt_mode tt_mode = TT_TS;
     char errbuf[128];
     if (teletext_arg != NULL && !parse_teletext_mode(teletext_arg, &tt_mode, errbuf, sizeof errbuf)) {
+      write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, "\n"}, 4);
+      return 2;
+    }
+    if (glyphs_arg != NULL && !parse_teletext_glyphs(glyphs_arg, &tt_glyphs, errbuf, sizeof errbuf)) {
       write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, "\n"}, 4);
       return 2;
     }
@@ -647,7 +682,7 @@ int main(int argc, char **argv) {
       write_parts(stderr, (const char *[]){argv[0], ": refusing to write binary teletext to a terminal\n"}, 2);
       return 2;
     }
-    tt = tt_stream_open(tt_mode, tt_net, fps);
+    tt = tt_stream_open(tt_mode, tt_glyphs, tt_net, fps);
     if (tt == NULL) {
       write_parts(stderr, (const char *[]){argv[0], ": failed to open the teletext output\n"}, 2);
       return 1;
@@ -696,7 +731,7 @@ int main(int argc, char **argv) {
     int w;
     int h;
     if (tt != NULL) {
-      w = TT_CANVAS_W;
+      w = tt_canvas_w(tt_glyphs);
       h = TT_CANVAS_H;
     } else {
       term_size(&w, &h);

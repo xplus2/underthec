@@ -26,6 +26,7 @@ underthec {-h|-v}
 | `-s`, `--screensaver`                | exit on any keypress                       |
 | `-t`, `--transparent`                | transparent background                     |
 | `--teletext <t42\|ts>`               | EBU Teletext stream to stdout (sea below)  |
+| `--teletext-mode <text\|mosaic>`     | teletext glyphs, default: text             |
 | `--mcast <GROUP:PORT>`               | MPEG-TS teletext to a multicast group      |
 | `--ttl <N>`                          | multicast TTL/hops, 1-255 (default: 1)     |
 | `--iface <if>`                       | multicast interface                        |
@@ -78,6 +79,7 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 | `UNDERTHEC_UTURN_CHANCE=<N>`      | `-u`              |
 | `UNDERTHEC_TRANSPARENT=0\|1`      | `-t`              |
 | `UNDERTHEC_TELETEXT=t42\|ts`      | `--teletext`      |
+| `UNDERTHEC_TELETEXT_MODE=text\|mosaic` | `--teletext-mode` |
 | `UNDERTHEC_MCAST=<GROUP:PORT>`    | `--mcast`         |
 | `UNDERTHEC_MCAST_TTL=<N>`         | `--ttl`           |
 | `UNDERTHEC_MCAST_IFACE=<if>`      | `--iface`         |
@@ -101,11 +103,14 @@ Instead of the terminal, output can be rendered as an EBU Teletext page (page 10
 * `--mcast GROUP:PORT`: the same MPEG-TS over UDP multicast
   IPv6 groups are written `[GROUP]:PORT`. 
 * `--iface` takes a local address (IPv4) or an interface name (IPv6). Not available on Windows.
+* `--teletext-mode mosaic` draws 2x3 mosaic blocks. `--teletext-mode text` (default) draws text characters, one per cell.
+  Text mode is 39x25. The Level 1 character set swaps `# [ \ ] ^ _ ` { | } ~` for national characters, so those are sent
+  as X/26 enhancement packets (Level 1.5). Decoders without X/26 support show look-alikes instead.
 
 Binary output is refused when stdout is a terminal.
 Output is paced by `-f` (default 10 frames/s).
-The tank is fixed at 78x23 cells, drawn as 2x3 mosaic blocks in the 7 teletext colors.
-Bold is ignored, gray ("bold black" is mapped to white).
+In mosaic mode the tank is fixed at 78x25 cells, drawn as 2x3 mosaic blocks in the 7 teletext colors.
+Bold is ignored, gray ("bold black") is mapped to white.
 Each second, the whole page is retransmitted, in between only changed rows.
 
 Examples:
@@ -116,9 +121,9 @@ If you want to test it locally in VLC, it will need an alibi-video ES:
 
 * `underthec --mcast 239.1.1.1:5000 --iface 127.0.0.1`
 * ```sh 
-  ffmpeg -f lavfi -i color=c=black:s=720x576:r=25 -i udp://239.1.1.1:5000 \
+  ffmpeg -f lavfi -i color=c=black:s=720x576:r=25 -i "udp://239.1.1.1:5000?localaddr=127.0.0.1" \
     -map 0:v -map 1:s -c:v mpeg2video -b:v 500k -c:s copy \
-    -f mpegts "udp://239.1.1.2:5000?ttl=1"
+    -f mpegts "udp://239.1.1.2:5000?ttl=1&pkt_size=1316"
   ```
 * Wait until ffmpeg produces an output
 * and launch VLC like this:

@@ -10,14 +10,15 @@
 #define TT_COLS 40
 #define TT_ROWS 25
 #define TT_PACKET_LEN 42
+#define TT_X26_PACKETS 16
+#define TT_X26_TRIPLETS 13
+#define TT_MAX_TRIPLETS (TT_X26_PACKETS * TT_X26_TRIPLETS - 1)
 /* header + rows 1-24 + terminating filler header */
-#define TT_MAX_PACKETS (TT_ROWS + 1)
+#define TT_MAX_PACKETS (TT_ROWS + 1 + TT_X26_PACKETS)
 /* row 0: decoder takes cols 0-7, stream owns TT_HDR_LEN */
 #define TT_HDR_COL 8
 #define TT_HDR_LEN (TT_COLS - TT_HDR_COL)
 #define TT_TITLE "UNDERTHEC"
-/* tank size: canvas row = page row, col 0 control cell */
-#define TT_CANVAS_W ((TT_COLS - 1) * 2)
 #define TT_CANVAS_H TT_ROWS
 
 enum tt_mode {
@@ -25,18 +26,34 @@ enum tt_mode {
   TT_TS
 };
 
+enum tt_glyphs {
+  TT_MOSAIC,
+  TT_TEXT
+};
+
+struct tt_triplet {
+  uint8_t addr;
+  uint8_t mode;
+  uint8_t data;
+};
+
 struct tt_page {
   uint8_t row[TT_ROWS][TT_COLS];
+  struct tt_triplet ov[TT_MAX_TRIPLETS];
+  int ov_count;
 };
 
 struct tt_net;
 
-/* rows 0-24 from canvas (TT_CANVAS_W x TT_CANVAS_H) */
-void tt_render(const struct canvas *c, struct tt_page *p);
+int tt_canvas_w(enum tt_glyphs g);
+
+void tt_render(const struct canvas *c, enum tt_glyphs g, struct tt_page *p);
 
 /* mag 1-8, page BCD 0x00-0x99. text: TT_HDR_LEN page bytes for cols 8-39 */
 void tt_t42_header(uint8_t out[TT_PACKET_LEN], int mag, int page, bool erase, const uint8_t text[TT_HDR_LEN]);
 void tt_t42_row(uint8_t out[TT_PACKET_LEN], int mag, int row, const uint8_t data[TT_COLS]);
+
+void tt_t42_x26(uint8_t out[TT_PACKET_LEN], int mag, int dc, const struct tt_triplet t[TT_X26_TRIPLETS]);
 
 /* ts mux state */
 struct tt_ts {
@@ -48,7 +65,8 @@ struct tt_ts {
 #define TT_TS_LEN 188
 #define TT_TS_PSI_LEN (2 * TT_TS_LEN)
 /* TT_MAX_PACKETS padded to 4k-1 data units, 46 bytes each, +PES hdr */
-#define TT_TS_PES_MAX (7 * TT_TS_LEN)
+#define TT_UNITS_PER_PES 32
+#define TT_TS_PES_MAX (((TT_MAX_PACKETS + TT_UNITS_PER_PES - 1) / TT_UNITS_PER_PES) * ((TT_UNITS_PER_PES + 4) / 4) * TT_TS_LEN)
 
 void tt_ts_init(struct tt_ts *m);
 
@@ -72,7 +90,7 @@ bool tt_stdout_is_tty(void);
 void tt_sleep_ms(int ms);
 
 /* net NULL=stdout */
-struct tt_stream *tt_stream_open(enum tt_mode mode, struct tt_net *net, int fps);
+struct tt_stream *tt_stream_open(enum tt_mode mode, enum tt_glyphs glyphs, struct tt_net *net, int fps);
 
 /* 0 ok, -1 output err */
 int tt_stream_present(struct tt_stream *s, const struct canvas *c);
