@@ -47,6 +47,12 @@ enum death_action {
   DEATH_ADD_MESSAGE
 };
 
+enum turn_state {
+  TURN_NONE,
+  TURN_SHRINK,
+  TURN_GROW
+};
+
 struct entity {
   int id;
   enum entity_type type;
@@ -81,6 +87,14 @@ struct entity {
   double splat_x;
   double splat_y;
   int splat_z;
+
+  enum turn_state turn_state;
+  int turn_step;
+  double turn_vx;
+  const struct sprite_pair *turn_frames;
+  bool hidden;
+  int hide_x0;
+  int hide_x1;
 };
 
 struct entity_list {

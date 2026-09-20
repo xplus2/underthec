@@ -43,6 +43,7 @@ void scene_init(struct scene *sc, bool classic_mode, struct aquatic_life aquatic
   sc->message_frame.mask = NULL;
   sc->message_attr = color_from_name("blue");
   sc->message_position = MSG_POS_MIDDLE;
+  sc->uturn_chance = 200;
 }
 
 void scene_free(struct scene *sc) {
@@ -71,6 +72,7 @@ void scene_tick(struct scene *sc, int term_w, int term_h) {
   for (int i = 0; i < sc->entities.count; i++) {
     struct entity *fish = &sc->entities.items[i];
     if (fish->marked_dead || fish->type != ENT_FISH) continue;
+    fish_turn_tick(fish, term_w, sc->uturn_chance);
     if (rng_int(100) > 97) {
       int fw = entity_width(fish);
       int fh = entity_height(fish);
@@ -122,6 +124,10 @@ void scene_set_message(struct scene *sc, const char *const *rows, int row_count)
 
 void scene_set_message_color(struct scene *sc, struct attr attr) {
   sc->message_attr = attr;
+}
+
+void scene_set_uturn_chance(struct scene *sc, int one_in) {
+  sc->uturn_chance = one_in;
 }
 
 void scene_set_message_position(struct scene *sc, enum message_position pos) {

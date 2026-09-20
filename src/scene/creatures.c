@@ -68,12 +68,72 @@ static void spawn_fish_from_table(struct scene *sc, const struct sprite_pair *ta
   struct entity *e = entity_spawn(&sc->entities);
   e->frames = &table[fish_num];
   e->frame_count = 1;
+  e->turn_frames = &table[fish_num ^ 1];
   if (table[fish_num].mask != NULL) randomize_fish_mask(e, table[fish_num].mask);
   int width = entity_width(e);
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = odd ? (double)(w - 2) : (double)(1 - width);
   finish_creature_spawn(e, ENT_FISH, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_FISH, (struct attr){COL_DEFAULT, false});
+}
+
+#define TURN_STEP_COLS 4
+
+static void set_turn_hide(struct entity *e) {
+  int w = entity_width(e);
+  int band = 2 * e->turn_step;
+  if (band > w) band = w;
+  e->hidden = true;
+  e->hide_x0 = (w - band) / 2;
+  e->hide_x1 = e->hide_x0 + band;
+}
+
+static void finish_turn(struct entity *e) {
+  e->turn_state = TURN_NONE;
+  e->hidden = false;
+}
+
+static void swap_turn_frames(struct entity *e) {
+  const struct sprite_pair *old = e->frames;
+  int old_w = entity_width(e);
+  e->frames = e->turn_frames;
+  e->turn_frames = old;
+  entity_shape_changed(e);
+  if (e->frames->mask != NULL) randomize_fish_mask(e, e->frames->mask);
+  int new_w = entity_width(e);
+  e->x += (old_w - new_w) / 2.0;
+  e->vx = e->turn_vx;
+  e->turn_step = (new_w + 1) / 2;
+  e->turn_state = TURN_GROW;
+}
+
+void fish_turn_tick(struct entity *e, int term_w, int uturn_one_in) {
+  if (e->turn_state != TURN_NONE) {
+    if (e->vy != 0.0) {
+      finish_turn(e);
+      return;
+    }
+    if (e->turn_state == TURN_SHRINK) {
+      e->turn_step += TURN_STEP_COLS;
+      if (2 * e->turn_step >= entity_width(e)) swap_turn_frames(e);
+    } else {
+      e->turn_step -= TURN_STEP_COLS;
+      if (e->turn_step <= 0) {
+        finish_turn(e);
+        return;
+      }
+    }
+    set_turn_hide(e);
+    return;
+  }
+  if (e->turn_frames == NULL || e->vy != 0.0 || e->vx == 0.0) return;
+  int w = entity_width(e);
+  if (e->x < 0.0 || e->x + w > term_w) return;
+  if (uturn_one_in <= 0 || rng_int(uturn_one_in) != 0) return;
+  e->turn_state = TURN_SHRINK;
+  e->turn_step = 0;
+  e->turn_vx = -e->vx;
+  e->vx = 0.0;
 }
 
 void spawn_fish(struct scene *sc, int w, int h) {

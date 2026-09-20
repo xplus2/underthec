@@ -41,28 +41,29 @@ static void print_help(const char *prog) {
   write_parts(stdout, (const char *[]){"usage: ", prog, " [options]\n\n"}, 3);
   fputs(
     "  -a, --aquatic-life <definition>\n"
-    "                        comma-separated, default: all on, fish=auto\n"
-    "                        fish=<N|auto>,ducks,dolphins,ship,swan,kaiju,crab,shark,\n"
-    "                        submarine,whale,jellyfish,monster,bigfish,swordfish\n"
-    "  -c, --classic [1.0|1.1]\n"
-    "                        classic mode, no arg = 1.0\n"
-    "  -m, --message <text>  bg text/ascii art ('-' for stdin)\n"
+    "                          comma-separated, default: all on, fish=auto\n"
+    "                          fish=<N|auto>,ducks,dolphins,ship,swan,kaiju,crab,shark,\n"
+    "                          submarine,whale,jellyfish,monster,bigfish,swordfish\n"
+    "  -c, --classic [1.0|1.1] classic mode, no arg = 1.0\n"
+    "  -m, --message <text>    bg text/ascii art ('-' for stdin)\n"
     "  -M, --message-color <color>\n"
-    "                        -m text color (default: blue)\n"
-    "                        red,green,blue,yellow,magenta,cyan,white,black\n"
-    "                        capitalized first letter=bold\n"
+    "                          -m text color (default: blue)\n"
+    "                          red,green,blue,yellow,magenta,cyan,white,black\n"
+    "                          capitalized first letter=bold\n"
     "  -P, --message-position [middle|center|marquee|swim|event]\n"
-    "                        -m placement (default: middle)\n"
-    "                        middle: horizontally+vertically centered\n"
-    "                        center: horizontally centered, vertical top\n"
-    "                        marquee: centered scrolling\n"
-    "                        swim: top row, scrolls right to left\n"
-    "                        event: like swim, but random\n"
-    "  -p, --pace <pace>     speed multiplier, 0.01-10 (default: 1)\n"
-    "  -s, --screensaver     exit on any keypress\n"
-    "  -t, --transparent     transparent background (default: opaque black)\n"
-    "  -h, --help            show this help\n"
-    "  -v, --version         show version\n\n"
+    "                          -m placement (default: middle)\n"
+    "                          middle: horizontally+vertically centered\n"
+    "                          center: horizontally centered, vertical top\n"
+    "                          marquee: centered scrolling\n"
+    "                          swim: top row, scrolls right to left\n"
+    "                          event: like swim, but random\n"
+    "  -p, --pace <pace>       speed multiplier, 0.01-10 (default: 1)\n"
+    "  -u, --uturn-chance <N>  fish turn around once per N ticks on average\n"
+    "                          (default: 200, 0 = never)\n"
+    "  -s, --screensaver       exit on any keypress\n"
+    "  -t, --transparent       transparent background (default: opaque black)\n"
+    "  -h, --help              show this help\n"
+    "  -v, --version           show version\n\n"
     "keys while running: q quit, r redraw, p pause, t toggle transparency\n\n"
     "environment variables:\n"
     "  UNDERTHEC_FISH=auto|number       like -a's fish=\n"
@@ -73,6 +74,7 @@ static void print_help(const char *prog) {
     "  UNDERTHEC_MESSAGE_POSITION=<pos> like -P\n"
     "  UNDERTHEC_PACE=<pace>            like -p\n"
     "  UNDERTHEC_SCREENSAVER=0|1        like -s\n"
+    "  UNDERTHEC_UTURN_CHANCE=<N>  like -u\n"
     "  UNDERTHEC_TRANSPARENT=0|1        like -t\n",
     stdout);
 }
@@ -221,6 +223,17 @@ static bool parse_message_position(const char *val, enum message_position *out, 
   return true;
 }
 
+static bool parse_uturn_chance(const char *val, int *out, char *errbuf, size_t errbuf_len) {
+  char *endptr = NULL;
+  long n = strtol(val, &endptr, 10);
+  if (val[0] == '\0' || *endptr != '\0' || n < 0 || n > 1000000) {
+    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid uturn chance '", val, "'"}, 3);
+    return false;
+  }
+  *out = (int)n;
+  return true;
+}
+
 static bool parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len) {
   size_t dot_count = 0;
   for (const char *p = s; *p != '\0'; p++) {
@@ -305,6 +318,8 @@ int main(int argc, char **argv) {
   bool transparent = false;
   double pace = 1.0;
   bool message_position_given = false;
+  bool u_given = false;
+  int uturn_chance = 200;
   const char *message_arg = NULL;
   const char *message_color_arg = NULL;
   enum message_position message_position = MSG_POS_MIDDLE;
@@ -338,6 +353,15 @@ int main(int argc, char **argv) {
         return 2;
       }
       p_given = true;
+      i += 2;
+    } else if (strcmp(a, "-u") == 0 || strcmp(a, "--uturn-chance") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      char errbuf[128];
+      if (!parse_uturn_chance(argv[i + 1], &uturn_chance, errbuf, sizeof errbuf)) {
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
+        return 2;
+      }
+      u_given = true;
       i += 2;
     } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
       print_help(argv[0]);
@@ -415,6 +439,15 @@ int main(int argc, char **argv) {
       char errbuf[128];
       if (!parse_pace(env_val, &pace, errbuf, sizeof errbuf)) {
         return err_env_bad(argv[0], "UNDERTHEC_PACE", errbuf);
+      }
+    }
+  }
+  if (!u_given) {
+    const char *env_val = getenv("UNDERTHEC_UTURN_CHANCE");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!parse_uturn_chance(env_val, &uturn_chance, errbuf, sizeof errbuf)) {
+        return err_env_bad(argv[0], "UNDERTHEC_UTURN_CHANCE", errbuf);
       }
     }
   }
@@ -510,6 +543,7 @@ int main(int argc, char **argv) {
   scene_init(&scene, classic, aquatic);
   if (message_color_arg != NULL) scene_set_message_color(&scene, color_from_name(message_color_arg));
   scene_set_message_position(&scene, message_position);
+  scene_set_uturn_chance(&scene, uturn_chance);
   if (message_row_count > 0) scene_set_message(&scene, (const char *const *)message_rows, message_row_count);
   free(message_rows);
   free(message_buf);
