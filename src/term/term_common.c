@@ -33,17 +33,33 @@ static const char *const sgr_table[2][2][9] = {
   },
 };
 
-static void write_sgr(enum color col, bool bold, bool mono) {
-  if (mono) return;
-  fputs(sgr_table[transparent][bold][col], stdout);
-}
-
 static char *append_uint(char *p, unsigned v) {
   char tmp[10];
   int n = 0;
   do { tmp[n++] = (char)('0' + v % 10); v /= 10; } while (v);
   while (n > 0) *p++ = tmp[--n];
   return p;
+}
+
+static void write_sgr(enum color col, bool bold, enum color bg, bool bg_bold, bool mono) {
+  if (mono) return;
+  if (bg == COL_DEFAULT) {
+    fputs(sgr_table[transparent][bold][col], stdout);
+    return;
+  }
+  char buf[24];
+  char *p = buf;
+  *p++ = '\x1b';
+  *p++ = '[';
+  *p++ = '0';
+  if (bold) { *p++ = ';'; *p++ = '1'; }
+  *p++ = ';';
+  if (col == COL_DEFAULT) { *p++ = '3'; *p++ = '9'; }
+  else p = append_uint(p, 30u + (unsigned)(col - 1));
+  *p++ = ';';
+  p = append_uint(p, (bg_bold ? 100u : 40u) + (unsigned)(bg - 1));
+  *p++ = 'm';
+  fwrite(buf, 1, (size_t)(p - buf), stdout);
 }
 
 static void write_cursor_pos(int row, int col) {
@@ -59,7 +75,8 @@ static void write_cursor_pos(int row, int col) {
 }
 
 static bool cells_equal(const struct cell *a, const struct cell *b) {
-  return a->cont == b->cont && a->col == b->col && a->bold == b->bold && strcmp(a->glyph, b->glyph) == 0;
+  return a->cont == b->cont && a->col == b->col && a->bold == b->bold &&
+         a->bg == b->bg && a->bg_bold == b->bg_bold && strcmp(a->glyph, b->glyph) == 0;
 }
 
 void term_present(const struct canvas *c) {
@@ -85,6 +102,8 @@ void term_present(const struct canvas *c) {
       x = start;
       enum color last_col = COL_DEFAULT;
       bool last_bold = false;
+      enum color last_bg = COL_DEFAULT;
+      bool last_bg_bold = false;
       bool first = true;
       while (x < c->width) {
         cur = &c->cells[(size_t)y * (size_t)c->width + (size_t)x];
@@ -95,10 +114,12 @@ void term_present(const struct canvas *c) {
           continue;
         }
         if (x != start && cells_equal(cur, old)) break;
-        if (first || cur->col != last_col || cur->bold != last_bold) {
-          write_sgr(cur->col, cur->bold, mono);
+        if (first || cur->col != last_col || cur->bold != last_bold || cur->bg != last_bg || cur->bg_bold != last_bg_bold) {
+          write_sgr(cur->col, cur->bold, cur->bg, cur->bg_bold, mono);
           last_col = cur->col;
           last_bold = cur->bold;
+          last_bg = cur->bg;
+          last_bg_bold = cur->bg_bold;
           first = false;
         }
         fputs(cur->glyph, stdout);

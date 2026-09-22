@@ -17,6 +17,8 @@ set(UNDERTHEC_SOURCES
         src/color.c
         src/rng.c
         src/entity.c
+        src/help.c
+        src/settings.c
         src/scene/scene.c
         src/scene/effects.c
         src/scene/creatures.c

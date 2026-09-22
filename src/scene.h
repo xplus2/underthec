@@ -52,6 +52,9 @@ void scene_set_message_color(struct scene *sc, struct attr attr);
 void scene_set_message_position(struct scene *sc, enum message_position pos);
 void scene_set_uturn_chance(struct scene *sc, int one_in);
 void scene_feed(struct scene *sc, int w, int h);
+void scene_set_fish_count(struct scene *sc, int w, int h, int count);
+int scene_fish_display_count(const struct scene *sc);
+void scene_on_species_toggled(struct scene *sc, int w, int h);
 void scene_draw(const struct scene *sc, struct canvas *c, double alpha);
 
 #endif

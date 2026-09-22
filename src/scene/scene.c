@@ -132,6 +132,84 @@ void scene_feed(struct scene *sc, int w, int h) {
   feed_trigger(sc, w, h);
 }
 
+int scene_fish_display_count(const struct scene *sc) {
+  int n = 0;
+  for (int i = 0; i < sc->entities.count; i++) {
+    const struct entity *e = &sc->entities.items[i];
+    if (!e->marked_dead && e->type == ENT_FISH) n++;
+  }
+  return n;
+}
+
+void scene_set_fish_count(struct scene *sc, int w, int h, int count) {
+  if (count < 0) count = 0;
+  if (count > 100000) count = 100000;
+  sc->aquatic.fish_count = count;
+  int live = scene_fish_display_count(sc);
+  if (live < count) {
+    for (int i = live; i < count; i++) spawn_fish(sc, w, h);
+    return;
+  }
+  int to_kill = live - count;
+  for (int i = 0; i < sc->entities.count && to_kill > 0; i++) {
+    struct entity *e = &sc->entities.items[i];
+    if (e->marked_dead || e->type != ENT_FISH) continue;
+    e->marked_dead = true;
+    e->death_action = DEATH_NONE;
+    to_kill--;
+  }
+  struct scene_ctx ctx = {sc, w, h};
+  entity_reap(&sc->entities, on_death, &ctx);
+}
+
+void scene_on_species_toggled(struct scene *sc, int w, int h) {
+  if (sc->aquatic.kaiju) {
+    bool has_timer = false;
+    bool has_live = false;
+    for (int i = 0; i < sc->entities.count; i++) {
+      struct entity *e = &sc->entities.items[i];
+      if (e->marked_dead) continue;
+      if (e->type == ENT_KAIJU_TIMER) has_timer = true;
+      if (e->type == ENT_KAIJU) has_live = true;
+    }
+    if (!has_timer && !has_live) schedule_kaiju_return(sc);
+  }
+
+  bool pool_enabled = sc->aquatic.ship || sc->aquatic.whale || sc->aquatic.monster || sc->aquatic.bigfish ||
+                      sc->aquatic.shark || sc->aquatic.submarine || sc->aquatic.swordfish || sc->aquatic.ducks ||
+                      sc->aquatic.dolphins || sc->aquatic.swan || sc->aquatic.fishhook || sc->aquatic.crab;
+  if (pool_enabled) {
+    bool has_timer = false;
+    bool has_live = false;
+    for (int i = 0; i < sc->entities.count; i++) {
+      struct entity *e = &sc->entities.items[i];
+      if (e->marked_dead) continue;
+      if (e->type == ENT_RANDOM_OBJECT_TIMER) has_timer = true;
+      switch (e->type) {
+        case ENT_SHIP: case ENT_WHALE: case ENT_MONSTER: case ENT_BIGFISH: case ENT_SHARK:
+        case ENT_SUBMARINE: case ENT_SWORDFISH: case ENT_DUCK: case ENT_DOLPHIN: case ENT_SWAN:
+        case ENT_FISHHOOK: case ENT_CRAB:
+          has_live = true;
+          break;
+        default:
+          break;
+      }
+    }
+    if (!has_timer && !has_live) spawn_random_object(sc, w, h);
+  }
+
+  if (sc->aquatic.jellyfish) {
+    bool has_live = false;
+    for (int i = 0; i < sc->entities.count; i++) {
+      if (!sc->entities.items[i].marked_dead && sc->entities.items[i].type == ENT_JELLYFISH) {
+        has_live = true;
+        break;
+      }
+    }
+    if (!has_live) spawn_jellyfish(sc, w, h);
+  }
+}
+
 void scene_set_message_position(struct scene *sc, enum message_position pos) {
   sc->message_position = pos;
 }

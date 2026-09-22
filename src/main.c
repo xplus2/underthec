@@ -2,8 +2,10 @@
 
 #include "canvas.h"
 #include "color.h"
+#include "help.h"
 #include "rng.h"
 #include "scene.h"
+#include "settings.h"
 #include "teletext/teletext.h"
 #include "term/term.h"
 #include "version.h"
@@ -83,7 +85,7 @@ static void print_help(const char *prog) {
     "  -h, --help              show this help\n"
     "  -v, --version           show version\n\n"
     "keys while running:\n"
-    "  q quit, r redraw, p pause, t toggle transparency, f feed\n\n"
+    "  q quit, r redraw, p pause, t toggle transparency, f feed, s settings, h help\n\n"
     "environment variables:\n"
     "  UNDERTHEC_FISH=auto|number          like -a's fish=\n"
     "  UNDERTHEC_AQUATIC_LIFE=<def>        like -a, except for fish=\n"
@@ -732,6 +734,10 @@ int main(int argc, char **argv) {
   if (message_row_count > 0) scene_set_message(&scene, (const char *const *)message_rows, message_row_count);
   free(message_rows);
   free(message_buf);
+  struct settings_ui settings_ui;
+  settings_ui_init(&settings_ui, &fps, &pace, &scene);
+  struct help_ui help_ui;
+  help_ui_init(&help_ui, &fps, &pace);
   struct canvas canvas;
   canvas_init(&canvas);
   int last_w = -1;
@@ -739,8 +745,6 @@ int main(int argc, char **argv) {
   bool paused = false;
   int exit_code = 0;
   double tick_accum = 0.0;
-  double tick_hz = 10.0 * pace;
-  double frame_period = 1.0 / (double)fps;
   double last = now_seconds();
   double deadline = last;
   while (!g_should_quit) {
@@ -758,6 +762,8 @@ int main(int argc, char **argv) {
       last_w = w;
       last_h = h;
     }
+    double tick_hz = 10.0 * pace;
+    double frame_period = 1.0 / (double)fps;
     deadline += frame_period;
     double wait = deadline - now_seconds();
     if (wait < -frame_period) deadline = now_seconds();
@@ -774,6 +780,21 @@ int main(int argc, char **argv) {
       term_set_transparent(transparent);
     }
     if (key == 'f') scene_feed(&scene, w, h);
+    if (key == 's') {
+      if (help_ui_is_open(&help_ui)) help_ui_close(&help_ui);
+      settings_ui_toggle(&settings_ui);
+    }
+    if (key == 'h') {
+      if (settings_ui_is_open(&settings_ui)) settings_ui_close(&settings_ui);
+      help_ui_toggle(&help_ui);
+    }
+    if (settings_ui_is_open(&settings_ui)) {
+      if (key == '\x1b') settings_ui_close(&settings_ui);
+      else settings_ui_handle_key(&settings_ui, key, w, h);
+    }
+    if (help_ui_is_open(&help_ui)) {
+      if (key == '\x1b') help_ui_close(&help_ui);
+    }
     if (g_feed_signal) {
       g_feed_signal = 0;
       scene_feed(&scene, w, h);
@@ -792,6 +813,8 @@ int main(int argc, char **argv) {
     }
     canvas_clear(&canvas);
     scene_draw(&scene, &canvas, tick_accum);
+    settings_ui_draw(&settings_ui, &canvas);
+    help_ui_draw(&help_ui, &canvas);
     if (tt != NULL) {
       if (tt_stream_present(tt, &canvas) != 0) {
         if (tt_net != NULL) {

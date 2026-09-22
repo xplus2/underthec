@@ -77,7 +77,7 @@ static void spawn_fish_from_table(struct scene *sc, const struct sprite_pair *ta
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = odd ? (double)(w - 2) : (double)(1 - width);
-  finish_creature_spawn(e, ENT_FISH, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_FISH, (struct attr){COL_DEFAULT, false});
+  finish_creature_spawn(e, ENT_FISH, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_FISH, (struct attr){.col = COL_DEFAULT, .bold = false});
 }
 
 #define TURN_STEP_COLS 4

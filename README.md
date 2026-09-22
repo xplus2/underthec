@@ -88,13 +88,15 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 
 ### Key bindings
 
-| Key          | Action                                                   |
-|--------------|----------------------------------------------------------|
-| `q` or `^C`  | Quit                                                     |
-| `r`          | Redraw (recreate everything with fresh random positions) |
-| `p`          | Pause / resume                                           |
-| `t`          | Toggle background transparency                           |
-| `f`          | Feed: drop flakes for the fish                           |
+| Key | Action                                                                       |
+|-----|------------------------------------------------------------------------------|
+| `f` | Feed: drop flakes for the fish                                               |
+| `h` | Help about keys                                                              |
+| `p` | Pause / resume                                                               |
+| `r` | Redraw (recreate everything with fresh random positions)                     |
+| `s` | Settings. Arrow to move the selector, `+`/`-`/`[space]` to make changes |
+| `t` | Toggle background transparency                                               |
+| `q` | Quit (`^C` works too)                                                        |
 
 `SIGUSR1` also triggers a feed.
 

@@ -72,6 +72,13 @@ int term_poll_key(int timeout_ms) {
   if (rec.EventType == KEY_EVENT && rec.Event.KeyEvent.bKeyDown) {
     char c = rec.Event.KeyEvent.uChar.AsciiChar;
     if (c != 0) return tolower((unsigned char)c);
+    switch (rec.Event.KeyEvent.wVirtualKeyCode) {
+      case VK_UP:    return TERM_KEY_UP;
+      case VK_DOWN:  return TERM_KEY_DOWN;
+      case VK_LEFT:  return TERM_KEY_LEFT;
+      case VK_RIGHT: return TERM_KEY_RIGHT;
+      default:       return -1;
+    }
   }
   return -1;
 }

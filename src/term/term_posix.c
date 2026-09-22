@@ -62,11 +62,39 @@ void term_size(int *cols, int *rows) {
 
 bool term_has_color(void) { return color_supported(); }
 
-int term_poll_key(int timeout_ms) {
+static bool have_pending = false;
+static unsigned char pending_byte;
+
+static bool read_byte(int timeout_ms, unsigned char *out) {
+  if (have_pending) {
+    *out = pending_byte;
+    have_pending = false;
+    return true;
+  }
   struct pollfd pfd = {.fd = tty_fd, .events = POLLIN};
-  int ret = poll(&pfd, 1, timeout_ms);
-  if (ret <= 0) return -1;
+  if (poll(&pfd, 1, timeout_ms) <= 0) return false;
+  return read(tty_fd, out, 1) == 1;
+}
+
+int term_poll_key(int timeout_ms) {
   unsigned char c;
-  if (read(tty_fd, &c, 1) != 1) return -1;
-  return tolower(c);
+  if (!read_byte(timeout_ms, &c)) return -1;
+  if (c != 0x1b) return tolower(c);
+
+  unsigned char c2;
+  if (!read_byte(25, &c2)) return 27;
+  if (c2 != '[') {
+    have_pending = true;
+    pending_byte = c2;
+    return 27;
+  }
+  unsigned char c3;
+  if (!read_byte(25, &c3)) return 27;
+  switch (c3) {
+    case 'A': return TERM_KEY_UP;
+    case 'B': return TERM_KEY_DOWN;
+    case 'C': return TERM_KEY_RIGHT;
+    case 'D': return TERM_KEY_LEFT;
+    default:  return -1;
+  }
 }

@@ -46,7 +46,7 @@ void spawn_kaiju(struct scene *sc, int w, int h) {
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = dir ? (double)(w - 2) : (double)(1 - width);
-  finish_creature_spawn(e, ENT_KAIJU, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_KAIJU_COOLDOWN, (struct attr){COL_DEFAULT, false});
+  finish_creature_spawn(e, ENT_KAIJU, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_KAIJU_COOLDOWN, (struct attr){.col = COL_DEFAULT, .bold = false});
 }
 
 void schedule_kaiju_return(struct scene *sc) {

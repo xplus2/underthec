@@ -8,6 +8,8 @@ struct cell {
   enum color col;
   bool bold;
   bool cont; /* 2nd multibyte */
+  enum color bg;
+  bool bg_bold;
 };
 
 struct canvas {

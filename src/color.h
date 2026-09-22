@@ -18,6 +18,8 @@ enum color {
 struct attr {
   enum color col;
   bool bold;
+  enum color bg;
+  bool bg_bold;
 };
 
 /* detect tty color support */

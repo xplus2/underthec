@@ -5,6 +5,11 @@
 
 #include "../canvas.h"
 
+#define TERM_KEY_UP    (-2)
+#define TERM_KEY_DOWN  (-3)
+#define TERM_KEY_LEFT  (-4)
+#define TERM_KEY_RIGHT (-5)
+
 /* 0 on success. raw mode, alt screen, hide cursor */
 int term_init(void);
 

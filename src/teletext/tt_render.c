@@ -62,7 +62,7 @@ static int cell_mask(const struct cell *c, uint8_t *col) {
 }
 
 static struct mcell mosaic_cell(const struct canvas *c, int x, int y) {
-  struct cell blank = {{' ', '\0'}, COL_DEFAULT, false, false};
+  struct cell blank = {.glyph = {' ', '\0'}, .col = COL_DEFAULT, .bold = false, .cont = false};
   const struct cell *g[2] = {&blank, &blank};
   if (y < c->height) for (int k = 0; k < 2; k++) if (x + k < c->width) g[k] = &c->cells[(size_t)y * (size_t)c->width + (size_t)(x + k)];
   int mask[2];

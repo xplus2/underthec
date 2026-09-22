@@ -32,23 +32,23 @@ bool color_supported(void) {
 struct attr color_from_mask_letter(char c) {
   static const char letters[] = "cCrRyYbBgGmMwWkK";
   static const enum color cols[8] = {COL_CYAN, COL_RED, COL_YELLOW, COL_BLUE, COL_GREEN, COL_MAGENTA, COL_WHITE, COL_BLACK};
-  if (c == '\0') return (struct attr){COL_DEFAULT, false};
+  if (c == '\0') return (struct attr){.col = COL_DEFAULT, .bold = false};
   const char *p = strchr(letters, c);
-  if (p == NULL) return (struct attr){COL_DEFAULT, false};
+  if (p == NULL) return (struct attr){.col = COL_DEFAULT, .bold = false};
   int idx = (int)(p - letters);
-  return (struct attr){cols[idx / 2], (idx % 2) == 1};
+  return (struct attr){.col = cols[idx / 2], .bold = (idx % 2) == 1};
 }
 
 static const char *const color_names[8] = {"black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"};
 static const enum color color_name_cols[8] = {COL_BLACK, COL_RED, COL_GREEN, COL_YELLOW, COL_BLUE, COL_MAGENTA, COL_CYAN, COL_WHITE};
 
 struct attr color_from_name(const char *name) {
-  if (name == NULL || name[0] == '\0') return (struct attr){COL_DEFAULT, false};
+  if (name == NULL || name[0] == '\0') return (struct attr){.col = COL_DEFAULT, .bold = false};
   bool bold = (name[0] >= 'A' && name[0] <= 'Z');
   for (size_t i = 0; i < sizeof(color_names) / sizeof(color_names[0]); i++) {
-    if (strcasecmp(name, color_names[i]) == 0) return (struct attr){color_name_cols[i], bold};
+    if (strcasecmp(name, color_names[i]) == 0) return (struct attr){.col = color_name_cols[i], .bold = bold};
   }
-  return (struct attr){COL_DEFAULT, false};
+  return (struct attr){.col = COL_DEFAULT, .bold = false};
 }
 
 bool color_name_valid(const char *name) {
