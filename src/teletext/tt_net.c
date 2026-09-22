@@ -21,7 +21,7 @@ struct tt_net *tt_net_open(const char *spec, int ttl, const char *iface, char *e
   return NULL;
 }
 
-int tt_net_send(struct tt_net *n, const uint8_t *buf, size_t len) {
+int tt_net_send(const struct tt_net *n, const uint8_t *buf, size_t len) {
   (void)n;
   (void)buf;
   (void)len;
@@ -156,7 +156,7 @@ struct tt_net *tt_net_open(const char *spec, int ttl, const char *iface, char *e
   return n;
 }
 
-int tt_net_send(struct tt_net *n, const uint8_t *buf, size_t len) {
+int tt_net_send(const struct tt_net *n, const uint8_t *buf, size_t len) {
   ssize_t rc = sendto(n->fd, buf, len, 0, (const struct sockaddr *)&n->dst, n->dst_len);
   return rc == (ssize_t)len ? 0 : -1;
 }

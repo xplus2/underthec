@@ -41,7 +41,7 @@ void feed_trigger(struct scene *sc, int w, int h) {
   bool have_fish = false;
   double lowest_fish_y = 0.0;
   for (int i = 0; i < sc->entities.count; i++) {
-    struct entity *e = &sc->entities.items[i];
+    const struct entity *e = &sc->entities.items[i];
     if (e->marked_dead || e->type != ENT_FISH) continue;
     if (!have_fish || e->y > lowest_fish_y) {
       lowest_fish_y = e->y;
@@ -49,7 +49,7 @@ void feed_trigger(struct scene *sc, int w, int h) {
     }
   }
   if (have_fish) for (int i = 0; i < sc->entities.count; i++) {
-    struct entity *e = &sc->entities.items[i];
+    const struct entity *e = &sc->entities.items[i];
     if (e->marked_dead || e->type != ENT_FLAKE) continue;
     if (e->y <= lowest_fish_y) return;
   }
@@ -100,7 +100,7 @@ static void feed_alert_fish(struct scene *sc) {
   int col_count = 0;
   bool any_in_main = false;
   for (int i = 0; i < sc->entities.count; i++) {
-    struct entity *e = &sc->entities.items[i];
+    const struct entity *e = &sc->entities.items[i];
     if (e->marked_dead || e->type != ENT_FLAKE || e->die_after >= 0.0) continue;
     if (e->y >= MAIN_REGION_TOP_ROW) any_in_main = true;
     int col = (int)(e->x + 0.5);
@@ -149,7 +149,7 @@ static void feed_advance_heading_fish(struct scene *sc) {
   }
 }
 
-static bool fish_mouth_touch(struct entity *fish, struct entity *flake) {
+static bool fish_mouth_touch(struct entity *fish, const struct entity *flake) {
   ascii_rows rows = entity_shape(fish);
   int w = entity_width(fish);
   int h = entity_height(fish);
@@ -157,14 +157,20 @@ static bool fish_mouth_touch(struct entity *fish, struct entity *flake) {
   int front_cols[2];
   int found = 0;
   if (fish->vx >= 0.0) {
-    for (int c = w - 1; c >= 0 && found < 2; c--) for (int r = 0; r < h; r++) {
-      const char *row = rows[r];
-      if (row != NULL && c < (int)strlen(row) && row[c] != ' ') { front_cols[found++] = c; break; }
+    for (int c = w - 1; c >= 0; c--) {
+      if (found >= 2) break;
+      for (int r = 0; r < h; r++) {
+        const char *row = rows[r];
+        if (row != NULL && c < (int)strlen(row) && row[c] != ' ') { front_cols[found++] = c; break; }
+      }
     }
   } else {
-    for (int c = 0; c < w && found < 2; c++) for (int r = 0; r < h; r++) {
-      const char *row = rows[r];
-      if (row != NULL && c < (int)strlen(row) && row[c] != ' ') { front_cols[found++] = c; break; }
+    for (int c = 0; c < w; c++) {
+      if (found >= 2) break;
+      for (int r = 0; r < h; r++) {
+        const char *row = rows[r];
+        if (row != NULL && c < (int)strlen(row) && row[c] != ' ') { front_cols[found++] = c; break; }
+      }
     }
   }
   if (found == 0) return false;
@@ -201,7 +207,7 @@ static void feed_release_waiting_fish(struct scene *sc) {
     if (fish->marked_dead || fish->type != ENT_FISH || !fish->feed_heading) continue;
     bool any_above = false;
     for (int j = 0; j < sc->entities.count; j++) {
-      struct entity *flake = &sc->entities.items[j];
+      const struct entity *flake = &sc->entities.items[j];
       if (flake->marked_dead || flake->type != ENT_FLAKE) continue;
       if (flake->y <= fish->y) { any_above = true; break; }
     }

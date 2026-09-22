@@ -55,9 +55,9 @@ static void write_sgr(enum color col, bool bold, enum color bg, bool bg_bold, bo
   if (bold) { *p++ = ';'; *p++ = '1'; }
   *p++ = ';';
   if (col == COL_DEFAULT) { *p++ = '3'; *p++ = '9'; }
-  else p = append_uint(p, 30u + (unsigned)(col - 1));
+  else p = append_uint(p, 30u + (col - 1));
   *p++ = ';';
-  p = append_uint(p, (bg_bold ? 100u : 40u) + (unsigned)(bg - 1));
+  p = append_uint(p, (bg_bold ? 100u : 40u) + (bg - 1));
   *p++ = 'm';
   fwrite(buf, 1, (size_t)(p - buf), stdout);
 }

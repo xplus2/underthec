@@ -792,9 +792,7 @@ int main(int argc, char **argv) {
       if (key == '\x1b') settings_ui_close(&settings_ui);
       else settings_ui_handle_key(&settings_ui, key, w, h);
     }
-    if (help_ui_is_open(&help_ui)) {
-      if (key == '\x1b') help_ui_close(&help_ui);
-    }
+    if (help_ui_is_open(&help_ui) && key == '\x1b') help_ui_close(&help_ui);
     if (g_feed_signal) {
       g_feed_signal = 0;
       scene_feed(&scene, w, h);

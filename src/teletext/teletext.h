@@ -74,14 +74,14 @@ void tt_ts_init(struct tt_ts *m);
 void tt_ts_psi(struct tt_ts *m, uint8_t *out);
 
 /* PCR packet, 27 MHz ticks */
-void tt_ts_pcr(struct tt_ts *m, uint8_t *out, uint64_t pcr);
+void tt_ts_pcr(const struct tt_ts *m, uint8_t *out, uint64_t pcr);
 
 /* 1 to TT_MAX_PACKETS, PES in TS, PTS at 90 kHz */
 size_t tt_ts_pes(struct tt_ts *m, uint8_t *out, const uint8_t (*pk)[TT_PACKET_LEN], int n, uint64_t pts);
 
 /* spec=GROUP:PORT or [GROUP]:PORT. iface=local addr, name (IPv6), or NULL */
 struct tt_net *tt_net_open(const char *spec, int ttl, const char *iface, char *errbuf, size_t errbuf_len);
-int tt_net_send(struct tt_net *n, const uint8_t *buf, size_t len);
+int tt_net_send(const struct tt_net *n, const uint8_t *buf, size_t len);
 void tt_net_close(struct tt_net *n);
 
 struct tt_stream;

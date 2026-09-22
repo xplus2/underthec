@@ -167,7 +167,7 @@ void scene_on_species_toggled(struct scene *sc, int w, int h) {
     bool has_timer = false;
     bool has_live = false;
     for (int i = 0; i < sc->entities.count; i++) {
-      struct entity *e = &sc->entities.items[i];
+      const struct entity *e = &sc->entities.items[i];
       if (e->marked_dead) continue;
       if (e->type == ENT_KAIJU_TIMER) has_timer = true;
       if (e->type == ENT_KAIJU) has_live = true;
@@ -182,7 +182,7 @@ void scene_on_species_toggled(struct scene *sc, int w, int h) {
     bool has_timer = false;
     bool has_live = false;
     for (int i = 0; i < sc->entities.count; i++) {
-      struct entity *e = &sc->entities.items[i];
+      const struct entity *e = &sc->entities.items[i];
       if (e->marked_dead) continue;
       if (e->type == ENT_RANDOM_OBJECT_TIMER) has_timer = true;
       switch (e->type) {

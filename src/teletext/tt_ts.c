@@ -67,7 +67,7 @@ void tt_ts_psi(struct tt_ts *m, uint8_t *out) {
   psi_packet(out + TT_TS_LEN, PID_PMT, &m->cc_pmt, pmt, 28);
 }
 
-void tt_ts_pcr(struct tt_ts *m, uint8_t *out, uint64_t pcr) {
+void tt_ts_pcr(const struct tt_ts *m, uint8_t *out, uint64_t pcr) {
   (void)m;
   uint64_t base = (pcr / 300) & PTS_MASK;
   unsigned ext = (unsigned)(pcr % 300);

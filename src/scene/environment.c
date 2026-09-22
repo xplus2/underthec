@@ -168,13 +168,13 @@ void add_all_fish(struct scene *sc, int w, int h) {
   for (int i = 0; i < count; i++) spawn_fish(sc, w, h);
 }
 
-static int message_row_count(struct scene *sc) {
+static int message_row_count(const struct scene *sc) {
   int rows = 0;
   while (sc->message_rows[rows] != NULL) rows++;
   return rows;
 }
 
-static int message_block_width(struct scene *sc, int rows) {
+static int message_block_width(const struct scene *sc, int rows) {
   int block_w = 0;
   for (int i = 0; i < rows; i++) {
     int len = entity_utf8_display_width(sc->message_rows[i]);

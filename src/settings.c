@@ -43,8 +43,17 @@ static const struct grid_cell grid[GRID_ROWS][2] = {
 static const struct attr BOX_ATTR = {.col = COL_WHITE, .bold = false, .bg = COL_BLACK, .bg_bold = true};
 static const struct attr HL_ATTR = {.col = COL_YELLOW, .bold = false, .bg = COL_BLUE, .bg_bold = false};
 
-static int clampi(int v, int lo, int hi) { return v < lo ? lo : (v > hi ? hi : v); }
-static double clampd(double v, double lo, double hi) { return v < lo ? lo : (v > hi ? hi : v); }
+static int clampi(int v, int lo, int hi) {
+  if (v < lo) return lo;
+  if (v > hi) return hi;
+  return v;
+}
+
+static double clampd(double v, double lo, double hi) {
+  if (v < lo) return lo;
+  if (v > hi) return hi;
+  return v;
+}
 
 static bool *species_field(struct aquatic_life *a, size_t offset) {
   return (bool *)((char *)a + offset);
@@ -168,9 +177,11 @@ void settings_ui_draw(const struct settings_ui *ui, struct canvas *c) {
   char line[CONTENT_W + 1];
   bool row0_sel = ui->sel_row == 0;
   snprintf(line, sizeof line, "%-7s-%3d+   %-5s-%5.2f+", "fps", *ui->fps, "pace", *ui->pace);
-  draw_row_text(c, MARGIN, MARGIN + draw_row_for_logical(0), line,
-                row0_sel && ui->sel_col == 0 ? 8 : (row0_sel && ui->sel_col == 1 ? 21 : -1),
-                row0_sel && ui->sel_col == 0 ? 3 : (row0_sel && ui->sel_col == 1 ? 5 : 0));
+  int row0_off, row0_len;
+  if (row0_sel && ui->sel_col == 0) { row0_off = 8; row0_len = 3; }
+  else if (row0_sel && ui->sel_col == 1) { row0_off = 21; row0_len = 5; }
+  else { row0_off = -1; row0_len = 0; }
+  draw_row_text(c, MARGIN, MARGIN + draw_row_for_logical(0), line, row0_off, row0_len);
 
   snprintf(line, sizeof line, "%-7s-%3d+", "uturn", ui->scene->uturn_chance);
   draw_row_text(c, MARGIN, MARGIN + draw_row_for_logical(1), line, ui->sel_row == 1 ? 8 : -1, ui->sel_row == 1 ? 3 : 0);
