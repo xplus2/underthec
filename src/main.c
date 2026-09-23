@@ -20,6 +20,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 static volatile sig_atomic_t g_should_quit = 0;
 static volatile sig_atomic_t g_feed_signal = 0;
 
@@ -28,10 +32,12 @@ static void on_signal(int sig) {
   g_should_quit = 1;
 }
 
+#ifdef SIGUSR1
 static void on_feed_signal(int sig) {
   (void)sig;
   g_feed_signal = 1;
 }
+#endif
 
 static void append_bounded(char *dst, size_t dst_cap, size_t *pos, const char *src) {
   size_t src_len = strlen(src);
@@ -304,9 +310,16 @@ static bool parse_ttl(const char *val, int *out, char *errbuf, size_t errbuf_len
 }
 
 static double now_seconds(void) {
+#ifdef _WIN32
+  LARGE_INTEGER freq, counter;
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&counter);
+  return (double)counter.QuadPart / (double)freq.QuadPart;
+#else
   struct timespec ts;
   timespec_get(&ts, TIME_UTC);
   return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
+#endif
 }
 
 static bool parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len) {
