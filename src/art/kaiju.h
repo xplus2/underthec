@@ -25,7 +25,7 @@ static const char *const kaiju_mask_0[] = {
     "       332     wwww",
     "  2   332      2www",
     " 2 2  32        2 2 2",
-    "2  222  2       yy2yy",
+    "2 2222  2       yy2yy",
     " 2     2    22     2",
     "  222222yyyy2 2yyyy2",
     NULL
@@ -53,7 +53,7 @@ static const char *const kaiju_mask_1[] = {
 	"  wwww     233",
 	"  www2      233   2",
 	"2 2 2        23  2 2",
-	"yy2yy       2  222  2",
+	"yy2yy       2  2222 2",
 	" 2     22    2     2",
 	" 2yyyy2 2yyyy222222",
 	NULL

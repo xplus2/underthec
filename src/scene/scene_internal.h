@@ -8,8 +8,10 @@
 #define Z_FISH_MIN 3
 #define Z_FISH_RANGE 17
 #define Z_SEAWEED 21
-#define Z_CASTLE 22
-#define Z_MESSAGE 23
+#define Z_CASTLE_BUBBLE 20
+#define Z_CASTLE_DOOR 22
+#define Z_CASTLE 23
+#define Z_MESSAGE 24
 #define Z_SHIP 7
 #define Z_WHALE 5
 #define Z_MONSTER 5
@@ -23,6 +25,7 @@
 #define Z_HOOKED 5
 #define Z_CRAB 21
 #define Z_JELLYFISH 4
+#define Z_SEAHORSE 4
 #define Z_FLAKE 1
 #define CASTLE_X_OFFSET 32
 #define CASTLE_WIDTH 31
@@ -34,6 +37,7 @@
 
 /* effects.c */
 void spawn_splat(struct scene *sc, double tx, double ty, int tz);
+struct entity *spawn_bubble_at(struct scene *sc, double x, double y, int z);
 void spawn_bubble(struct scene *sc, double fish_x, double fish_y, int fish_z, int fish_w, int fish_h, double fish_vx);
 
 /* creatures.c */
@@ -50,6 +54,7 @@ void add_environment(struct scene *sc, int w, int h);
 void add_castle(struct scene *sc, int w, int h);
 void add_castle_building(struct scene *sc, int w, int h);
 void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle_height);
+void castle_door_tick(struct scene *sc);
 void add_seaweed(struct scene *sc, int w, int h);
 void add_all_seaweed(struct scene *sc, int w, int h);
 void add_all_fish(struct scene *sc, int w, int h);

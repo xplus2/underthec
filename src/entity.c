@@ -287,7 +287,7 @@ static void tick_dolphin(struct entity *e) {
   e->age_ticks++;
 }
 
-static void tick_jellyfish(struct entity *e, int term_h) {
+static void tick_bob(struct entity *e, int term_h) {
   int phase = e->age_ticks % 60;
   double dy;
   if (phase < 20)      dy = -0.15;
@@ -325,10 +325,12 @@ void entity_tick_all(struct entity_list *list, int term_w, int term_h) {
       case ENT_FISHHOOK:
       case ENT_KAIJU_TIMER:
       case ENT_RANDOM_OBJECT_TIMER:
-      case ENT_FLAKE:                                       break;
+      case ENT_FLAKE:
+      case ENT_CASTLE_DOOR:                                 break;
       case ENT_DOLPHIN:        tick_dolphin(e);
                                advance_frame(e);            break;
-      case ENT_JELLYFISH:      tick_jellyfish(e, term_h);
+      case ENT_JELLYFISH:
+      case ENT_SEAHORSE:       tick_bob(e, term_h);
                                advance_frame(e);            break;
       case ENT_WATERLINE:
       case ENT_CASTLE:

@@ -10,6 +10,7 @@
 #include "art/jellyfish.h"
 #include "art/misc.h"
 #include "art/monster.h"
+#include "art/seahorse.h"
 #include "art/shark.h"
 #include "art/ship.h"
 #include "art/submarine.h"
@@ -371,6 +372,23 @@ void spawn_jellyfish(struct scene *sc, int w, int h) {
   finish_creature_spawn(e, ENT_JELLYFISH, Z_JELLYFISH, speed, 0, DEATH_NONE, color_from_name("cyan"));
 }
 
+static void spawn_seahorse(struct scene *sc, int w, int h) {
+  int dir = rng_int(2);
+  double speed = rng_double(0.4) + 0.5;
+  if (dir) speed = -speed;
+
+  struct entity *e = entity_spawn(&sc->entities);
+  e->frames = seahorse[dir];
+  e->frame_count = 2;
+  e->frame_interval = 4.0;
+  entity_randomize_mask(e, seahorse[dir][0].mask);
+  int width = entity_width(e);
+  int height = entity_height(e);
+  e->y = random_swim_y(h, height);
+  e->x = dir ? (double)(w - 2) : (double)(1 - width);
+  finish_creature_spawn(e, ENT_SEAHORSE, Z_SEAHORSE, speed, 0, DEATH_RANDOM_OBJECT, color_from_name("YELLOW"));
+}
+
 void spawn_random_object(struct scene *sc, int w, int h) {
   typedef void (*spawn_fn)(struct scene *, int, int);
   struct candidate {
@@ -384,6 +402,7 @@ void spawn_random_object(struct scene *sc, int w, int h) {
   {spawn_swordfish, sc->aquatic.swordfish}, {spawn_ducks, sc->aquatic.ducks},
   {spawn_dolphins, sc->aquatic.dolphins},   {spawn_swan, sc->aquatic.swan},
   {spawn_fishhook, sc->aquatic.fishhook},   {spawn_crab, sc->aquatic.crab},
+  {spawn_seahorse, sc->aquatic.seahorse},
   {spawn_message_event, sc->message_rows != NULL && sc->message_position == MSG_POS_EVENT},
   };
   const int count = (int)(sizeof(table) / sizeof(table[0]));

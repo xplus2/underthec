@@ -16,6 +16,7 @@ struct aquatic_life {
   bool whale;
   bool shark;
   bool jellyfish;
+  bool seahorse;
   bool monster;
   bool bigfish;
   bool swordfish;

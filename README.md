@@ -58,7 +58,8 @@ Define what's going on in your asciiquarium. It takes a comma-separated definiti
 
 - `fish=<N|auto>`: number of fish (default: `auto`, sized to the terminal)
 - flags, present=on, omitted=off: `ducks`, `dolphins`, `ship`, `swan`, `kaiju`, `fishhook`,
-  `submarine`, `whale`, `shark`, `jellyfish`, `monster`, `bigfish`, `swordfish`, `crab`
+  `submarine`, `whale`, `shark`, `jellyfish`, `monster`, `bigfish`, `swordfish`, `crab`,
+  `seahorse`
 
 Default (no `-a`): every flag on, `fish=auto`. Example: `-a fish=10,jellyfish,dolphins`
 

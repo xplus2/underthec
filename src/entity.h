@@ -33,7 +33,9 @@ enum entity_type {
   ENT_KAIJU_TIMER,
   ENT_JELLYFISH,
   ENT_RANDOM_OBJECT_TIMER,
-  ENT_FLAKE
+  ENT_FLAKE,
+  ENT_SEAHORSE,
+  ENT_CASTLE_DOOR
 };
 
 enum death_action {

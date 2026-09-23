@@ -15,25 +15,26 @@ struct grid_cell {
 
 #define SP(field) offsetof(struct aquatic_life, field)
 
-#define GRID_ROWS 10
+#define GRID_ROWS 11
 
 static const struct grid_cell grid[GRID_ROWS][2] = {
   {{FIELD_FPS, "fps", 0},        {FIELD_PACE, "pace", 0}},
   {{FIELD_UTURN, "uturn", 0},    {FIELD_NONE, NULL, 0}},
   {{FIELD_FISH, "fish", 0},      {FIELD_NONE, NULL, 0}},
-  {{FIELD_SPECIES, "bigfish", SP(bigfish)},     {FIELD_SPECIES, "monster", SP(monster)}},
+  {{FIELD_SPECIES, "bigfish", SP(bigfish)},     {FIELD_SPECIES, "seahorse", SP(seahorse)}},
   {{FIELD_SPECIES, "crab", SP(crab)},           {FIELD_SPECIES, "shark", SP(shark)}},
   {{FIELD_SPECIES, "dolphins", SP(dolphins)},   {FIELD_SPECIES, "ship", SP(ship)}},
   {{FIELD_SPECIES, "ducks", SP(ducks)},         {FIELD_SPECIES, "submarine", SP(submarine)}},
   {{FIELD_SPECIES, "fishhook", SP(fishhook)},   {FIELD_SPECIES, "swan", SP(swan)}},
   {{FIELD_SPECIES, "jellyfish", SP(jellyfish)}, {FIELD_SPECIES, "swordfish", SP(swordfish)}},
   {{FIELD_SPECIES, "kaiju", SP(kaiju)},         {FIELD_SPECIES, "whale", SP(whale)}},
+  {{FIELD_SPECIES, "monster", SP(monster)},     {FIELD_NONE, NULL, 0}},
 };
 
 #undef SP
 
 #define CONTENT_W 28
-#define CONTENT_H 13
+#define CONTENT_H 14
 #define MARGIN 1
 #define BOX_W (CONTENT_W + 2 * MARGIN)
 #define BOX_H (CONTENT_H + 2 * MARGIN)

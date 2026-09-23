@@ -99,6 +99,66 @@ void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle
   e->y = castle_y + castle_height - rubble_height;
 }
 
+#define CASTLE_DOOR_ONE_IN 9000 /* ~15 min at 10 ticks/s */
+
+static const int castle_door_hold_ticks[CASTLE_DOOR_STEPS] = {4, 4, 4, 2, 2, 2, 0, 2, 2, 4, 4, 4};
+
+static double castle_door_hold(int step) {
+  if (step == CASTLE_DOOR_OPEN_STEP) return rng_int(121) + 80.0; /* 8-20 s */
+  return castle_door_hold_ticks[step];
+}
+
+static void spawn_castle_door(struct scene *sc, double x, double y) {
+  struct entity *e = entity_spawn(&sc->entities);
+  e->type = ENT_CASTLE_DOOR;
+  e->x = x;
+  e->y = y;
+  e->z = Z_CASTLE_DOOR;
+  e->frames = castle_door_frames;
+  e->frame_count = CASTLE_DOOR_STEPS;
+  e->frame_timer = castle_door_hold(0);
+  e->default_attr = color_from_name("BLACK");
+}
+
+/* bubbles leaving top row keep rising */
+static void release_door_bubbles(struct scene *sc, double door_x, double door_y) {
+  const char *top = castle_door_frames[CASTLE_DOOR_OPEN_STEP - 1].shape[0];
+  for (int col = 0; top[col] != '\0'; col++) {
+    if (top[col] != 'o') continue;
+    struct entity *b = spawn_bubble_at(sc, door_x + col, door_y - 1, Z_CASTLE_BUBBLE);
+    b->frame_cur = 1;
+  }
+}
+
+void castle_door_tick(struct scene *sc) {
+  struct entity *castle_ent = entity_find_first(&sc->entities, ENT_CASTLE);
+  bool castle_ready = castle_ent != NULL && sc->castle_hidden_by == 0 && castle_ent->frame_cur == castle_ent->frame_count - 1;
+  struct entity *door = entity_find_first(&sc->entities, ENT_CASTLE_DOOR);
+
+  if (door == NULL) {
+    if (castle_ready && rng_int(CASTLE_DOOR_ONE_IN) == 0)
+      spawn_castle_door(sc, castle_ent->x + CASTLE_DOOR_COL, castle_ent->y + CASTLE_DOOR_ROW);
+    return;
+  }
+  if (!castle_ready) {
+    door->marked_dead = true;
+    return;
+  }
+  if (door->frame_timer > 1.0) {
+    door->frame_timer -= 1.0;
+    return;
+  }
+
+  int next = door->frame_cur + 1;
+  if (next >= door->frame_count) {
+    door->marked_dead = true;
+    return;
+  }
+  door->frame_cur = next;
+  door->frame_timer = castle_door_hold(next);
+  if (next == CASTLE_DOOR_OPEN_STEP) release_door_bubbles(sc, door->x, door->y);
+}
+
 void add_seaweed(struct scene *sc, int w, int h) {
   int height = rng_int(4) + 3;
   char **rows0 = xmalloc((size_t)(height + 1) * sizeof(*rows0));
