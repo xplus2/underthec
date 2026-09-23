@@ -19,6 +19,7 @@ static const struct aquatic_flag aquatic_flags[] = {
   AQ_FLAG(monster),  AQ_FLAG(bigfish),  AQ_FLAG(swordfish),AQ_FLAG(crab),  AQ_FLAG(seahorse),
 };
 #define AQUATIC_FLAG_COUNT (sizeof(aquatic_flags) / sizeof(aquatic_flags[0]))
+_Static_assert(AQUATIC_FLAG_COUNT == SCENE_AQUATIC_FLAG_COUNT, "SCENE_AQUATIC_FLAG_COUNT out of sync");
 
 static bool *aquatic_field(struct aquatic_life *a, size_t offset) {
   return (bool *)((char *)a + offset);
@@ -56,6 +57,10 @@ bool scene_aquatic_set_flag(struct aquatic_life *a, const char *name) {
   return false;
 }
 
+const char *scene_aquatic_flag_name(size_t i) { return aquatic_flags[i].name; }
+
+bool *scene_aquatic_flag(struct aquatic_life *a, size_t i) { return aquatic_field(a, aquatic_flags[i].offset); }
+
 struct scene_ctx {
   struct scene *sc;
   int w;
@@ -89,6 +94,7 @@ void scene_init(struct scene *sc, bool classic_mode, struct aquatic_life aquatic
   entity_list_init(&sc->entities);
   sc->classic_mode = classic_mode;
   sc->aquatic = aquatic;
+  sc->castle = true;
   sc->message_rows = NULL;
   sc->message_frame.shape = NULL;
   sc->message_frame.mask = NULL;
@@ -110,7 +116,7 @@ void scene_reset(struct scene *sc, int term_w, int term_h) {
   sc->feed_alerted = true;
   if (sc->message_rows != NULL) add_message(sc, term_w, term_h);
   add_environment(sc, term_w, term_h);
-  add_castle(sc, term_w, term_h);
+  if (sc->castle) add_castle(sc, term_w, term_h);
   add_all_seaweed(sc, term_w, term_h);
   add_all_fish(sc, term_w, term_h);
   if (sc->aquatic.kaiju) schedule_kaiju_return(sc);
@@ -179,6 +185,8 @@ void scene_set_message_color(struct scene *sc, struct attr attr) {
 void scene_set_uturn_chance(struct scene *sc, int one_in) {
   sc->uturn_chance = one_in;
 }
+
+void scene_set_castle(struct scene *sc, bool on) { sc->castle = on; }
 
 void scene_feed(struct scene *sc, int w, int h) {
   feed_trigger(sc, w, h);

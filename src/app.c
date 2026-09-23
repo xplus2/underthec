@@ -48,6 +48,11 @@ void app_key(struct app *a, int key) {
 
 void app_feed(struct app *a) { scene_feed(&a->scene, a->w, a->h); }
 
+void app_click(struct app *a, int x, int y) {
+  if (settings_ui_click(&a->settings, x, y, a->w, a->h)) return;
+  app_feed(a);
+}
+
 void app_frame(struct app *a, double now) {
   double dt = now - a->last;
   a->last = now;

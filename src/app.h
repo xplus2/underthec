@@ -32,6 +32,8 @@ void app_resize(struct app *a, int w, int h);
 /* r,p,f,s,h,esc + dialog keys */
 void app_key(struct app *a, int key);
 void app_feed(struct app *a);
+/* dialog hits, otherwise: feed */
+void app_click(struct app *a, int x, int y);
 
 /* tick, canvas redraw */
 void app_frame(struct app *a, double now);

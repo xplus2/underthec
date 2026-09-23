@@ -9,9 +9,22 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif ()
 
+file(READ ${CMAKE_SOURCE_DIR}/src/version.h UNDERTHEC_VERSION_H)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS src/version.h)
+string(REGEX MATCH "TOOL_VERSION \"([0-9]+)\\.([0-9]+)\\.([0-9]+)\"" _ "${UNDERTHEC_VERSION_H}")
+set(UNDERTHEC_VERSION_STRING "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
+foreach (part MAJOR MINOR PATCH)
+    string(REGEX MATCH "TOOL_VERSION_${part} ([0-9]+)" _ "${UNDERTHEC_VERSION_H}")
+    list(APPEND UNDERTHEC_VERSION_PARTS "${CMAKE_MATCH_1}")
+endforeach ()
+string(REPLACE ";" "." UNDERTHEC_VERSION_PARTS "${UNDERTHEC_VERSION_PARTS}")
+if (NOT UNDERTHEC_VERSION_STRING STREQUAL UNDERTHEC_VERSION_PARTS)
+    message(FATAL_ERROR "src/version.h: TOOL_VERSION ${UNDERTHEC_VERSION_STRING} != MAJOR.MINOR.PATCH ${UNDERTHEC_VERSION_PARTS}")
+endif ()
+
 option(UNDERTHEC_STATIC "link statically where the target platform allows it" ON)
 
-set(UNDERTHEC_SOURCES
+set(UNDERTHEC_CORE_SOURCES
         src/app.c
         src/opts.c
         src/canvas.c
@@ -28,9 +41,10 @@ set(UNDERTHEC_SOURCES
         src/scene/fishhook.c
         src/scene/feed.c
 )
+set(UNDERTHEC_SOURCES ${UNDERTHEC_CORE_SOURCES})
 
 if (EMSCRIPTEN)
-    list(APPEND UNDERTHEC_SOURCES src/web/web_main.c)
+    list(APPEND UNDERTHEC_SOURCES src/config.c src/web/web_main.c)
 else ()
     list(APPEND UNDERTHEC_SOURCES
             src/main.c
@@ -64,7 +78,7 @@ if (EMSCRIPTEN)
             -sEXPORT_NAME=underthec
             -sENVIRONMENT=web
             -sALLOW_MEMORY_GROWTH=1
-            -sEXPORTED_FUNCTIONS=_web_opt,_web_init,_web_fps,_web_resize,_web_key,_web_feed,_web_frame,_web_width,_web_height
+            -sEXPORTED_FUNCTIONS=_web_opt,_web_init,_web_fps,_web_resize,_web_key,_web_click,_web_frame,_web_width,_web_height
             -sEXPORTED_RUNTIME_METHODS=HEAPU32,ccall
     )
     add_custom_command(TARGET underthec POST_BUILD
@@ -77,9 +91,28 @@ else ()
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -s")
 endif ()
 
+if (WIN32 AND NOT EMSCRIPTEN)
+    enable_language(RC)
+    add_executable(underthec_scr WIN32
+            ${UNDERTHEC_CORE_SOURCES}
+            src/config.c
+            src/scr/scr_main.c
+            src/scr/scr_cfg.c
+            src/scr/scr.rc
+    )
+    set_source_files_properties(src/scr/scr.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_SOURCE_DIR}/src/scr/scr.manifest)
+    target_include_directories(underthec_scr PRIVATE src)
+    set_target_properties(underthec_scr PROPERTIES OUTPUT_NAME underthec SUFFIX ".scr")
+    target_link_libraries(underthec_scr PRIVATE gdi32 advapi32)
+    if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(underthec_scr PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wall -Wextra>)
+    endif ()
+    if (UNDERTHEC_STATIC)
+        target_link_options(underthec_scr PRIVATE -static)
+    endif ()
+    install(TARGETS underthec_scr RUNTIME DESTINATION bin)
+endif ()
+
 if (NOT EMSCRIPTEN)
     install(TARGETS underthec RUNTIME DESTINATION bin)
-    if (NOT WIN32)
-        install(FILES man/underthec.1 DESTINATION share/man/man1)
-    endif ()
 endif ()

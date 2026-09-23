@@ -123,6 +123,12 @@ with the same values as on the command line:
 
 An invalid value shows the error instead of the aquarium.
 
+### Windows screensaver
+
+`underthec.scr` is a native Windows multi-monitor screensaver.
+Right-click it and choose "Install", or copy it to `C:\Windows\System32`,
+then select it in the screensaver settings.
+
 ### Teletext output
 
 Instead of the terminal, output can be rendered as an EBU Teletext page (page 100) and streamed:

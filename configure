@@ -32,6 +32,13 @@ for arg in "$@"; do
 	esac
 done
 
+ver_str=$(sed -n 's/^#define TOOL_VERSION "\(.*\)"$/\1/p' src/version.h)
+ver_parts=$(for p in MAJOR MINOR PATCH; do sed -n "s/^#define TOOL_VERSION_$p \([0-9]*\)$/\1/p" src/version.h; done | paste -sd. -)
+if [ "$ver_str" != "$ver_parts" ]; then
+	echo "configure: src/version.h: TOOL_VERSION $ver_str != MAJOR.MINOR.PATCH $ver_parts" >&2
+	exit 1
+fi
+
 if [ "$emcc" = "1" ] && [ -n "$host" ]; then
 	echo "configure: --emcc and --host are mutually exclusive" >&2
 	exit 1
@@ -43,19 +50,26 @@ fi
 srcs="src/app.c src/opts.c src/canvas.c src/color.c src/rng.c src/entity.c src/help.c src/settings.c src/scene/scene.c src/scene/effects.c src/scene/creatures.c src/scene/environment.c src/scene/kaiju.c src/scene/fishhook.c src/scene/feed.c"
 
 if [ "$emcc" = "1" ]; then
-	srcs="$srcs src/web/web_main.c"
+	srcs="$srcs src/config.c src/web/web_main.c"
 else
+	core_srcs="$srcs"
 	srcs="$srcs src/main.c src/term/term_common.c src/teletext/tt_render.c src/teletext/tt_t42.c src/teletext/tt_ts.c src/teletext/tt_net.c"
+	windows=0
 	case "$host" in
-	*mingw*) term_src="src/term/term_windows.c" ;;
-	*)
+	*mingw*) windows=1 ;;
+	"")
 		case "$(uname -s 2>/dev/null)" in
-		*MINGW*|*MSYS*) term_src="src/term/term_windows.c" ;;
-		*) term_src="src/term/term_posix.c" ;;
+		*MINGW*|*MSYS*) windows=1 ;;
 		esac
 		;;
 	esac
-	srcs="$srcs $term_src"
+	if [ "$windows" = "1" ]; then
+		srcs="$srcs src/term/term_windows.c"
+		scr_srcs="$core_srcs src/config.c src/scr/scr_main.c src/scr/scr_cfg.c"
+		if [ -n "$host" ]; then windres="${host}-windres"; else windres=windres; fi
+	else
+		srcs="$srcs src/term/term_posix.c"
+	fi
 fi
 
 cflags="-std=c11 -Wall -Wextra -Isrc"
@@ -70,7 +84,7 @@ fi
 
 if [ "$emcc" = "1" ]; then
 	ldflags="$ldflags -sMODULARIZE=1 -sEXPORT_NAME=underthec -sENVIRONMENT=web -sALLOW_MEMORY_GROWTH=1"
-	ldflags="$ldflags -sEXPORTED_FUNCTIONS=_web_opt,_web_init,_web_fps,_web_resize,_web_key,_web_feed,_web_frame,_web_width,_web_height"
+	ldflags="$ldflags -sEXPORTED_FUNCTIONS=_web_opt,_web_init,_web_fps,_web_resize,_web_key,_web_click,_web_frame,_web_width,_web_height"
 	ldflags="$ldflags -sEXPORTED_RUNTIME_METHODS=HEAPU32,ccall"
 elif [ "$static" = "1" ]; then
 	case "$(uname -s 2>/dev/null)" in
@@ -92,7 +106,14 @@ fi
 		echo 'TARGET = $(BUILDDIR)/underthec.js'
 		echo 'WEB_FILES = $(BUILDDIR)/index.html'
 	fi
+	if [ -n "$scr_srcs" ]; then
+		echo 'SCR_TARGET = $(BUILDDIR)/underthec.scr'
+		echo "SCR_SRCS = $scr_srcs"
+		echo "SCR_RC = src/scr/scr.rc"
+		echo "WINDRES = $windres"
+		echo "SCR_LDFLAGS = -mwindows -lgdi32 -ladvapi32"
+	fi
 } > config.mk
 
-echo "configured: CC=$cc static=$static debug=$debug emcc=$emcc prefix=$prefix"
+echo "configured: CC=$cc static=$static debug=$debug emcc=$emcc screensaver=$([ -n "$scr_srcs" ] && echo 1 || echo 0) prefix=$prefix"
 echo "run 'make' to build."

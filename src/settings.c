@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 enum field_kind { FIELD_NONE, FIELD_FPS, FIELD_PACE, FIELD_UTURN, FIELD_FISH, FIELD_SPECIES };
 
@@ -40,6 +41,13 @@ static const struct grid_cell grid[GRID_ROWS][2] = {
 #define BOX_H (CONTENT_H + 2 * MARGIN)
 #define COL0_X 0
 #define COL1_X 14
+/* -/+ x in numeric rows, col 1 only in row 0 */
+#define MINUS0_X 7
+#define PLUS0_X 11
+#define MINUS1_X 20
+#define PLUS1_X 26
+/* "[x] " before species label */
+#define CHECK_PREFIX 4
 
 static const struct attr BOX_ATTR = {.col = COL_WHITE, .bold = false, .bg = COL_BLACK, .bg_bold = true};
 static const struct attr HL_ATTR = {.col = COL_YELLOW, .bold = false, .bg = COL_BLUE, .bg_bold = false};
@@ -69,6 +77,12 @@ static int draw_row_for_logical(int lr) {
   if (lr == 1) return 3;
   if (lr == 2) return 5;
   return lr + 3;
+}
+
+static int logical_for_draw_row(int dr) {
+  for (int lr = 0; lr < GRID_ROWS; lr++)
+    if (draw_row_for_logical(lr) == dr) return lr;
+  return -1;
 }
 
 void settings_ui_init(struct settings_ui *ui, int *fps, double *pace, struct scene *scene) {
@@ -155,6 +169,32 @@ void settings_ui_handle_key(struct settings_ui *ui, int key, int term_w, int ter
   }
 }
 
+bool settings_ui_click(struct settings_ui *ui, int x, int y, int term_w, int term_h) {
+  if (!ui->open || x < 0 || x >= BOX_W || y < 0 || y >= BOX_H) return false;
+  int lr = logical_for_draw_row(y - MARGIN);
+  if (lr < 0) return true;
+  int cx = x - MARGIN;
+  int col;
+  int dir = 0;
+  if (grid[lr][0].kind != FIELD_SPECIES) {
+    if (cx == MINUS0_X || cx == PLUS0_X) col = 0;
+    else if (cx == MINUS1_X || cx == PLUS1_X) col = 1;
+    else return true;
+    if (grid[lr][col].kind == FIELD_NONE) return true;
+    dir = (cx == PLUS0_X || cx == PLUS1_X) ? 1 : -1;
+  } else {
+    col = cx >= COL1_X ? 1 : 0;
+    const struct grid_cell *cell = &grid[lr][col];
+    int x0 = col == 0 ? COL0_X : COL1_X;
+    if (cell->kind != FIELD_SPECIES || cx < x0 || cx >= x0 + CHECK_PREFIX + (int)strlen(cell->label)) return true;
+  }
+  ui->sel_row = lr;
+  ui->sel_col = col;
+  if (dir != 0) adjust(ui, dir, term_w, term_h);
+  else toggle_species(ui, term_w, term_h);
+  return true;
+}
+
 static void fill_rect(struct canvas *c, int x0, int y0, int w, int h, struct attr a) {
   for (int y = 0; y < h; y++)
     for (int x = 0; x < w; x++)
@@ -179,16 +219,16 @@ void settings_ui_draw(const struct settings_ui *ui, struct canvas *c) {
   bool row0_sel = ui->sel_row == 0;
   snprintf(line, sizeof line, "%-7s-%3d+   %-5s-%5.2f+", "fps", *ui->fps, "pace", *ui->pace);
   int row0_off, row0_len;
-  if (row0_sel && ui->sel_col == 0) { row0_off = 8; row0_len = 3; }
-  else if (row0_sel && ui->sel_col == 1) { row0_off = 21; row0_len = 5; }
+  if (row0_sel && ui->sel_col == 0) { row0_off = MINUS0_X + 1; row0_len = 3; }
+  else if (row0_sel && ui->sel_col == 1) { row0_off = MINUS1_X + 1; row0_len = 5; }
   else { row0_off = -1; row0_len = 0; }
   draw_row_text(c, MARGIN, MARGIN + draw_row_for_logical(0), line, row0_off, row0_len);
 
   snprintf(line, sizeof line, "%-7s-%3d+", "uturn", ui->scene->uturn_chance);
-  draw_row_text(c, MARGIN, MARGIN + draw_row_for_logical(1), line, ui->sel_row == 1 ? 8 : -1, ui->sel_row == 1 ? 3 : 0);
+  draw_row_text(c, MARGIN, MARGIN + draw_row_for_logical(1), line, ui->sel_row == 1 ? MINUS0_X + 1 : -1, ui->sel_row == 1 ? 3 : 0);
 
   snprintf(line, sizeof line, "%-7s-%3d+", "fish", current_fish_value(ui->scene));
-  draw_row_text(c, MARGIN, MARGIN + draw_row_for_logical(2), line, ui->sel_row == 2 ? 8 : -1, ui->sel_row == 2 ? 3 : 0);
+  draw_row_text(c, MARGIN, MARGIN + draw_row_for_logical(2), line, ui->sel_row == 2 ? MINUS0_X + 1 : -1, ui->sel_row == 2 ? 3 : 0);
 
   for (int lr = 3; lr < GRID_ROWS; lr++) {
     int y = MARGIN + draw_row_for_logical(lr);

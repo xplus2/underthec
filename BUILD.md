@@ -19,10 +19,16 @@ cmake --build build-musl
 ### Windows
 Cross-compiling a static Windows build requires the `mingw-w64` cross toolchain:
 
+It creates the terminal binary as well as the screensaver.
+
 ```sh
 cmake -B build-win -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-toolchain.cmake
 cmake --build build-win
 ```
+
+Windows builds also produce the screensaver `underthec.scr`.
+It needs `windres` (comes with mingw-w64).
+With configure + make, `--host=*-mingw32` builds `build/underthec.scr`.
 
 ### macOS
 The CMake build above should natively work on macOS.

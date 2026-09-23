@@ -11,6 +11,7 @@ src/*.o
 /underthec.exe
 /underthec.js
 /underthec.wasm
+/underthec.scr
 
 # cmake generic and profile builds
 /build*/
