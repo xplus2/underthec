@@ -1,11 +1,11 @@
 #define _DEFAULT_SOURCE
 
+#include "app.h"
 #include "canvas.h"
 #include "color.h"
-#include "help.h"
+#include "opts.h"
 #include "rng.h"
 #include "scene.h"
-#include "settings.h"
 #include "teletext/teletext.h"
 #include "term/term.h"
 #include "version.h"
@@ -39,18 +39,10 @@ static void on_feed_signal(int sig) {
 }
 #endif
 
-static void append_bounded(char *dst, size_t dst_cap, size_t *pos, const char *src) {
-  size_t src_len = strlen(src);
-  size_t avail = dst_cap > *pos ? dst_cap - *pos : 0;
-  if (src_len > avail) src_len = avail;
-  memcpy(dst + *pos, src, src_len);
-  *pos += src_len;
-}
-
 static void write_parts(FILE *stream, const char *const *parts, size_t count) {
   char buf[512] = {0};
   size_t pos = 0;
-  for (size_t i = 0; i < count; i++) append_bounded(buf, sizeof(buf), &pos, parts[i]);
+  for (size_t i = 0; i < count; i++) opts_append_bounded(buf, sizeof(buf), &pos, parts[i]);
   fwrite(buf, 1, pos, stream);
 }
 
@@ -112,104 +104,9 @@ static void print_help(const char *prog) {
     stdout);
 }
 
-static void set_errbuf(char *errbuf, size_t errbuf_len, const char *const *parts, size_t count) {
-  if (errbuf_len == 0) return;
-  size_t pos = 0;
-  for (size_t i = 0; i < count; i++) append_bounded(errbuf, errbuf_len - 1, &pos, parts[i]);
-  errbuf[pos] = '\0';
-}
-
 static int err_requires_arg(const char *prog, const char *opt) {
   write_parts(stderr, (const char *[]){prog, ": ", opt, " requires an argument\n"}, 4);
   return 2;
-}
-
-static char *owned_copy(const char *s) {
-  size_t len = strlen(s);
-  char *p = xmalloc(len + 1);
-  memcpy(p, s, len + 1);
-  return p;
-}
-
-struct aquatic_life_flag {
-  const char *name;
-  size_t offset;
-};
-
-#define AQ_FLAG(field) {#field, offsetof(struct aquatic_life, field)}
-
-static const struct aquatic_life_flag aquatic_life_flags[] = {
-  AQ_FLAG(ducks),    AQ_FLAG(dolphins), AQ_FLAG(ship),     AQ_FLAG(swan), AQ_FLAG(kaiju),
-  AQ_FLAG(fishhook), AQ_FLAG(submarine),AQ_FLAG(whale),    AQ_FLAG(shark),AQ_FLAG(jellyfish),
-  AQ_FLAG(monster),  AQ_FLAG(bigfish),  AQ_FLAG(swordfish),AQ_FLAG(crab),
-};
-#define AQUATIC_LIFE_FLAG_COUNT (sizeof(aquatic_life_flags) / sizeof(aquatic_life_flags[0]))
-
-static bool *aquatic_life_field(struct aquatic_life *a, size_t offset) {
-  return (bool *)((char *)a + offset);
-}
-
-static struct aquatic_life aquatic_life_default(void) {
-  struct aquatic_life a;
-  a.fish_count = -1;
-  for (size_t i = 0; i < AQUATIC_LIFE_FLAG_COUNT; i++) *aquatic_life_field(&a, aquatic_life_flags[i].offset) = true;
-  return a;
-}
-
-static bool aquatic_life_set_flag(struct aquatic_life *out, const char *name) {
-  for (size_t i = 0; i < AQUATIC_LIFE_FLAG_COUNT; i++) {
-    if (strcmp(name, aquatic_life_flags[i].name) == 0) {
-      *aquatic_life_field(out, aquatic_life_flags[i].offset) = true;
-      return true;
-    }
-  }
-  return false;
-}
-
-static bool parse_fish_count(const char *val, int *out, char *errbuf, size_t errbuf_len) {
-  if (strcmp(val, "auto") == 0) {
-    *out = -1;
-    return true;
-  }
-  char *endptr = NULL;
-  long n = strtol(val, &endptr, 10);
-  if (val[0] == '\0' || *endptr != '\0' || n < 0 || n > 100000) {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid fish count '", val, "'"}, 3);
-    return false;
-  }
-  *out = (int)n;
-  return true;
-}
-
-static bool aquatic_life_parse(const char *definition, struct aquatic_life *out, bool allow_fish, bool *fish_set, char *errbuf, size_t errbuf_len) {
-  for (size_t i = 0; i < AQUATIC_LIFE_FLAG_COUNT; i++) *aquatic_life_field(out, aquatic_life_flags[i].offset) = false;
-  char *buf = owned_copy(definition);
-  size_t len = strlen(buf);
-  bool ok = true;
-  const char *token = buf;
-  for (size_t i = 0; i <= len && ok; i++) {
-    if (buf[i] != ',' && buf[i] != '\0') continue;
-    buf[i] = '\0';
-    if (token[0] == '\0') {
-      set_errbuf(errbuf, errbuf_len, (const char *[]){"empty entry in aquatic-life definition"}, 1);
-      ok = false;
-    } else if (strncmp(token, "fish=", 5) == 0) {
-      if (!allow_fish) {
-        set_errbuf(errbuf, errbuf_len, (const char *[]){"fish must be set via UNDERTHEC_FISH, not here"}, 1);
-        ok = false;
-      } else if (!parse_fish_count(token + 5, &out->fish_count, errbuf, errbuf_len)) {
-        ok = false;
-      } else {
-        *fish_set = true;
-      }
-    } else if (!aquatic_life_set_flag(out, token)) {
-      set_errbuf(errbuf, errbuf_len, (const char *[]){"unknown aquatic-life entry '", token, "'"}, 3);
-      ok = false;
-    }
-    token = buf + i + 1;
-  }
-  free(buf);
-  return ok;
 }
 
 static int err_env_bad(const char *prog, const char *name, const char *errbuf) {
@@ -226,63 +123,15 @@ static bool parse_bool_env(const char *val, bool *out, char *errbuf, size_t errb
     *out = true;
     return true;
   }
-  set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid value '", val, "', expected 0 or 1"}, 3);
+  opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid value '", val, "', expected 0 or 1"}, 3);
   return false;
-}
-
-static bool parse_classic_env(const char *val, int *out_ver, char *errbuf, size_t errbuf_len) {
-  if (val[0] == '\0' || strcmp(val, "1.0") == 0) {
-    *out_ver = 1;
-    return true;
-  }
-  if (strcmp(val, "1.1") == 0) {
-    *out_ver = 2;
-    return true;
-  }
-  set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid value '", val, "', expected 1.0 or 1.1"}, 3);
-  return false;
-}
-
-static bool parse_message_position(const char *val, enum message_position *out, char *errbuf, size_t errbuf_len) {
-  if (strcmp(val, "middle") == 0) *out = MSG_POS_MIDDLE;
-  else if (strcmp(val, "center") == 0) *out = MSG_POS_CENTER;
-  else if (strcmp(val, "marquee") == 0) *out = MSG_POS_MARQUEE;
-  else if (strcmp(val, "swim") == 0) *out = MSG_POS_SWIM;
-  else if (strcmp(val, "event") == 0) *out = MSG_POS_EVENT;
-  else {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid message position '", val, "'"}, 3);
-    return false;
-  }
-  return true;
-}
-
-static bool parse_uturn_chance(const char *val, int *out, char *errbuf, size_t errbuf_len) {
-  char *endptr = NULL;
-  long n = strtol(val, &endptr, 10);
-  if (val[0] == '\0' || *endptr != '\0' || n < 0 || n > 1000000) {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid uturn chance '", val, "'"}, 3);
-    return false;
-  }
-  *out = (int)n;
-  return true;
-}
-
-static bool parse_fps(const char *val, int *out, char *errbuf, size_t errbuf_len) {
-  char *endptr = NULL;
-  long n = strtol(val, &endptr, 10);
-  if (val[0] == '\0' || *endptr != '\0' || n < 1 || n > 120) {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid fps '", val, "', expected 1-120"}, 3);
-    return false;
-  }
-  *out = (int)n;
-  return true;
 }
 
 static bool parse_teletext_mode(const char *val, enum tt_mode *out, char *errbuf, size_t errbuf_len) {
   if (strcmp(val, "t42") == 0) *out = TT_T42;
   else if (strcmp(val, "ts") == 0) *out = TT_TS;
   else {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid teletext format '", val, "', expected t42 or ts"}, 3);
+    opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid teletext format '", val, "', expected t42 or ts"}, 3);
     return false;
   }
   return true;
@@ -292,7 +141,7 @@ static bool parse_teletext_glyphs(const char *val, enum tt_glyphs *out, char *er
   if (strcmp(val, "text") == 0) *out = TT_TEXT;
   else if (strcmp(val, "mosaic") == 0) *out = TT_MOSAIC;
   else {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid teletext mode '", val, "', expected text or mosaic"}, 3);
+    opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid teletext mode '", val, "', expected text or mosaic"}, 3);
     return false;
   }
   return true;
@@ -302,7 +151,7 @@ static bool parse_ttl(const char *val, int *out, char *errbuf, size_t errbuf_len
   char *endptr = NULL;
   long n = strtol(val, &endptr, 10);
   if (val[0] == '\0' || *endptr != '\0' || n < 1 || n > 255) {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid ttl '", val, "', expected 1-255"}, 3);
+    opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid ttl '", val, "', expected 1-255"}, 3);
     return false;
   }
   *out = (int)n;
@@ -322,39 +171,6 @@ static double now_seconds(void) {
 #endif
 }
 
-static bool parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len) {
-  size_t dot_count = 0;
-  for (const char *p = s; *p != '\0'; p++) {
-    if (*p == '.') {
-      dot_count++;
-      if (dot_count > 1) {
-        set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid pace '", s, "'"}, 3);
-        return false;
-      }
-    } else if (*p < '0' || *p > '9') {
-      set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid pace '", s, "'"}, 3);
-      return false;
-    }
-  }
-  const char *dot = strchr(s, '.');
-  if (dot != NULL && strlen(dot + 1) > 2) {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"pace '", s, "' has more than 2 decimal digits"}, 3);
-    return false;
-  }
-  char *endptr = NULL;
-  double val = strtod(s, &endptr);
-  if (s[0] == '\0' || *endptr != '\0') {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid pace '", s, "'"}, 3);
-    return false;
-  }
-  if (val < 0.01 - 1e-9 || val > 10.0 + 1e-9) {
-    set_errbuf(errbuf, errbuf_len, (const char *[]){"pace '", s, "' out of range 0.01-10"}, 3);
-    return false;
-  }
-  *out = val;
-  return true;
-}
-
 static char *read_all_stdin(void) {
   size_t cap = 4096;
   size_t len = 0;
@@ -369,29 +185,6 @@ static char *read_all_stdin(void) {
   }
   buf[len] = '\0';
   return buf;
-}
-
-static int split_and_trim_lines(char *buf, char ***out_rows) {
-  size_t cap = 16;
-  char **rows = xmalloc(cap * sizeof(*rows));
-  int count = 0;
-  char *start = buf;
-  for (char *p = buf;; p++) {
-    if (*p == '\n' || *p == '\0') {
-      char end = *p;
-      *p = '\0';
-      if ((size_t)count == cap) {
-        cap *= 2;
-        rows = xrealloc(rows, cap * sizeof(*rows));
-      }
-      rows[count++] = start;
-      if (end == '\0') break;
-      start = p + 1;
-    }
-  }
-  while (count > 0 && rows[count - 1][0] == '\0') count--;
-  *out_rows = rows;
-  return count;
 }
 
 int main(int argc, char **argv) {
@@ -420,7 +213,7 @@ int main(int argc, char **argv) {
   int mcast_ttl = 1;
   bool ttl_given = false;
   enum message_position message_position = MSG_POS_MIDDLE;
-  struct aquatic_life aquatic = aquatic_life_default();
+  struct aquatic_life aquatic = scene_aquatic_default();
   int i = 1;
   while (i < argc) {
     const char *a = argv[i];
@@ -445,7 +238,7 @@ int main(int argc, char **argv) {
     } else if (strcmp(a, "-p") == 0 || strcmp(a, "--pace") == 0) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       char errbuf[128];
-      if (!parse_pace(argv[i + 1], &pace, errbuf, sizeof errbuf)) {
+      if (!opts_parse_pace(argv[i + 1], &pace, errbuf, sizeof errbuf)) {
         write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
         return 2;
       }
@@ -454,7 +247,7 @@ int main(int argc, char **argv) {
     } else if (strcmp(a, "-u") == 0 || strcmp(a, "--uturn-chance") == 0) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       char errbuf[128];
-      if (!parse_uturn_chance(argv[i + 1], &uturn_chance, errbuf, sizeof errbuf)) {
+      if (!opts_parse_uturn_chance(argv[i + 1], &uturn_chance, errbuf, sizeof errbuf)) {
         write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
         return 2;
       }
@@ -463,7 +256,7 @@ int main(int argc, char **argv) {
     } else if (strcmp(a, "-f") == 0 || strcmp(a, "--fps") == 0) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       char errbuf[128];
-      if (!parse_fps(argv[i + 1], &fps, errbuf, sizeof errbuf)) {
+      if (!opts_parse_fps(argv[i + 1], &fps, errbuf, sizeof errbuf)) {
         write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
         return 2;
       }
@@ -528,7 +321,7 @@ int main(int argc, char **argv) {
     } else if (strcmp(a, "-P") == 0 || strcmp(a, "--message-position") == 0) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       char errbuf[128];
-      if (!parse_message_position(argv[i + 1], &message_position, errbuf, sizeof errbuf)) {
+      if (!opts_parse_message_position(argv[i + 1], &message_position, errbuf, sizeof errbuf)) {
         write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
         return 2;
       }
@@ -539,7 +332,7 @@ int main(int argc, char **argv) {
       if (i + 1 >= argc) return err_requires_arg(argv[0], a);
       char errbuf[128];
       bool fish_set = false;
-      if (!aquatic_life_parse(argv[i + 1], &aquatic, true, &fish_set, errbuf, sizeof errbuf)) {
+      if (!opts_parse_aquatic_life(argv[i + 1], &aquatic, true, &fish_set, errbuf, sizeof errbuf)) {
         write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
         return 2;
       }
@@ -574,7 +367,7 @@ int main(int argc, char **argv) {
     const char *env_val = getenv("UNDERTHEC_PACE");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_pace(env_val, &pace, errbuf, sizeof errbuf))
+      if (!opts_parse_pace(env_val, &pace, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_PACE", errbuf);
     }
   }
@@ -582,7 +375,7 @@ int main(int argc, char **argv) {
     const char *env_val = getenv("UNDERTHEC_FPS");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_fps(env_val, &fps, errbuf, sizeof errbuf))
+      if (!opts_parse_fps(env_val, &fps, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_FPS", errbuf);
     }
   }
@@ -590,7 +383,7 @@ int main(int argc, char **argv) {
     const char *env_val = getenv("UNDERTHEC_UTURN_CHANCE");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_uturn_chance(env_val, &uturn_chance, errbuf, sizeof errbuf))
+      if (!opts_parse_uturn_chance(env_val, &uturn_chance, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_UTURN_CHANCE", errbuf);
     }
   }
@@ -615,7 +408,7 @@ int main(int argc, char **argv) {
     if (env_val != NULL) {
       if (!color_name_valid(env_val)) {
         char errbuf[128];
-        set_errbuf(errbuf, sizeof errbuf, (const char *[]){"invalid color '", env_val, "'"}, 3);
+        opts_set_errbuf(errbuf, sizeof errbuf, (const char *[]){"invalid color '", env_val, "'"}, 3);
         return err_env_bad(argv[0], "UNDERTHEC_MESSAGE_COLOR", errbuf);
       }
       message_color_arg = env_val;
@@ -625,7 +418,7 @@ int main(int argc, char **argv) {
     const char *env_val = getenv("UNDERTHEC_MESSAGE_POSITION");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_message_position(env_val, &message_position, errbuf, sizeof errbuf))
+      if (!opts_parse_message_position(env_val, &message_position, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_MESSAGE_POSITION", errbuf);
     }
   }
@@ -633,7 +426,7 @@ int main(int argc, char **argv) {
     const char *env_val = getenv("UNDERTHEC_FISH");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_fish_count(env_val, &aquatic.fish_count, errbuf, sizeof errbuf))
+      if (!opts_parse_fish_count(env_val, &aquatic.fish_count, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_FISH", errbuf);
       a_flag = true;
     }
@@ -643,7 +436,7 @@ int main(int argc, char **argv) {
     if (env_val != NULL) {
       char errbuf[128];
       bool fish_set = false;
-      if (!aquatic_life_parse(env_val, &aquatic, false, &fish_set, errbuf, sizeof errbuf))
+      if (!opts_parse_aquatic_life(env_val, &aquatic, false, &fish_set, errbuf, sizeof errbuf))
         return err_env_bad(argv[0], "UNDERTHEC_AQUATIC_LIFE", errbuf);
       a_flag = true;
     }
@@ -652,7 +445,7 @@ int main(int argc, char **argv) {
     const char *env_val = getenv("UNDERTHEC_CLASSIC");
     if (env_val != NULL) {
       char errbuf[128];
-      if (!parse_classic_env(env_val, &classic_ver, errbuf, sizeof errbuf)) {
+      if (!opts_parse_classic(env_val, &classic_ver, errbuf, sizeof errbuf)) {
         return err_env_bad(argv[0], "UNDERTHEC_CLASSIC", errbuf);
       }
       c_flag = true;
@@ -665,14 +458,7 @@ int main(int argc, char **argv) {
   }
   bool classic = (classic_ver == 1);
   if (classic_ver == 2) {
-    aquatic = (struct aquatic_life){
-        .fish_count = -1,
-        .ship = true,
-        .whale = true,
-        .monster = true,
-        .bigfish = true,
-        .shark = true,
-    };
+    aquatic = scene_aquatic_classic11();
   }
   struct tt_stream *tt = NULL;
   struct tt_net *tt_net = NULL;
@@ -719,8 +505,8 @@ int main(int argc, char **argv) {
   char **message_rows = NULL;
   int message_row_count = 0;
   if (message_arg != NULL) {
-    message_buf = (strcmp(message_arg, "-") == 0) ? read_all_stdin() : owned_copy(message_arg);
-    message_row_count = split_and_trim_lines(message_buf, &message_rows);
+    message_buf = (strcmp(message_arg, "-") == 0) ? read_all_stdin() : opts_strdup(message_arg);
+    message_row_count = opts_split_lines(message_buf, &message_rows);
   }
   rng_seed((uint64_t)time(NULL) ^ ((uint64_t)clock() << 32));
   if (tt == NULL && term_init() != 0) {
@@ -739,27 +525,16 @@ int main(int argc, char **argv) {
   feed_sa.sa_flags = SA_RESTART;
   sigaction(SIGUSR1, &feed_sa, NULL);
 #endif
-  struct scene scene;
-  scene_init(&scene, classic, aquatic);
-  if (message_color_arg != NULL) scene_set_message_color(&scene, color_from_name(message_color_arg));
-  scene_set_message_position(&scene, message_position);
-  scene_set_uturn_chance(&scene, uturn_chance);
-  if (message_row_count > 0) scene_set_message(&scene, (const char *const *)message_rows, message_row_count);
+  struct app app;
+  app_init(&app, classic, aquatic, pace, fps, now_seconds());
+  if (message_color_arg != NULL) scene_set_message_color(&app.scene, color_from_name(message_color_arg));
+  scene_set_message_position(&app.scene, message_position);
+  scene_set_uturn_chance(&app.scene, uturn_chance);
+  if (message_row_count > 0) scene_set_message(&app.scene, (const char *const *)message_rows, message_row_count);
   free(message_rows);
   free(message_buf);
-  struct settings_ui settings_ui;
-  settings_ui_init(&settings_ui, &fps, &pace, &scene);
-  struct help_ui help_ui;
-  help_ui_init(&help_ui, &fps, &pace);
-  struct canvas canvas;
-  canvas_init(&canvas);
-  int last_w = -1;
-  int last_h = -1;
-  bool paused = false;
   int exit_code = 0;
-  double tick_accum = 0.0;
-  double last = now_seconds();
-  double deadline = last;
+  double deadline = app.last;
   while (!g_should_quit) {
     int w;
     int h;
@@ -769,14 +544,8 @@ int main(int argc, char **argv) {
     } else {
       term_size(&w, &h);
     }
-    if (w != last_w || h != last_h) {
-      canvas_resize(&canvas, w, h);
-      scene_reset(&scene, w, h);
-      last_w = w;
-      last_h = h;
-    }
-    double tick_hz = 10.0 * pace;
-    double frame_period = 1.0 / (double)fps;
+    app_resize(&app, w, h);
+    double frame_period = 1.0 / (double)app.fps;
     deadline += frame_period;
     double wait = deadline - now_seconds();
     if (wait < -frame_period) deadline = now_seconds();
@@ -786,48 +555,18 @@ int main(int argc, char **argv) {
     else key = term_poll_key(wait_ms);
     if (key == 'q') break;
     if (screensaver && key != -1) break;
-    if (key == 'r') scene_reset(&scene, w, h);
-    if (key == 'p') paused = !paused;
+    app_key(&app, key);
     if (key == 't') {
       transparent = !transparent;
       term_set_transparent(transparent);
     }
-    if (key == 'f') scene_feed(&scene, w, h);
-    if (key == 's') {
-      if (help_ui_is_open(&help_ui)) help_ui_close(&help_ui);
-      settings_ui_toggle(&settings_ui);
-    }
-    if (key == 'h') {
-      if (settings_ui_is_open(&settings_ui)) settings_ui_close(&settings_ui);
-      help_ui_toggle(&help_ui);
-    }
-    if (settings_ui_is_open(&settings_ui)) {
-      if (key == '\x1b') settings_ui_close(&settings_ui);
-      else settings_ui_handle_key(&settings_ui, key, w, h);
-    }
-    if (help_ui_is_open(&help_ui) && key == '\x1b') help_ui_close(&help_ui);
     if (g_feed_signal) {
       g_feed_signal = 0;
-      scene_feed(&scene, w, h);
+      app_feed(&app);
     }
-    double now = now_seconds();
-    double dt = now - last;
-    last = now;
-    if (dt < 0.0) dt = 0.0;
-    if (dt > 0.5) dt = 0.5;
-    if (!paused) {
-      tick_accum += dt * tick_hz;
-      while (tick_accum >= 1.0) {
-        scene_tick(&scene, w, h);
-        tick_accum -= 1.0;
-      }
-    }
-    canvas_clear(&canvas);
-    scene_draw(&scene, &canvas, tick_accum);
-    settings_ui_draw(&settings_ui, &canvas);
-    help_ui_draw(&help_ui, &canvas);
+    app_frame(&app, now_seconds());
     if (tt != NULL) {
-      if (tt_stream_present(tt, &canvas) != 0) {
+      if (tt_stream_present(tt, &app.canvas) != 0) {
         if (tt_net != NULL) {
           write_parts(stderr, (const char *[]){argv[0], ": multicast send failed\n"}, 2);
           exit_code = 1;
@@ -835,11 +574,10 @@ int main(int argc, char **argv) {
         break;
       }
     } else {
-      term_present(&canvas);
+      term_present(&app.canvas);
     }
   }
-  canvas_free(&canvas);
-  scene_free(&scene);
+  app_free(&app);
   if (tt != NULL) {
     tt_stream_close(tt);
     if (tt_net != NULL) tt_net_close(tt_net);

@@ -5,6 +5,7 @@ prefix=/usr/local
 cc=${CC:-cc}
 static=1
 debug=0
+emcc=0
 host=
 
 for arg in "$@"; do
@@ -13,13 +14,15 @@ for arg in "$@"; do
 	--host=*) host="${arg#--host=}"; cc="${host}-gcc" ;;
 	--no-static) static=0 ;;
 	--debug) debug=1 ;;
+	--emcc) emcc=1; cc=emcc ;;
 	--help)
-		echo "usage: ./configure [--prefix=DIR] [--host=TRIPLET] [--no-static] [--debug]"
+		echo "usage: ./configure [--prefix=DIR] [--host=TRIPLET] [--no-static] [--debug] [--emcc]"
 		echo ""
 		echo "  --prefix=DIR    install prefix (default: /usr/local)"
 		echo "  --host=TRIPLET  cross-compiler prefix, e.g. x86_64-w64-mingw32"
 		echo "  --no-static     do not pass -static to the linker"
 		echo "  --debug         build with -g -O0 and keep symbols (skip stripping)"
+		echo "  --emcc          WebAssembly build with Emscripten (build/underthec.js, .wasm, index.html)"
 		exit 0
 		;;
 	*)
@@ -29,18 +32,31 @@ for arg in "$@"; do
 	esac
 done
 
-srcs="src/main.c src/canvas.c src/color.c src/rng.c src/entity.c src/help.c src/settings.c src/scene/scene.c src/scene/effects.c src/scene/creatures.c src/scene/environment.c src/scene/kaiju.c src/scene/fishhook.c src/scene/feed.c src/term/term_common.c src/teletext/tt_render.c src/teletext/tt_t42.c src/teletext/tt_ts.c src/teletext/tt_net.c"
+if [ "$emcc" = "1" ] && [ -n "$host" ]; then
+	echo "configure: --emcc and --host are mutually exclusive" >&2
+	exit 1
+fi
+if [ "$emcc" = "1" ]; then
+	static=0
+fi
 
-case "$host" in
-*mingw*) term_src="src/term/term_windows.c" ;;
-*)
-	case "$(uname -s 2>/dev/null)" in
-	*MINGW*|*MSYS*) term_src="src/term/term_windows.c" ;;
-	*) term_src="src/term/term_posix.c" ;;
+srcs="src/app.c src/opts.c src/canvas.c src/color.c src/rng.c src/entity.c src/help.c src/settings.c src/scene/scene.c src/scene/effects.c src/scene/creatures.c src/scene/environment.c src/scene/kaiju.c src/scene/fishhook.c src/scene/feed.c"
+
+if [ "$emcc" = "1" ]; then
+	srcs="$srcs src/web/web_main.c"
+else
+	srcs="$srcs src/main.c src/term/term_common.c src/teletext/tt_render.c src/teletext/tt_t42.c src/teletext/tt_ts.c src/teletext/tt_net.c"
+	case "$host" in
+	*mingw*) term_src="src/term/term_windows.c" ;;
+	*)
+		case "$(uname -s 2>/dev/null)" in
+		*MINGW*|*MSYS*) term_src="src/term/term_windows.c" ;;
+		*) term_src="src/term/term_posix.c" ;;
+		esac
+		;;
 	esac
-	;;
-esac
-srcs="$srcs $term_src"
+	srcs="$srcs $term_src"
+fi
 
 cflags="-std=c11 -Wall -Wextra -Isrc"
 ldflags=""
@@ -49,10 +65,14 @@ if [ "$debug" = "1" ]; then
 	cflags="$cflags -g -O0"
 else
 	cflags="$cflags -O2"
-	ldflags="$ldflags -s"
+	if [ "$emcc" = "1" ]; then ldflags="$ldflags -O2"; else ldflags="$ldflags -s"; fi
 fi
 
-if [ "$static" = "1" ]; then
+if [ "$emcc" = "1" ]; then
+	ldflags="$ldflags -sMODULARIZE=1 -sEXPORT_NAME=underthec -sENVIRONMENT=web -sALLOW_MEMORY_GROWTH=1"
+	ldflags="$ldflags -sEXPORTED_FUNCTIONS=_web_opt,_web_init,_web_fps,_web_resize,_web_key,_web_feed,_web_frame,_web_width,_web_height"
+	ldflags="$ldflags -sEXPORTED_RUNTIME_METHODS=HEAPU32,ccall"
+elif [ "$static" = "1" ]; then
 	case "$(uname -s 2>/dev/null)" in
 	Darwin) : ;; # macOS does not support fully static libSystem binaries
 	*) ldflags="$ldflags -static" ;;
@@ -68,7 +88,11 @@ fi
 	echo "LDFLAGS = $ldflags"
 	echo "PREFIX = $prefix"
 	echo "SRCS = $srcs"
+	if [ "$emcc" = "1" ]; then
+		echo 'TARGET = $(BUILDDIR)/underthec.js'
+		echo 'WEB_FILES = $(BUILDDIR)/index.html'
+	fi
 } > config.mk
 
-echo "configured: CC=$cc static=$static debug=$debug prefix=$prefix"
+echo "configured: CC=$cc static=$static debug=$debug emcc=$emcc prefix=$prefix"
 echo "run 'make' to build."

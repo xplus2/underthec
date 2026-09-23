@@ -2,8 +2,59 @@
 #include "rng.h"
 #include "xalloc.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+
+struct aquatic_flag {
+  const char *name;
+  size_t offset;
+};
+
+#define AQ_FLAG(field) {#field, offsetof(struct aquatic_life, field)}
+
+static const struct aquatic_flag aquatic_flags[] = {
+  AQ_FLAG(ducks),    AQ_FLAG(dolphins), AQ_FLAG(ship),     AQ_FLAG(swan), AQ_FLAG(kaiju),
+  AQ_FLAG(fishhook), AQ_FLAG(submarine),AQ_FLAG(whale),    AQ_FLAG(shark),AQ_FLAG(jellyfish),
+  AQ_FLAG(monster),  AQ_FLAG(bigfish),  AQ_FLAG(swordfish),AQ_FLAG(crab),
+};
+#define AQUATIC_FLAG_COUNT (sizeof(aquatic_flags) / sizeof(aquatic_flags[0]))
+
+static bool *aquatic_field(struct aquatic_life *a, size_t offset) {
+  return (bool *)((char *)a + offset);
+}
+
+void scene_aquatic_fill(struct aquatic_life *a, bool on) {
+  for (size_t i = 0; i < AQUATIC_FLAG_COUNT; i++) *aquatic_field(a, aquatic_flags[i].offset) = on;
+}
+
+struct aquatic_life scene_aquatic_default(void) {
+  struct aquatic_life a;
+  a.fish_count = -1;
+  scene_aquatic_fill(&a, true);
+  return a;
+}
+
+struct aquatic_life scene_aquatic_classic11(void) {
+  return (struct aquatic_life){
+      .fish_count = -1,
+      .ship = true,
+      .whale = true,
+      .monster = true,
+      .bigfish = true,
+      .shark = true,
+  };
+}
+
+bool scene_aquatic_set_flag(struct aquatic_life *a, const char *name) {
+  for (size_t i = 0; i < AQUATIC_FLAG_COUNT; i++) {
+    if (strcmp(name, aquatic_flags[i].name) == 0) {
+      *aquatic_field(a, aquatic_flags[i].offset) = true;
+      return true;
+    }
+  }
+  return false;
+}
 
 struct scene_ctx {
   struct scene *sc;

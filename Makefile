@@ -12,7 +12,7 @@ DEPS := $(OBJS:.o=.d)
 
 .PHONY: all clean install
 
-all: $(TARGET)
+all: $(TARGET) $(WEB_FILES)
 
 $(TARGET): $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
@@ -21,12 +21,17 @@ $(BUILDDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
+$(BUILDDIR)/index.html: web/index.html
+	@mkdir -p $(dir $@)
+	cp $< $@
+
 -include $(DEPS)
 
 clean:
 	rm -rf $(BUILDDIR) $(TARGET)
 
 install: $(TARGET)
+	@if [ -n "$(WEB_FILES)" ]; then echo "install: not supported for the web build" >&2; exit 1; fi
 	install -d $(DESTDIR)$(PREFIX)/bin
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
 	install -d $(DESTDIR)$(PREFIX)/share/man/man1

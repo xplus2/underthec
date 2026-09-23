@@ -9,6 +9,8 @@ src/*.o
 # result binaries
 /underthec
 /underthec.exe
+/underthec.js
+/underthec.wasm
 
 # cmake generic and profile builds
 /build*/

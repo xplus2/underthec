@@ -153,8 +153,27 @@ jobs:
           name: windows-arm64
           path: underthec-*-windows-arm64.zip
 
+  web:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: sudo apt-get update && sudo apt-get install -y emscripten
+      - run: emcmake cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j
+      - run: |
+          ver=${{ needs.version.outputs.version }}
+          name=underthec-${ver}-web
+          mkdir "$name"
+          cp build/index.html build/underthec.js build/underthec.wasm LICENSE "$name"/
+          zip -r "${name}.zip" "$name"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: web
+          path: underthec-*-web.zip
+
   release:
-    needs: [version, linux, linux-musl-cross, macos-arm64, windows-amd64, windows-arm64]
+    needs: [version, linux, linux-musl-cross, macos-arm64, windows-amd64, windows-arm64, web]
     runs-on: ubuntu-latest
     permissions:
       contents: write

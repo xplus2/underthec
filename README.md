@@ -100,6 +100,28 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 
 `SIGUSR1` also triggers a feed.
 
+
+
+### WebAssembly
+
+Keys work (`h`for help), click or tap also feeds, but not necessarily at this position.
+
+Options can go in the URL query, by long or short name (long wins if both are set),
+with the same values as on the command line:
+
+| long               | short | example                |
+|--------------------|-------|------------------------|
+| `classic`          | `c`   | `?classic` or `?c=1.1` |
+| `aquatic-life`     | `a`   | `?a=fish=5,ducks,crab` |
+| `message`          | `m`   | `?m=HowMuchIsTheFish`  |
+| `message-color`    | `M`   | `?M=Yellow`            |
+| `message-position` | `P`   | `?P=middle`            |
+| `pace`             | `p`   | `?p=2`                 |
+| `uturn-chance`     | `u`   | `?u=50`                |
+| `fps`              | `f`   | `?f=30`                |
+
+An invalid value shows the error instead of the aquarium.
+
 ### Teletext output
 
 Instead of the terminal, output can be rendered as an EBU Teletext page (page 100) and streamed:
@@ -107,7 +129,7 @@ Instead of the terminal, output can be rendered as an EBU Teletext page (page 10
 * `--teletext t42`: raw 42-byte teletext packets to stdout (t42)
 * `--teletext ts`: MPEG-TS to stdout, teletext as private PES (EN 300 472) on PID 0x100, with PAT, PMT and PCR
 * `--mcast GROUP:PORT`: the same MPEG-TS over UDP multicast
-  IPv6 groups are written `[GROUP]:PORT`. 
+  IPv6 groups are written `[GROUP]:PORT`.
 * `--iface` takes a local address (IPv4) or an interface name (IPv6). Not available on Windows.
 * `--teletext-mode mosaic` draws 2x3 mosaic blocks. `--teletext-mode text` (default) draws text characters, one per cell.
   Text mode is 39x25. The Level 1 character set swaps `# [ \ ] ^ _ ` { | } ~` for national characters, so those are sent
@@ -135,7 +157,6 @@ If you want to test it locally in VLC, it will need an alibi-video ES:
 * and launch VLC like this:
   `vlc udp://@239.1.1.2:5000` (or open VLC, ^N and enter `udp://@239.1.1.2:5000`)
 * Press the Teletext button, stay on page 100
-
 
 ## Credits
 

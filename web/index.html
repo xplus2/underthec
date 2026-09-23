@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Under The C</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  canvas { display: block; }
+  pre { margin: 16px; color: #c0c0c0; font: 16px monospace; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<canvas id="tank"></canvas>
+<pre id="error" hidden></pre>
+<script src="underthec.js"></script>
+<script>
+"use strict";
+/* [long, short], long wins */
+const OPTIONS = [
+  ["classic", "c"],
+  ["aquatic-life", "a"],
+  ["message", "m"],
+  ["message-color", "M"],
+  ["message-position", "P"],
+  ["pace", "p"],
+  ["uturn-chance", "u"],
+  ["fps", "f"],
+];
+const FONT_PX = 16;
+const FONT = FONT_PX + "px monospace";
+const FONT_BOLD = "bold " + FONT;
+/* index: enum color. [normal, bold]. bg: [40-47, 100-107] */
+const PALETTE = [
+  ["#c0c0c0", "#ffffff"],
+  ["#000000", "#808080"],
+  ["#c00000", "#ff5555"],
+  ["#00c000", "#55ff55"],
+  ["#c0c000", "#ffff55"],
+  ["#0000c0", "#5555ff"],
+  ["#c000c0", "#ff55ff"],
+  ["#00c0c0", "#55ffff"],
+  ["#c0c0c0", "#ffffff"],
+];
+
+/* TERM_KEY_* in term.h */
+const KEYS = { ArrowUp: -2, ArrowDown: -3, ArrowLeft: -4, ArrowRight: -5, Escape: 27 };
+
+const canvas = document.getElementById("tank");
+const ctx = canvas.getContext("2d");
+let cellW = 0;
+let cellH = 0;
+let cols = 0;
+let rows = 0;
+
+function measure() {
+  ctx.font = FONT;
+  cellW = Math.ceil(ctx.measureText("M").width);
+  cellH = Math.ceil(FONT_PX * 1.2);
+}
+
+function layout(M) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(window.innerWidth * dpr);
+  canvas.height = Math.floor(window.innerHeight * dpr);
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  measure();
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  M._web_resize(Math.max(1, Math.floor(window.innerWidth / cellW)), Math.max(1, Math.floor(window.innerHeight / cellH)));
+  cols = M._web_width();
+  rows = M._web_height();
+}
+
+/* full repaint: glyph overhang would leave stale pixels with per-cell diffing */
+/* cell: codepoint << 10 | bg_bold << 9 | bg << 5 | color << 1 | bold. codepoint 0 = wide glyph tail */
+function present(M, ptr) {
+  const cells = M.HEAPU32.subarray(ptr >>> 2, (ptr >>> 2) + cols * rows);
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  for (let i = 0; i < cells.length; i++) {
+    const bg = (cells[i] >>> 5) & 0xf;
+    if (bg === 0) continue;
+    ctx.fillStyle = PALETTE[bg][(cells[i] >>> 9) & 1];
+    ctx.fillRect((i % cols) * cellW, Math.floor(i / cols) * cellH, cellW, cellH);
+  }
+  let font = null;
+  for (let i = 0; i < cells.length; i++) {
+    const v = cells[i];
+    const cp = v >>> 10;
+    if (cp === 0 || cp === 0x20) continue;
+    const bold = v & 1;
+    const f = bold ? FONT_BOLD : FONT;
+    if (f !== font) {
+      ctx.font = f;
+      font = f;
+    }
+    ctx.fillStyle = PALETTE[(v >>> 1) & 0xf][bold];
+    ctx.fillText(String.fromCodePoint(cp), (i % cols) * cellW, Math.floor(i / cols) * cellH);
+  }
+}
+
+function applyOptions(M) {
+  const params = new URLSearchParams(window.location.search);
+  for (const [long, short] of OPTIONS) {
+    const shown = params.has(long) ? long : params.has(short) ? short : null;
+    if (shown === null) continue;
+    const e = M.ccall("web_opt", "string", ["string", "string", "string"], [long, params.get(shown), shown]);
+    if (e) return e;
+  }
+  return M.ccall("web_init", "string", ["number"], [performance.now()]);
+}
+
+function showError(msg) {
+  canvas.style.display = "none";
+  const pre = document.getElementById("error");
+  pre.textContent = "underthec: " + msg;
+  pre.hidden = false;
+}
+
+underthec().then((M) => {
+  const e = applyOptions(M);
+  if (e) {
+    showError(e);
+    return;
+  }
+  layout(M);
+  window.addEventListener("resize", () => layout(M));
+  window.addEventListener("keydown", (e) => {
+    let key = KEYS[e.key];
+    if (key === undefined && e.key.length === 1) key = e.key.toLowerCase().charCodeAt(0);
+    if (key === undefined) return;
+    if (key < 0 || e.key === " ") e.preventDefault();
+    M._web_key(key);
+  });
+  canvas.addEventListener("pointerdown", () => M._web_feed());
+  let next = performance.now();
+  function tick(now) {
+    if (now >= next) {
+      const period = 1000 / M._web_fps();
+      next = Math.max(next + period, now - period);
+      present(M, M._web_frame(now));
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+});
+</script>
+</body>
+</html>

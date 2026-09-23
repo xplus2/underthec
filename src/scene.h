@@ -43,6 +43,15 @@ struct scene {
   bool feed_alerted;
 };
 
+/* all on, fish=auto */
+struct aquatic_life scene_aquatic_default(void);
+/* classic 1.1 lineup */
+struct aquatic_life scene_aquatic_classic11(void);
+/* creature flags only, fish_count untouched */
+void scene_aquatic_fill(struct aquatic_life *a, bool on);
+/* false if name unknown */
+bool scene_aquatic_set_flag(struct aquatic_life *a, const char *name);
+
 void scene_init(struct scene *sc, bool classic_mode, struct aquatic_life aquatic);
 void scene_free(struct scene *sc);
 void scene_reset(struct scene *sc, int term_w, int term_h);
