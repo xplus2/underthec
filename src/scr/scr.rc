@@ -5,14 +5,16 @@
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "scr.manifest"
 
+1 ICON "../win/scr.ico"
+
 STRINGTABLE
 BEGIN
-  IDS_DESCRIPTION TOOL_NAME
+  IDS_DESCRIPTION TOOL_DISPLAY_NAME
 END
 
 IDD_CONFIG DIALOGEX 0, 0, 330, 254
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "underthec screensaver"
+CAPTION TOOL_DISPLAY_NAME " screensaver"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Aquatic life", -1, 7, 7, 316, 74
@@ -68,8 +70,8 @@ BEGIN
   BEGIN
     BLOCK "040904b0"
     BEGIN
-      VALUE "FileDescription", "underthec screensaver"
-      VALUE "ProductName", TOOL_NAME
+      VALUE "FileDescription", TOOL_DISPLAY_NAME " screensaver"
+      VALUE "ProductName", TOOL_DISPLAY_NAME
       VALUE "ProductVersion", TOOL_VERSION
       VALUE "FileVersion", TOOL_VERSION
       VALUE "OriginalFilename", "underthec.scr"

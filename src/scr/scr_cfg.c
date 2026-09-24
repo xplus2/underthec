@@ -228,16 +228,19 @@ static bool apply(HWND dlg) {
   struct config cfg;
   config_init(&cfg);
   bool ok = true;
-  for (size_t i = 0; i < OPT_COUNT && ok; i++)
-    if (vals[i] != NULL) ok = config_set(&cfg, opt_names[i], vals[i], opt_labels[i], err, sizeof err);
+  for (size_t i = 0; i < OPT_COUNT; i++) {
+    if (vals[i] == NULL) continue;
+    ok = config_set(&cfg, opt_names[i], vals[i], opt_labels[i], err, sizeof err);
+    if (!ok) break;
+  }
   if (ok) ok = config_check(&cfg, err, sizeof err);
   config_free(&cfg);
   if (!ok) {
     WCHAR *w = wide_from_utf8(err);
-    MessageBoxW(dlg, w, L"underthec", MB_OK | MB_ICONWARNING);
+    MessageBoxW(dlg, w, TOOL_DISPLAY_NAME_W, MB_OK | MB_ICONWARNING);
     free(w);
   } else if (!config_save(vals)) {
-    MessageBoxW(dlg, L"Could not save settings to the registry.", L"underthec", MB_OK | MB_ICONERROR);
+    MessageBoxW(dlg, L"Could not save settings to the registry.", TOOL_DISPLAY_NAME_W, MB_OK | MB_ICONERROR);
     ok = false;
   }
   for (size_t i = 0; i < OPT_COUNT; i++) free(vals[i]);
@@ -271,7 +274,7 @@ static void init_dialog(HWND dlg) {
   combo_fill(dlg, IDC_MSG_POS, position_items, COUNT(position_items));
   for (size_t i = 0; i < SCENE_AQUATIC_FLAG_COUNT; i++) item_set_text(dlg, IDC_FLAG0 + (int)i, scene_aquatic_flag_name(i));
   message_font_set(dlg, window_dpi(dlg));
-  item_set_text(dlg, IDC_VERSION, TOOL_NAME " v" TOOL_VERSION);
+  item_set_text(dlg, IDC_VERSION, TOOL_DISPLAY_NAME " v" TOOL_VERSION);
 
   struct config cfg;
   config_init(&cfg);
@@ -290,7 +293,7 @@ static void show_load_error(HWND dlg) {
   char msg[320];
   snprintf(msg, sizeof msg, "Stored settings are invalid, showing defaults.\n\n%s", load_err);
   WCHAR *w = wide_from_utf8(msg);
-  MessageBoxW(dlg, w, L"underthec", MB_OK | MB_ICONWARNING);
+  MessageBoxW(dlg, w, TOOL_DISPLAY_NAME_W, MB_OK | MB_ICONWARNING);
   free(w);
 }
 

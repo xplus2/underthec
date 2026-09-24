@@ -8,6 +8,7 @@ $(error config.mk not found - run ./configure first)
 endif
 
 OBJS := $(patsubst %.c,$(BUILDDIR)/%.o,$(SRCS))
+RC_OBJS := $(patsubst %.rc,$(BUILDDIR)/%.res.o,$(RC))
 SCR_OBJS := $(patsubst %.c,$(BUILDDIR)/%.o,$(SCR_SRCS)) $(patsubst %.rc,$(BUILDDIR)/%.res.o,$(SCR_RC))
 DEPS := $(sort $(OBJS:.o=.d) $(patsubst %.c,$(BUILDDIR)/%.d,$(SCR_SRCS)))
 
@@ -15,8 +16,8 @@ DEPS := $(sort $(OBJS:.o=.d) $(patsubst %.c,$(BUILDDIR)/%.d,$(SCR_SRCS)))
 
 all: $(TARGET) $(WEB_FILES) $(SCR_TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS) -o $@
+$(TARGET): $(OBJS) $(RC_OBJS)
+	$(CC) $(OBJS) $(RC_OBJS) $(LDFLAGS) -o $@
 
 $(SCR_TARGET): $(SCR_OBJS)
 	$(CC) $(SCR_OBJS) $(LDFLAGS) $(SCR_LDFLAGS) -o $@
@@ -25,7 +26,7 @@ $(BUILDDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
-$(BUILDDIR)/%.res.o: %.rc src/version.h src/scr/scr_res.h src/scr/scr.manifest
+$(BUILDDIR)/%.res.o: %.rc src/version.h src/scr/scr_res.h src/scr/scr.manifest src/win/underthec.ico src/win/scr.ico
 	@mkdir -p $(dir $@)
 	$(WINDRES) -Isrc -O coff $< -o $@
 

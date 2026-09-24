@@ -65,6 +65,7 @@ else
 	esac
 	if [ "$windows" = "1" ]; then
 		srcs="$srcs src/term/term_windows.c"
+		rc="src/win/underthec.rc"
 		scr_srcs="$core_srcs src/config.c src/scr/scr_main.c src/scr/scr_cfg.c"
 		if [ -n "$host" ]; then windres="${host}-windres"; else windres=windres; fi
 	else
@@ -102,6 +103,9 @@ fi
 	echo "LDFLAGS = $ldflags"
 	echo "PREFIX = $prefix"
 	echo "SRCS = $srcs"
+	if [ -n "$rc" ]; then
+		echo "RC = $rc"
+	fi
 	if [ "$emcc" = "1" ]; then
 		echo 'TARGET = $(BUILDDIR)/underthec.js'
 		echo 'WEB_FILES = $(BUILDDIR)/index.html'

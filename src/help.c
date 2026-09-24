@@ -43,7 +43,7 @@ void help_ui_draw(const struct help_ui *ui, struct canvas *c) {
 
   char line[CONTENT_W + 1];
   int y = MARGIN;
-  snprintf(line, sizeof line, "Under The C v%s", TOOL_VERSION);
+  snprintf(line, sizeof line, TOOL_DISPLAY_NAME " v%s", TOOL_VERSION);
   draw_row_text(c, MARGIN, y++, line, TITLE_ATTR);
   y++;
   draw_row_text(c, MARGIN, y++, "keys:", BOX_ATTR);

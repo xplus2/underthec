@@ -1,6 +1,7 @@
 #include "scr.h"
 #include "../app.h"
 #include "../config.h"
+#include "../version.h"
 
 #include <ctype.h>
 #include <stdint.h>
@@ -54,8 +55,7 @@ static double now_seconds(void) {
 
 static void fonts_create(HDC dc) {
   for (int b = 0; b < 2; b++) {
-    scr.font[b] = CreateFontW(-scr.font_px, 0, 0, 0, b ? FW_BOLD : FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-                              OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
+    scr.font[b] = CreateFontW(-scr.font_px, 0, 0, 0, b ? FW_BOLD : FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
   }
   HGDIOBJ old = SelectObject(dc, scr.font[0]);
   TEXTMETRICW tm;
@@ -283,14 +283,14 @@ static int run(HINSTANCE inst, HWND parent) {
     GetMonitorInfoW(MonitorFromPoint((POINT){0, 0}, MONITOR_DEFAULTTOPRIMARY), &primary);
     scr.font_px = (primary.rcMonitor.bottom - primary.rcMonitor.top) / 45;
     if (scr.font_px < 10) scr.font_px = 10;
-    wnd = CreateWindowExW(WS_EX_TOPMOST, wc.lpszClassName, L"underthec", WS_POPUP, all.left, all.top, all.right - all.left,
+    wnd = CreateWindowExW(WS_EX_TOPMOST, wc.lpszClassName, TOOL_DISPLAY_NAME_W, WS_POPUP, all.left, all.top, all.right - all.left,
                           all.bottom - all.top, NULL, NULL, inst, NULL);
   } else {
     RECT r;
     GetClientRect(parent, &r);
     scr.font_px = r.bottom / 14;
     if (scr.font_px < 6) scr.font_px = 6;
-    wnd = CreateWindowExW(0, wc.lpszClassName, L"underthec", WS_CHILD, 0, 0, r.right, r.bottom, parent, NULL, inst, NULL);
+    wnd = CreateWindowExW(0, wc.lpszClassName, TOOL_DISPLAY_NAME_W, WS_CHILD, 0, 0, r.right, r.bottom, parent, NULL, inst, NULL);
   }
   if (wnd == NULL) return 1;
   ShowWindow(wnd, SW_SHOW);

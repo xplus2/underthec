@@ -131,7 +131,7 @@ static void release_door_bubbles(struct scene *sc, double door_x, double door_y)
 }
 
 void castle_door_tick(struct scene *sc) {
-  struct entity *castle_ent = entity_find_first(&sc->entities, ENT_CASTLE);
+  const struct entity *castle_ent = entity_find_first(&sc->entities, ENT_CASTLE);
   bool castle_ready = castle_ent != NULL && sc->castle_hidden_by == 0 && castle_ent->frame_cur == castle_ent->frame_count - 1;
   struct entity *door = entity_find_first(&sc->entities, ENT_CASTLE_DOOR);
 
