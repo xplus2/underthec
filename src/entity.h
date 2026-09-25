@@ -35,7 +35,9 @@ enum entity_type {
   ENT_RANDOM_OBJECT_TIMER,
   ENT_FLAKE,
   ENT_SEAHORSE,
-  ENT_CASTLE_DOOR
+  ENT_CASTLE_DOOR,
+  ENT_SEAWEED_DEBRIS,
+  ENT_ROWERS
 };
 
 enum death_action {
@@ -108,6 +110,17 @@ struct entity {
   bool feed_wait;
   int feed_target_col;
   double feed_resume_vx;
+
+  int seaweed_orig_height;
+  int seaweed_grown;
+  bool seaweed_top_left;
+  double seaweed_grow_timer;
+  bool seaweed_capped;
+  double seaweed_split_timer;
+  bool seaweed_landed;
+  int seaweed_full_collapse_in;
+  bool seaweed_full_collapse;
+  char ***owned_mask_frames;
 };
 
 struct entity_list {
@@ -126,7 +139,9 @@ void entity_randomize_mask(struct entity *e, ascii_rows mask_template);
 typedef void (*row_transform_fn)(const char *in, char *out, void *ctx);
 char **entity_build_transformed_rows(ascii_rows tmpl, row_transform_fn fn, void *ctx);
 void entity_free_owned_rows(char **rows);
+void entity_clear_owned_mask_frames(struct entity *e);
 void entity_set_owned_shape_frames(struct entity *e, char ***rows, int frame_count, double frame_interval_ticks);
+void entity_set_owned_shape_frame_masks(struct entity *e, char ***mask_rows);
 void entity_set_owned_single_row(struct entity *e, char *row, double frame_interval_ticks);
 void entity_clear_owned(struct entity *e);
 ascii_rows entity_shape(const struct entity *e);

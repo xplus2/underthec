@@ -10,16 +10,16 @@
 
 #define REG_PATH L"Software\\underthec\\Screensaver"
 
-enum reg_opt { OPT_CLASSIC, OPT_AQUATIC, OPT_MESSAGE, OPT_COLOR, OPT_POSITION, OPT_PACE, OPT_UTURN, OPT_FPS, OPT_COUNT };
+enum reg_opt { OPT_CLASSIC, OPT_AQUATIC, OPT_MESSAGE, OPT_COLOR, OPT_POSITION, OPT_CASTLE_NAME, OPT_PACE, OPT_UTURN, OPT_FPS, OPT_COUNT };
 
 /* long CLI names */
 static const char *const opt_names[OPT_COUNT] = {
-  "classic", "aquatic-life", "message", "message-color", "message-position", "pace", "uturn-chance", "fps",
+  "classic", "aquatic-life", "message", "message-color", "message-position", "castle-name", "pace", "uturn-chance", "fps",
 };
 
 /* dialog names in errors */
 static const char *const opt_labels[OPT_COUNT] = {
-  "Classic", "Fish", "Message", "Color", "Position", "Pace", "U-turn chance", "FPS",
+  "Classic", "Fish", "Message", "Color", "Position", "Castle name", "Pace", "U-turn chance", "FPS",
 };
 
 static const char *const classic_items[] = {"off", "1.0", "1.1"};
@@ -176,6 +176,7 @@ static void controls_from_config(HWND dlg, struct config *cfg) {
     if (strcmp(cfg->message_color, color_items[i]) == 0) color = (int)i;
   SendDlgItemMessageW(dlg, IDC_MSG_COLOR, CB_SETCURSEL, (WPARAM)color, 0);
   SendDlgItemMessageW(dlg, IDC_MSG_POS, CB_SETCURSEL, (WPARAM)cfg->message_position, 0);
+  item_set_text(dlg, IDC_CASTLE_NAME, cfg->castle_name != NULL ? cfg->castle_name : "");
   snprintf(buf, sizeof buf, "%.2f", cfg->pace);
   char *end = buf + strlen(buf);
   while (end[-1] == '0') *--end = '\0';
@@ -220,6 +221,11 @@ static bool apply(HWND dlg) {
   int color = combo_sel(dlg, IDC_MSG_COLOR);
   if (color > 0) vals[OPT_COLOR] = opts_strdup(color_items[color]);
   vals[OPT_POSITION] = opts_strdup(position_items[combo_sel(dlg, IDC_MSG_POS)]);
+  vals[OPT_CASTLE_NAME] = item_text(dlg, IDC_CASTLE_NAME);
+  if (vals[OPT_CASTLE_NAME][0] == '\0') {
+    free(vals[OPT_CASTLE_NAME]);
+    vals[OPT_CASTLE_NAME] = NULL;
+  }
   vals[OPT_PACE] = item_text(dlg, IDC_PACE);
   vals[OPT_UTURN] = item_text(dlg, IDC_UTURN);
   vals[OPT_FPS] = item_text(dlg, IDC_FPS);

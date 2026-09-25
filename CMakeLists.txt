@@ -24,6 +24,9 @@ endif ()
 
 option(UNDERTHEC_STATIC "link statically where the target platform allows it" ON)
 
+set(UNDERTHEC_XSCREENSAVER_BINDIR "libexec/xscreensaver" CACHE PATH "install dir for the xscreensaver binary")
+set(UNDERTHEC_XSCREENSAVER_CONFIGDIR "libexec/xscreensaver" CACHE PATH "install dir for the xscreensaver .xml config-spec")
+
 set(UNDERTHEC_CORE_SOURCES
         src/app.c
         src/opts.c
@@ -113,6 +116,40 @@ if (WIN32 AND NOT EMSCRIPTEN)
         target_link_options(underthec_scr PRIVATE -static)
     endif ()
     install(TARGETS underthec_scr RUNTIME DESTINATION bin)
+endif ()
+
+if (NOT WIN32 AND NOT EMSCRIPTEN)
+    find_package(X11)
+    if (X11_FOUND)
+        add_executable(underthec_xscr
+                ${UNDERTHEC_CORE_SOURCES}
+                src/config.c
+                src/xscr/xscr_main.c
+                src/xscr/xscr_font.c
+        )
+        target_include_directories(underthec_xscr PRIVATE src ${X11_INCLUDE_DIR})
+        target_link_libraries(underthec_xscr PRIVATE ${X11_LIBRARIES})
+        if (X11_Xft_FOUND)
+            find_package(Freetype)
+            if (FREETYPE_FOUND)
+                target_compile_definitions(underthec_xscr PRIVATE HAVE_XFT)
+                target_include_directories(underthec_xscr PRIVATE ${X11_Xft_INCLUDE_PATH} ${FREETYPE_INCLUDE_DIRS})
+                target_link_libraries(underthec_xscr PRIVATE ${X11_Xft_LIB} ${FREETYPE_LIBRARIES})
+            else ()
+                message(STATUS "Xft found but freetype2 development headers are missing, building without Xft")
+            endif ()
+        endif ()
+        if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+            target_compile_options(underthec_xscr PRIVATE -Wall -Wextra)
+        endif ()
+        if (UNDERTHEC_STATIC)
+            message(STATUS "UNDERTHEC_STATIC has no effect on the xscreensaver build (X11/Xft aren't available static)")
+        endif ()
+        install(PROGRAMS $<TARGET_FILE:underthec_xscr> DESTINATION ${UNDERTHEC_XSCREENSAVER_BINDIR} RENAME underthec)
+        install(FILES src/xscr/underthec.xml DESTINATION ${UNDERTHEC_XSCREENSAVER_CONFIGDIR})
+    else ()
+        message(STATUS "X11 development headers not found, skipping the xscreensaver target")
+    endif ()
 endif ()
 
 if (NOT EMSCRIPTEN)

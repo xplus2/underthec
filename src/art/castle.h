@@ -41,6 +41,8 @@ static const struct sprite_pair castle = { castle_image, castle_mask };
 
 #define CASTLE_DOOR_COL 13
 #define CASTLE_DOOR_ROW 10
+#define CASTLE_NAME_COL 10
+#define CASTLE_NAME_ROW 8
 
 static const char *const door_bars_2[] = { "/| |\\", " |=|=", "_|_|_", NULL };
 static const char *const door_bars_1[] = { "/| |\\", " | |=", "_|_|_", NULL };

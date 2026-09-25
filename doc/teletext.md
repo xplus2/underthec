@@ -10,6 +10,7 @@ Instead of the terminal, output can be rendered as an EBU Teletext page (page 10
 * `--teletext-mode mosaic` draws 2x3 mosaic blocks. `--teletext-mode text` (default) draws text characters, one per cell.
   Text mode is 39x25. The Level 1 character set swaps `# [ \ ] ^ _ ` { | } ~` for national characters, so those are sent
   as X/26 enhancement packets (Level 1.5). Decoders without X/26 support show look-alikes instead.
+* `--teletext-caption <text>` sets the page caption, printable ASCII, max 32 chars. Default=`UNDERTHEC`.
 
 Binary output is refused when stdout is a terminal.
 Output is paced by `-f` (default 10 frames/s).

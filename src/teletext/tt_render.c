@@ -195,15 +195,15 @@ static void render_text_row(const struct canvas *c, const uint8_t allow[TT_ROWS]
   }
 }
 
-static void overlay_title(uint8_t row[TT_COLS]) {
-  const char title[] = TT_TITLE;
+static void overlay_title(uint8_t row[TT_COLS], const char *title) {
+  int title_len = (int)strlen(title);
   bool tinted = false;
   for (int c = TT_HDR_COL; c < TT_COLS; c++) {
     uint8_t b = row[c];
     if (b >= 0x01 && b <= ALPHA_WHITE) tinted = b != ALPHA_WHITE;
     else if (b > GFX_BASE && b <= GFX_BASE + 7) tinted = true;
     int t = c - TT_HDR_COL;
-    if (t >= (int)sizeof(title) - 1 || b != MOSAIC_BLANK) continue;
+    if (t >= title_len || b != MOSAIC_BLANK) continue;
     if (tinted) {
       row[c] = ALPHA_WHITE;
       tinted = false;
@@ -217,7 +217,7 @@ int tt_canvas_w(enum tt_glyphs g) {
   return g == TT_TEXT ? TT_COLS - 1 : (TT_COLS - 1) * 2;
 }
 
-void tt_render(const struct canvas *c, enum tt_glyphs g, struct tt_page *p) {
+void tt_render(const struct canvas *c, enum tt_glyphs g, struct tt_page *p, const char *caption) {
   int ov_row = -1;
   uint8_t allow[TT_ROWS][TT_COLS];
   p->ov_count = 0;
@@ -227,5 +227,5 @@ void tt_render(const struct canvas *c, enum tt_glyphs g, struct tt_page *p) {
     if (g == TT_TEXT) render_text_row(c, allow, y, first, &ov_row, p);
     else render_row(c, y, first, p->row[y]);
   }
-  overlay_title(p->row[0]);
+  overlay_title(p->row[0], caption);
 }

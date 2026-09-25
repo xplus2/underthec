@@ -111,11 +111,12 @@ struct tt_stream {
   struct tt_page prev;
   uint64_t frame;
   int fps;
+  char caption[TT_HDR_LEN + 1];
   uint8_t pk[TT_MAX_PACKETS][TT_PACKET_LEN];
   uint8_t buf[TT_TS_PSI_LEN + TT_TS_LEN + TT_TS_PES_MAX];
 };
 
-struct tt_stream *tt_stream_open(enum tt_mode mode, enum tt_glyphs glyphs, struct tt_net *net, int fps) {
+struct tt_stream *tt_stream_open(enum tt_mode mode, enum tt_glyphs glyphs, struct tt_net *net, int fps, const char *caption) {
 #ifdef _WIN32
   if (net == NULL && _setmode(_fileno(stdout), _O_BINARY) == -1) return NULL;
 #endif
@@ -124,6 +125,10 @@ struct tt_stream *tt_stream_open(enum tt_mode mode, enum tt_glyphs glyphs, struc
   s->glyphs = glyphs;
   s->net = net;
   s->fps = fps;
+  size_t caption_len = strlen(caption);
+  if (caption_len > TT_HDR_LEN) caption_len = TT_HDR_LEN;
+  memcpy(s->caption, caption, caption_len);
+  s->caption[caption_len] = '\0';
   tt_ts_init(&s->ts);
   return s;
 }
@@ -160,7 +165,7 @@ static int packetize(struct tt_stream *s) {
   int n = 0;
   uint8_t fill[TT_HDR_LEN];
   memset(fill, ' ', sizeof fill);
-  memcpy(fill, TT_TITLE, sizeof(TT_TITLE) - 1);
+  memcpy(fill, s->caption, strlen(s->caption));
   tt_t42_header(s->pk[n++], TT_MAG, TT_PAGE, s->frame == 0, s->cur.row[0] + TT_HDR_COL);
   x26_packets(s, &n);
   int budget = TT_UNITS_PER_PES - 1 - n;
@@ -182,7 +187,7 @@ static int packetize(struct tt_stream *s) {
 }
 
 int tt_stream_present(struct tt_stream *s, const struct canvas *c) {
-  tt_render(c, s->glyphs, &s->cur);
+  tt_render(c, s->glyphs, &s->cur, s->caption);
   int n = packetize(s);
   int rc;
   if (s->mode == TT_T42) {

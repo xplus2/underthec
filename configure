@@ -7,6 +7,8 @@ static=1
 debug=0
 emcc=0
 host=
+xscr_bindir=
+xscr_configdir=
 
 for arg in "$@"; do
 	case "$arg" in
@@ -15,14 +17,19 @@ for arg in "$@"; do
 	--no-static) static=0 ;;
 	--debug) debug=1 ;;
 	--emcc) emcc=1; cc=emcc ;;
+	--xscreensaver-bindir=*) xscr_bindir="${arg#--xscreensaver-bindir=}" ;;
+	--xscreensaver-configdir=*) xscr_configdir="${arg#--xscreensaver-configdir=}" ;;
 	--help)
 		echo "usage: ./configure [--prefix=DIR] [--host=TRIPLET] [--no-static] [--debug] [--emcc]"
+		echo "                   [--xscreensaver-bindir=DIR] [--xscreensaver-configdir=DIR]"
 		echo ""
 		echo "  --prefix=DIR    install prefix (default: /usr/local)"
 		echo "  --host=TRIPLET  cross-compiler prefix, e.g. x86_64-w64-mingw32"
 		echo "  --no-static     do not pass -static to the linker"
 		echo "  --debug         build with -g -O0 and keep symbols (skip stripping)"
 		echo "  --emcc          WebAssembly build with Emscripten (build/underthec.js, .wasm, index.html)"
+		echo "  --xscreensaver-bindir=DIR    install dir (default: PREFIX/libexec/xscreensaver)"
+		echo "  --xscreensaver-configdir=DIR install dir (default: PREFIX/libexec/xscreensaver)"
 		exit 0
 		;;
 	*)
@@ -31,6 +38,9 @@ for arg in "$@"; do
 		;;
 	esac
 done
+
+if [ -z "$xscr_bindir" ]; then xscr_bindir="$prefix/libexec/xscreensaver"; fi
+if [ -z "$xscr_configdir" ]; then xscr_configdir="$prefix/libexec/xscreensaver"; fi
 
 ver_str=$(sed -n 's/^#define TOOL_VERSION "\(.*\)"$/\1/p' src/version.h)
 ver_parts=$(for p in MAJOR MINOR PATCH; do sed -n "s/^#define TOOL_VERSION_$p \([0-9]*\)$/\1/p" src/version.h; done | paste -sd. -)
@@ -73,7 +83,49 @@ else
 	fi
 fi
 
+have_x11=0
+x11_cflags=
+x11_libs=
+have_xft=0
+xft_cflags=
+xft_libs=
+
+if [ "$emcc" != "1" ] && [ "$windows" != "1" ] && [ -z "$host" ]; then
+	tmpc="${TMPDIR:-/tmp}/underthec-x11check-$$.c"
+	tmpo="${TMPDIR:-/tmp}/underthec-x11check-$$.out"
+	if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists x11 2>/dev/null; then
+		have_x11=1
+		x11_cflags=$(pkg-config --cflags x11)
+		x11_libs=$(pkg-config --libs x11)
+	else
+		printf '#include <X11/Xlib.h>\nint main(void){XOpenDisplay(0);return 0;}\n' > "$tmpc"
+		if "$cc" "$tmpc" -lX11 -o "$tmpo" >/dev/null 2>&1; then
+			have_x11=1
+			x11_libs="-lX11"
+		fi
+		rm -f "$tmpc" "$tmpo"
+	fi
+	if [ "$have_x11" = "1" ]; then
+		if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists xft 2>/dev/null; then
+			have_xft=1
+			xft_cflags=$(pkg-config --cflags xft)
+			xft_libs=$(pkg-config --libs xft)
+		else
+			printf '#include <X11/Xft/Xft.h>\nint main(void){return 0;}\n' > "$tmpc"
+			if "$cc" "$tmpc" -lXft -lX11 -o "$tmpo" >/dev/null 2>&1; then
+				have_xft=1
+				xft_libs="-lXft -lX11"
+			fi
+			rm -f "$tmpc" "$tmpo"
+		fi
+	fi
+fi
+
 cflags="-std=c11 -Wall -Wextra -Isrc"
+if [ "$have_x11" = "1" ]; then
+	cflags="$cflags $x11_cflags $xft_cflags"
+	if [ "$have_xft" = "1" ]; then cflags="$cflags -DHAVE_XFT"; fi
+fi
 ldflags=""
 
 if [ "$debug" = "1" ]; then
@@ -117,7 +169,15 @@ fi
 		echo "WINDRES = $windres"
 		echo "SCR_LDFLAGS = -mwindows -lgdi32 -ladvapi32"
 	fi
+	if [ "$have_x11" = "1" ]; then
+		echo 'XSCR_TARGET = $(BUILDDIR)/underthec-xscr'
+		echo "XSCR_SRCS = $core_srcs src/config.c src/xscr/xscr_main.c src/xscr/xscr_font.c"
+		echo "XSCR_LDFLAGS = $x11_libs $xft_libs"
+		echo "XSCR_BINDIR = $xscr_bindir"
+		echo "XSCR_CONFIGDIR = $xscr_configdir"
+	fi
 } > config.mk
 
 echo "configured: CC=$cc static=$static debug=$debug emcc=$emcc screensaver=$([ -n "$scr_srcs" ] && echo 1 || echo 0) prefix=$prefix"
+echo "xscreensaver: x11=$have_x11 xft=$have_xft$([ "$have_x11" = "1" ] && echo " bindir=$xscr_bindir")"
 echo "run 'make' to build."

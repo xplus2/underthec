@@ -49,40 +49,37 @@ static void write_parts(FILE *stream, const char *const *parts, size_t count) {
 static void print_help(const char *prog) {
   write_parts(stdout, (const char *[]){"usage: ", prog, " [options]\n\n"}, 3);
   fputs(
-    "  -a, --aquatic-life <definition>\n"
-    "                          comma-separated, default: all on, fish=auto\n"
-    "                          fish=<N|auto>,ducks,dolphins,ship,swan,kaiju,crab,shark,\n"
-    "                          submarine,whale,jellyfish,monster,bigfish,swordfish,\n"
-    "                          seahorse\n"
-    "  -c, --classic [1.0|1.1] classic mode, no arg = 1.0\n"
-    "  -m, --message <text>    bg text/ascii art ('-' for stdin)\n"
-    "  -M, --message-color <color>\n"
-    "                          -m text color (default: blue)\n"
-    "                          red,green,blue,yellow,magenta,cyan,white,black\n"
-    "                          capitalized first letter=bold\n"
-    "  -P, --message-position [middle|center|marquee|swim|event]\n"
-    "                          -m placement (default: middle)\n"
-    "                          middle: horizontally+vertically centered\n"
-    "                          center: horizontally centered, vertical top\n"
-    "                          marquee: centered scrolling\n"
-    "                          swim: top row, scrolls right to left\n"
-    "                          event: like swim, but random\n"
-    "  -p, --pace <pace>       speed multiplier, 0.01-10 (default: 1)\n"
-    "  -u, --uturn-chance <N>  fish turn around once per N ticks on average\n"
-    "                          (default: 200, 0 = never)\n"
-    "  -f, --fps <N>           render frames per second, 1-120 (default: 10)\n"
-    "  -s, --screensaver       exit on any keypress\n"
-    "  -t, --transparent       transparent background (default: opaque black)\n"
-    "      --teletext <t42|ts> binary teletext stream to stdout instead of the terminal\n"
-    "                          t42: raw 42-byte packets, ts: MPEG-TS with teletext PES\n"
-    "      --teletext-mode <text|mosaic>\n"
-    "                          text: real characters, 39 columns, exact ASCII via X/26\n"
-    "                          mosaic: 2x3 blocks, 78 columns (default: text)\n"
-    "      --mcast <IP:PORT>   send MPEG-TS teletext to a multicast group, [GROUP]:PORT for IPv6\n"
-    "      --ttl <N>           multicast TTL/hops, 1-255 (default: 1)\n"
-    "      --iface <if>        multicast interface: local address (IPv4) or name (IPv6)\n"
-    "  -h, --help              show this help\n"
-    "  -v, --version           show version\n\n"
+    "  -a, --aquatic-life <definition>  comma-separated, default: all on, fish=auto\n"
+    "                            fish=<N|auto>,ducks,dolphins,ship,swan,kaiju,crab,shark,\n"
+    "                            submarine,whale,jellyfish,monster,bigfish,swordfish,\n"
+    "                            seahorse,rowers\n"
+    "  -c, --classic [1.0|1.1]   classic mode, no arg = 1.0\n"
+    "  -m, --message <text>      bg text/ascii art ('-' for stdin)\n"
+    "  -M, --message-color <color>  -m text color (default: blue)\n"
+    "                            red,green,blue,yellow,magenta,cyan,white,black\n"
+    "                            capitalized first letter=bold\n"
+    "  -P, --message-position [middle|center|marquee|swim|event]  -m placement\n"
+    "                            middle: horizontally+vertically centered (default)\n"
+    "                            center: horizontally centered, vertical top\n"
+    "                            marquee: centered scrolling\n"
+    "                            swim: top row, scrolls right to left\n"
+    "                            event: like swim, but random\n"
+    "  -p, --pace <pace>         speed multiplier, 0.01-10 (default: 1)\n"
+    "  -u, --uturn-chance <N>    fish turn per N ticks (default: 200, 0 = never)\n"
+    "  -f, --fps <N>             render frames per second, 1-120 (default: 10)\n"
+    "  -s, --screensaver         exit on any keypress\n"
+    "  -t, --transparent         transparent background (default: opaque black)\n"
+    "      --teletext <t42|ts>   binary teletext stream to stdout instead of the terminal\n"
+    "                            t42: raw 42-byte packets, ts: MPEG-TS with teletext PES\n"
+    "      --teletext-mode <text|mosaic>  text: 39 columns, exact ASCII via X/26\n"
+    "                            mosaic: 2x3 blocks, 78 columns (default: text)\n"
+    "      --mcast <IP:PORT>     send MPEG-TS teletext to a multicast group, [GROUP]:PORT for IPv6\n"
+    "      --ttl <N>             multicast TTL/hops, 1-255 (default: 1)\n"
+    "      --iface <if>          multicast interface: local address (IPv4) or name (IPv6)\n"
+    "      --teletext-caption <text> page caption (default: UNDERTHEC)\n"
+    "  -n, --castle-name <text>  text on the castle, printable ASCII, max 11 chars\n"
+    "  -h, --help                show this help\n"
+    "  -v, --version             show version\n\n"
     "keys while running:\n"
     "  q quit, r redraw, p pause, t toggle transparency, f feed, s settings, h help\n\n"
     "environment variables:\n"
@@ -101,7 +98,9 @@ static void print_help(const char *prog) {
     "  UNDERTHEC_TELETEXT_MODE=text|mosaic like --teletext-mode\n"
     "  UNDERTHEC_MCAST=<GROUP:PORT>        like --mcast\n"
     "  UNDERTHEC_MCAST_TTL=<N>             like --ttl\n"
-    "  UNDERTHEC_MCAST_IFACE=<if>          like --iface\n",
+    "  UNDERTHEC_MCAST_IFACE=<if>          like --iface\n"
+    "  UNDERTHEC_TELETEXT_CAPTION=<text>   like --teletext-caption\n"
+    "  UNDERTHEC_CASTLE_NAME=<text>        like --castle-name\n",
     stdout);
 }
 
@@ -213,6 +212,10 @@ int main(int argc, char **argv) {
   const char *iface_arg = NULL;
   int mcast_ttl = 1;
   bool ttl_given = false;
+  char teletext_caption[TT_HDR_LEN + 1] = TT_TITLE;
+  bool teletext_caption_given = false;
+  char castle_name[CASTLE_NAME_LEN + 1] = {0};
+  bool castle_name_given = false;
   enum message_position message_position = MSG_POS_MIDDLE;
   struct aquatic_life aquatic = scene_aquatic_default();
   int i = 1;
@@ -295,6 +298,24 @@ int main(int argc, char **argv) {
         return 2;
       }
       ttl_given = true;
+      i += 2;
+    } else if (strcmp(a, "--teletext-caption") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      char errbuf[128];
+      if (!opts_parse_teletext_caption(argv[i + 1], teletext_caption, sizeof teletext_caption, errbuf, sizeof errbuf)) {
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
+        return 2;
+      }
+      teletext_caption_given = true;
+      i += 2;
+    } else if (strcmp(a, "-n") == 0 || strcmp(a, "--castle-name") == 0) {
+      if (i + 1 >= argc) return err_requires_arg(argv[0], a);
+      char errbuf[128];
+      if (!opts_parse_castle_name(argv[i + 1], castle_name, sizeof castle_name, errbuf, sizeof errbuf)) {
+        write_parts(stderr, (const char *[]){argv[0], ": ", errbuf, " for ", a, "\n"}, 6);
+        return 2;
+      }
+      castle_name_given = true;
       i += 2;
     } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
       print_help(argv[0]);
@@ -400,6 +421,22 @@ int main(int argc, char **argv) {
         return err_env_bad(argv[0], "UNDERTHEC_MCAST_TTL", errbuf);
     }
   }
+  if (!teletext_caption_given) {
+    const char *env_val = getenv("UNDERTHEC_TELETEXT_CAPTION");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!opts_parse_teletext_caption(env_val, teletext_caption, sizeof teletext_caption, errbuf, sizeof errbuf))
+        return err_env_bad(argv[0], "UNDERTHEC_TELETEXT_CAPTION", errbuf);
+    }
+  }
+  if (!castle_name_given) {
+    const char *env_val = getenv("UNDERTHEC_CASTLE_NAME");
+    if (env_val != NULL) {
+      char errbuf[128];
+      if (!opts_parse_castle_name(env_val, castle_name, sizeof castle_name, errbuf, sizeof errbuf))
+        return err_env_bad(argv[0], "UNDERTHEC_CASTLE_NAME", errbuf);
+    }
+  }
   if (message_arg == NULL) {
     const char *env_val = getenv("UNDERTHEC_MESSAGE");
     if (env_val != NULL) message_arg = env_val;
@@ -493,7 +530,7 @@ int main(int argc, char **argv) {
       write_parts(stderr, (const char *[]){argv[0], ": refusing to write binary teletext to a terminal\n"}, 2);
       return 2;
     }
-    tt = tt_stream_open(tt_mode, tt_glyphs, tt_net, fps);
+    tt = tt_stream_open(tt_mode, tt_glyphs, tt_net, fps, teletext_caption);
     if (tt == NULL) {
       write_parts(stderr, (const char *[]){argv[0], ": failed to open the teletext output\n"}, 2);
       return 1;
@@ -528,6 +565,7 @@ int main(int argc, char **argv) {
 #endif
   struct app app;
   app_init(&app, classic, aquatic, pace, fps, now_seconds());
+  if (castle_name[0] != '\0') scene_set_castle_name(&app.scene, castle_name);
   if (message_color_arg != NULL) scene_set_message_color(&app.scene, color_from_name(message_color_arg));
   scene_set_message_position(&app.scene, message_position);
   scene_set_uturn_chance(&app.scene, uturn_chance);

@@ -17,9 +17,10 @@
 #define IDC_UTURN 1009
 #define IDC_DEFAULTS 1010
 #define IDC_VERSION 1011
+#define IDC_CASTLE_NAME 1012
 
 /* creature features */
 #define IDC_FLAG0 1100
-#define SCR_FLAG_SLOTS 15
+#define SCR_FLAG_SLOTS 16
 
 #endif

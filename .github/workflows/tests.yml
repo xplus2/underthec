@@ -30,6 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: sudo apt-get update && sudo apt-get install -y libx11-dev libxft-dev
       - run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DUNDERTHEC_STATIC=OFF \
             -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g -O1" \

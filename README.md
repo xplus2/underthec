@@ -4,22 +4,23 @@ Asciiquarium is an aquarium/C animation in ASCII art.
 This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquarium),
 see "Credits" below for the original authors.
 
-
 [Build](doc/build.md) and [release](https://github.com/xplus2/underthec/releases) targets:
 * Linux
   - Terminal: amd64, arm64, armel, armhf, i386, riscv64
+  - [XScreensaver](doc/screensaver.md): amd64, arm64
 * MacOS
   - Terminal: arm64
 * Windows
   - Terminal: amd64, arm64
-  - Screensaver: amd64, arm64
+  - [Screensaver](doc/screensaver.md): amd64, arm64
 * [WebAssembly](doc/wasm.md)
 
 It also renders to [EBU Teletext](doc/teletext.md) (text and mosaic mode).
 
 ## Dependencies
 
-None.
+Not really. 
+`libx11`+`libxft` for the X11 screensaver, if you're still on X11.
 
 From time to time, it is recommended to feed the fish.
 
@@ -30,25 +31,27 @@ underthec [-c [1.0|1.1]] [-s] [-t] [-p pace] [-m text|-] [-M color] [-P position
 underthec {-h|-v}
 ```
 
-| Short | Long                 | Parameter        | Description                          |
-|-------|----------------------|------------------|--------------------------------------|
-| `-a`  | `--aquatic-life`     | `<def>`          | decide what's in (see below)         |
-| `-c`  | `--classic`          | `[1.0\|1.1]`     | Asciiquarium 1.0 / 1.1 modes         |
-| `-m`  | `--message`          | `<text>`         | background `text`. `-` for stdin     |
-| `-M`  | `--message-color`    | `<color>`        | `-m`'s text color (see below)        |
-| `-P`  | `--message-position` | `<pos>`          | `-m`'s placement (see below)         |
-| `-p`  | `--pace <pace>`      |                  | speed, 0.01-10 (default: 1)          |
-| `-u`  | `--uturn-chance`     | `<N>`            | fish turn chance (default: 1 in 200) |
-| `-f`  | `--fps`              | `<N>`            | render fps, 1-120 (default: 10)      |
-| `-s`  | `--screensaver`      |                  | (terminal) exit on any keypress      |
-| `-t`  | `--transparent`      |                  | transparent background               |
-|       | `--teletext`         | `<t42\|ts>`      | Teletext to stdout (see below)       |
-|       | `--teletext-mode`    | `<text\|mosaic>` | teletext glyphs, default: text       |
-|       | `--mcast`            | `<GROUP:PORT>`   | MPEG-TS teletext multicast group     |
-|       | `--ttl`              | `<N>`            | multicast TTL (default: 1)           |
-|       | `--iface`            | `<if>`           | multicast interface                  |
-| `-h`  | `--help`             |                  | show usage                           |
-| `-v`  | `--version`          |                  | show version                         |
+| Short | Long                 | Parameter        | Description                           |
+|-------|----------------------|------------------|---------------------------------------|
+| `-a`  | `--aquatic-life`     | `<def>`          | decide what's in (see below)          |
+| `-c`  | `--classic`          | `[1.0\|1.1]`     | Asciiquarium 1.0 / 1.1 modes          |
+| `-m`  | `--message`          | `<text>`         | background `text`. `-` for stdin      |
+| `-M`  | `--message-color`    | `<color>`        | `-m`'s text color (see below)         |
+| `-P`  | `--message-position` | `<pos>`          | `-m`'s placement (see below)          |
+| `-p`  | `--pace <pace>`      |                  | speed, 0.01-10 (default: 1)           |
+| `-u`  | `--uturn-chance`     | `<N>`            | fish turn chance (default: 1 in 200)  |
+| `-f`  | `--fps`              | `<N>`            | render fps, 1-120 (default: 10)       |
+| `-s`  | `--screensaver`      |                  | (terminal) exit on any keypress       |
+| `-t`  | `--transparent`      |                  | transparent background                |
+|       | `--teletext`         | `<t42\|ts>`      | Teletext to stdout (see below)        |
+|       | `--teletext-mode`    | `<text\|mosaic>` | teletext glyphs, default: text        |
+|       | `--mcast`            | `<GROUP:PORT>`   | MPEG-TS teletext multicast group      |
+|       | `--ttl`              | `<N>`            | multicast TTL (default: 1)            |
+|       | `--iface`            | `<if>`           | multicast interface                   |
+|       | `--teletext-caption` | `<text>`         | teletext caption (default: UNDERTHEC) |
+| `-n`  | `--castle-name`      | `<text>`         | text on the castle, max 11 chars      |
+| `-h`  | `--help`             |                  | show usage                            |
+| `-v`  | `--version`          |                  | show version                          |
 
 ### Classic mode `-c`/`--classic`
 - `-c 1.0` (or bare `-c`): original 1.0 fish/monster look
@@ -75,7 +78,7 @@ Define what's going on in your asciiquarium. It takes a comma-separated definiti
 - `fish=<N|auto>`: number of fish (default: `auto`, sized to the terminal)
 - flags, present=on, omitted=off: `ducks`, `dolphins`, `ship`, `swan`, `kaiju`, `fishhook`,
   `submarine`, `whale`, `shark`, `jellyfish`, `monster`, `bigfish`, `swordfish`, `crab`,
-  `seahorse`
+  `seahorse`, `rowers`
 
 Default (no `-a`): every flag on, `fish=auto`. Example: `-a fish=10,jellyfish,dolphins`
 
@@ -102,7 +105,6 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 | `UNDERTHEC_MCAST_TTL=<N>`               | `--ttl`           |
 | `UNDERTHEC_MCAST_IFACE=<if>`            | `--iface`         |
 
-
 ### Key bindings
 
 | Key | Action                                                                   |
@@ -117,13 +119,6 @@ If both an env var and its cmdline option are given, the cmdline option wins.
 
 `SIGUSR1` also triggers a feed.
 
-
-### Windows screensaver
-
-`underthec.scr` is a native Windows multi-monitor screensaver.
-Right-click it and choose "Install", or copy it to `%windir%\System32`,
-then select it in the screensaver settings.
-
 ## Credits
 
 * The original asciiquarium program and most of its design are by [Kirk Baucom](https://robobunny.com/projects/asciiquarium/html/)
@@ -133,4 +128,7 @@ then select it in the screensaver settings.
 
 ## License
 
-GPL-2.0-or-later, see [LICENSE](LICENSE).
+It is a ship of Theseus. Anyway, Asciiquarium's original skipper (and crew, see "Credits" above) 
+put it under GPL-2.0-or-later, see [LICENSE](LICENSE).
+
+So, GPL-2.0-or-later it is.

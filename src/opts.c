@@ -153,6 +153,38 @@ bool opts_parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len
   return true;
 }
 
+bool opts_parse_teletext_caption(const char *val, char *out, size_t out_cap, char *errbuf, size_t errbuf_len) {
+  size_t len = strlen(val);
+  if (len >= out_cap) {
+    opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"teletext caption '", val, "' too long, max 32 chars"}, 3);
+    return false;
+  }
+  for (size_t i = 0; i < len; i++) {
+    if ((unsigned char)val[i] < 0x20 || (unsigned char)val[i] > 0x7E) {
+      opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"teletext caption '", val, "' must be printable ASCII"}, 3);
+      return false;
+    }
+  }
+  memcpy(out, val, len + 1);
+  return true;
+}
+
+bool opts_parse_castle_name(const char *val, char *out, size_t out_cap, char *errbuf, size_t errbuf_len) {
+  size_t len = strlen(val);
+  if (len >= out_cap) {
+    opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"castle name '", val, "' too long, max 11 chars"}, 3);
+    return false;
+  }
+  for (size_t i = 0; i < len; i++) {
+    if ((unsigned char)val[i] < 0x20 || (unsigned char)val[i] > 0x7E) {
+      opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"castle name '", val, "' must be printable ASCII"}, 3);
+      return false;
+    }
+  }
+  memcpy(out, val, len + 1);
+  return true;
+}
+
 int opts_split_lines(char *buf, char ***out_rows) {
   size_t cap = 16;
   char **rows = xmalloc(cap * sizeof(*rows));

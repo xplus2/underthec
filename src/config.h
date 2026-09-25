@@ -15,6 +15,7 @@ struct config {
   struct aquatic_life aquatic;
   char *message;
   char *message_color;
+  char *castle_name;
   enum message_position message_position;
   double pace;
   int uturn_chance;

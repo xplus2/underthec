@@ -47,7 +47,7 @@ struct tt_net;
 
 int tt_canvas_w(enum tt_glyphs g);
 
-void tt_render(const struct canvas *c, enum tt_glyphs g, struct tt_page *p);
+void tt_render(const struct canvas *c, enum tt_glyphs g, struct tt_page *p, const char *caption);
 
 /* mag 1-8, page BCD 0x00-0x99. text: TT_HDR_LEN page bytes for cols 8-39 */
 void tt_t42_header(uint8_t out[TT_PACKET_LEN], int mag, int page, bool erase, const uint8_t text[TT_HDR_LEN]);
@@ -89,8 +89,8 @@ struct tt_stream;
 bool tt_stdout_is_tty(void);
 void tt_sleep_ms(int ms);
 
-/* net NULL=stdout */
-struct tt_stream *tt_stream_open(enum tt_mode mode, enum tt_glyphs glyphs, struct tt_net *net, int fps);
+/* net NULL=stdout. caption: row 0 label, truncated to TT_HDR_LEN */
+struct tt_stream *tt_stream_open(enum tt_mode mode, enum tt_glyphs glyphs, struct tt_net *net, int fps, const char *caption);
 
 /* 0 ok, -1 output err */
 int tt_stream_present(struct tt_stream *s, const struct canvas *c);

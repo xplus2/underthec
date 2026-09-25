@@ -62,7 +62,7 @@ static bool find_kaiju_eye(const struct entity *kaiju_ent, int *row_out, int *co
   for (int r = 0; rows[r] != NULL; r++) {
     int sum = 0;
     int count = 0;
-    for (int c = 0; rows[r][c] != '\0'; c++) if (rows[r][c] == '0') {
+    for (int c = 0; rows[r][c] != '\0'; c++) if (rows[r][c] == 'o') {
       sum += c;
       count++;
     }

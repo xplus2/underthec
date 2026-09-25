@@ -22,6 +22,9 @@ bool opts_parse_message_position(const char *val, enum message_position *out, ch
 bool opts_parse_uturn_chance(const char *val, int *out, char *errbuf, size_t errbuf_len);
 bool opts_parse_fps(const char *val, int *out, char *errbuf, size_t errbuf_len);
 bool opts_parse_pace(const char *s, double *out, char *errbuf, size_t errbuf_len);
+/* out_cap incl NUL, printable ASCII (0x20-0x7E) */
+bool opts_parse_teletext_caption(const char *val, char *out, size_t out_cap, char *errbuf, size_t errbuf_len);
+bool opts_parse_castle_name(const char *val, char *out, size_t out_cap, char *errbuf, size_t errbuf_len);
 
 /* splits buf in place, drops trailing empty rows. caller frees rows */
 int opts_split_lines(char *buf, char ***out_rows);

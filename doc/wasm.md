@@ -17,5 +17,6 @@ with the same values as on the command line:
 | `pace`             | `p`   | `?p=2`                 |
 | `uturn-chance`     | `u`   | `?u=50`                |
 | `fps`              | `f`   | `?f=30`                |
+| `castle-name`      | `n`   | `?n=MyCastle`          |
 
 An invalid value shows the error instead of the aquarium.

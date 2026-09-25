@@ -88,7 +88,7 @@ void spawn_fishhook(struct scene *sc, int w, int h) {
   e->sentinel = '?';
   e->splat_x = 0.0;
   e->death_action = DEATH_RANDOM_OBJECT;
-  e->default_attr = color_from_name("GREEN");
+  e->default_attr = color_from_name("WHITE");
   update_fishhook_shape(e, 0);
 }
 

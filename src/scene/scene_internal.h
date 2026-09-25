@@ -26,6 +26,7 @@
 #define Z_CRAB 21
 #define Z_JELLYFISH 4
 #define Z_SEAHORSE 4
+#define Z_ROWERS 3
 #define Z_FLAKE 1
 #define CASTLE_X_OFFSET 32
 #define CASTLE_WIDTH 31
@@ -57,6 +58,7 @@ void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle
 void castle_door_tick(struct scene *sc);
 void add_seaweed(struct scene *sc, int w, int h);
 void add_all_seaweed(struct scene *sc, int w, int h);
+void seaweed_tick(struct scene *sc, int term_w, int term_h);
 void add_all_fish(struct scene *sc, int w, int h);
 void add_message(struct scene *sc, int w, int h);
 void spawn_message_event(struct scene *sc, int w, int h);

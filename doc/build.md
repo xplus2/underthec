@@ -10,11 +10,12 @@ cmake --build build
 The `Release` build type (the default) links statically wherever the target platform allows it, and strips the resulting binary.
 
 Static musl build on Linux (requires `musl-gcc`):
-
 ```sh
 cmake -B build-musl -DCMAKE_TOOLCHAIN_FILE=cmake/musl-toolchain.cmake
 cmake --build build-musl
 ```
+
+If `libx11` and `libxft` headers are installed, this also builds the X11 screensaver (non-static).
 
 ### Windows
 Cross-compiling a static Windows build requires the `mingw-w64` cross toolchain:

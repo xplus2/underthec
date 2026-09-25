@@ -37,15 +37,60 @@ void add_environment(struct scene *sc, int w, int h) {
   }
 }
 
+static void map_identity_row(const char *in, char *out, void *ctx) {
+  (void)ctx;
+  strcpy(out, in);
+}
+
+static void bake_castle_name_shape(char *row, const char *name) {
+  size_t len = strlen(name);
+  if (len > CASTLE_NAME_LEN) len = CASTLE_NAME_LEN;
+  size_t pad = (CASTLE_NAME_LEN - len) / 2;
+  memcpy(row + CASTLE_NAME_COL + pad, name, len);
+}
+
+static char **build_castle_mask(const char *name) {
+  int rows = 0;
+  while (castle_mask[rows] != NULL) rows++;
+  char **out = xmalloc((size_t)(rows + 1) * sizeof(*out));
+  for (int i = 0; i < rows; i++) {
+    if (i != CASTLE_NAME_ROW) {
+      size_t len = strlen(castle_mask[i]);
+      out[i] = xmalloc(len + 1);
+      memcpy(out[i], castle_mask[i], len + 1);
+      continue;
+    }
+    size_t width = CASTLE_NAME_COL + CASTLE_NAME_LEN;
+    out[i] = xmalloc(width + 1);
+    memset(out[i], ' ', width);
+    out[i][width] = '\0';
+    size_t len = strlen(name);
+    if (len > CASTLE_NAME_LEN) len = CASTLE_NAME_LEN;
+    size_t pad = (CASTLE_NAME_LEN - len) / 2;
+    memset(out[i] + CASTLE_NAME_COL + pad, 'w', len);
+  }
+  out[rows] = NULL;
+  return out;
+}
+
 void add_castle(struct scene *sc, int w, int h) {
   struct entity *e = entity_spawn(&sc->entities);
   e->type = ENT_CASTLE;
   e->x = w - CASTLE_X_OFFSET;
   e->y = h - 13;
   e->z = Z_CASTLE;
-  e->frames = &castle;
-  e->frame_count = 1;
   e->default_attr = color_from_name("BLACK");
+  if (sc->castle_name == NULL) {
+    e->frames = &castle;
+    e->frame_count = 1;
+    return;
+  }
+  char **shape_rows = entity_build_transformed_rows(castle_image, map_identity_row, NULL);
+  bake_castle_name_shape(shape_rows[CASTLE_NAME_ROW], sc->castle_name);
+  char ***frame_list = xmalloc(sizeof(*frame_list));
+  frame_list[0] = shape_rows;
+  entity_set_owned_shape_frames(e, frame_list, 1, 0.0);
+  e->owned_mask = build_castle_mask(sc->castle_name);
 }
 
 struct castle_reveal_ctx {
@@ -60,19 +105,17 @@ static void map_castle_reveal(const char *in, char *out, void *ctx) {
   rv->row++;
 }
 
-static void map_identity_row(const char *in, char *out, void *ctx) {
-  (void)ctx;
-  strcpy(out, in);
-}
-
 void add_castle_building(struct scene *sc, int w, int h) {
   int rows = 0;
   while (castle_image[rows] != NULL) rows++;
 
   char ***frame_list = xmalloc((size_t)rows * sizeof(*frame_list));
   for (int step = 0; step < rows; step++) {
-    struct castle_reveal_ctx ctx = {rows - 1 - step, 0};
+    int revealed_from_row = rows - 1 - step;
+    struct castle_reveal_ctx ctx = {revealed_from_row, 0};
     frame_list[step] = entity_build_transformed_rows(castle_image, map_castle_reveal, &ctx);
+    if (sc->castle_name != NULL && CASTLE_NAME_ROW >= revealed_from_row)
+      bake_castle_name_shape(frame_list[step][CASTLE_NAME_ROW], sc->castle_name);
   }
 
   struct entity *e = entity_spawn(&sc->entities);
@@ -82,7 +125,7 @@ void add_castle_building(struct scene *sc, int w, int h) {
   e->z = Z_CASTLE;
   e->default_attr = color_from_name("BLACK");
   entity_set_owned_shape_frames(e, frame_list, rows, 8.0);
-  e->owned_mask = entity_build_transformed_rows(castle_mask, map_identity_row, NULL);
+  e->owned_mask = sc->castle_name != NULL ? build_castle_mask(sc->castle_name) : entity_build_transformed_rows(castle_mask, map_identity_row, NULL);
 }
 
 void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle_height) {
@@ -205,8 +248,10 @@ void add_seaweed(struct scene *sc, int w, int h) {
   e->y = y;
   e->z = Z_SEAWEED;
   e->default_attr = color_from_name("green");
-  e->die_after = rng_double(4.0 * 60.0) + 8.0 * 60.0; /* 8-12 minutes */
-  e->death_action = DEATH_ADD_SEAWEED;
+  e->seaweed_orig_height = height;
+  e->seaweed_top_left = true;
+  e->seaweed_grow_timer = rng_double(180.0) + 90.0;
+  e->seaweed_full_collapse_in = rng_int(2) + 2;
 
   char ***frame_list = xmalloc(2 * sizeof(*frame_list));
   frame_list[0] = rows0;
@@ -217,6 +262,76 @@ void add_seaweed(struct scene *sc, int w, int h) {
 void add_all_seaweed(struct scene *sc, int w, int h) {
   int count = w / 15;
   for (int i = 0; i < count; i++) add_seaweed(sc, w, h);
+}
+
+static char **seaweed_shrink_rows(char **rows, int total_h, int grown) {
+  for (int i = 0; i < grown; i++) free(rows[i]);
+  int keep = total_h - grown;
+  char **out = xmalloc((size_t)(keep + 1) * sizeof(*out));
+  for (int i = 0; i < keep; i++) out[i] = rows[i + grown];
+  out[keep] = NULL;
+  free(rows);
+  return out;
+}
+
+static void seaweed_spawn_debris(struct scene *sc, double base_x, double base_y, bool row_left) {
+  struct entity *d = entity_spawn(&sc->entities);
+  d->type = ENT_SEAWEED_DEBRIS;
+  d->z = Z_SEAWEED;
+  d->default_attr = color_from_name("yellow");
+  double side_shift = rng_int(2) == 0 ? -1.0 : 1.0;
+  d->x = base_x + (row_left ? 0.0 : 1.0) + side_shift;
+  d->y = base_y;
+  d->vy = rng_double(0.15) + 0.15;
+  char *glyph = xmalloc(2);
+  memcpy(glyph, row_left ? "(" : ")", 2);
+  entity_set_owned_single_row(d, glyph, 0.0);
+}
+
+static void seaweed_split(struct scene *sc, struct entity *e, int term_w, int term_h) {
+  int total = entity_height(e);
+  int grown = e->seaweed_grown;
+  bool top_left = e->seaweed_top_left;
+  double base_x = e->x;
+  double base_y = e->y;
+  int base_id = e->id;
+  bool collapse = e->seaweed_full_collapse;
+  int shed_rows = collapse ? total : grown;
+
+  for (int i = 0; i < shed_rows; i++) {
+    bool row_left = ((i % 2) == 0) ? top_left : !top_left;
+    seaweed_spawn_debris(sc, base_x, base_y + i, row_left);
+  }
+
+  struct entity *base = entity_find_by_id(&sc->entities, base_id);
+  if (base == NULL) return;
+  if (collapse) {
+    entity_clear_owned(base);
+    base->marked_dead = true;
+    add_seaweed(sc, term_w, term_h);
+    return;
+  }
+
+  base->owned_shape_rows[0] = seaweed_shrink_rows(base->owned_shape_rows[0], total, grown);
+  base->owned_shape_rows[1] = seaweed_shrink_rows(base->owned_shape_rows[1], total, grown);
+  base->owned_frame_table[0].shape = (ascii_rows)base->owned_shape_rows[0];
+  base->owned_frame_table[1].shape = (ascii_rows)base->owned_shape_rows[1];
+  entity_clear_owned_mask_frames(base);
+  entity_shape_changed(base);
+
+  base->y = base_y + grown;
+  base->seaweed_grown = 0;
+  base->seaweed_capped = false;
+  base->seaweed_top_left = ((grown % 2) == 0) ? top_left : !top_left;
+  base->seaweed_grow_timer = rng_double(180.0) + 90.0;
+}
+
+void seaweed_tick(struct scene *sc, int term_w, int term_h) {
+  for (int i = 0; i < sc->entities.count; i++) {
+    struct entity *e = &sc->entities.items[i];
+    if (e->marked_dead || e->type != ENT_SEAWEED) continue;
+    if (e->seaweed_capped && e->seaweed_split_timer <= 0.0) seaweed_split(sc, e, term_w, term_h);
+  }
 }
 
 void add_all_fish(struct scene *sc, int w, int h) {
@@ -244,7 +359,7 @@ static int message_block_width(const struct scene *sc, int rows) {
 }
 
 static int message_surface_y(int rows) {
-  if (rows < WATER_SURFACE_ROW) return WATER_SURFACE_ROW - rows;
+  if (rows <= WATER_SURFACE_ROW) return WATER_SURFACE_ROW - rows + 1;
   return MESSAGE_TOP_ROW;
 }
 
@@ -276,7 +391,7 @@ void add_message(struct scene *sc, int w, int h) {
     case MSG_POS_MARQUEE:
     case MSG_POS_SWIM: {
       bool swim = sc->message_position == MSG_POS_SWIM;
-      double y = swim ? MESSAGE_TOP_ROW : y_mid;
+      double y = swim ? message_surface_y(rows) : y_mid;
       struct entity *e = spawn_message_entity(sc, w, y);
       if (swim) e->z = Z_MESSAGE_SURFACE;
       e->vx = -MESSAGE_SCROLL_SPEED;

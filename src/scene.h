@@ -7,7 +7,7 @@
 #include "entity.h"
 
 /* creature flags, excl. fish_count */
-#define SCENE_AQUATIC_FLAG_COUNT 15
+#define SCENE_AQUATIC_FLAG_COUNT 16
 
 struct aquatic_life {
   int fish_count; /* < 0 = auto, screen-size based */
@@ -26,7 +26,10 @@ struct aquatic_life {
   bool bigfish;
   bool swordfish;
   bool crab;
+  bool rowers;
 };
+
+#define CASTLE_NAME_LEN 11
 
 enum message_position {
   MSG_POS_MIDDLE,
@@ -46,6 +49,7 @@ struct scene {
   enum message_position message_position;
   bool castle;
   int castle_hidden_by;
+  char *castle_name;
   int uturn_chance;
   bool feed_alerted;
 };
@@ -69,8 +73,8 @@ void scene_set_message(struct scene *sc, const char *const *rows, int row_count)
 void scene_set_message_color(struct scene *sc, struct attr attr);
 void scene_set_message_position(struct scene *sc, enum message_position pos);
 void scene_set_uturn_chance(struct scene *sc, int one_in);
-/* next reset */
 void scene_set_castle(struct scene *sc, bool on);
+void scene_set_castle_name(struct scene *sc, const char *name);
 void scene_feed(struct scene *sc, int w, int h);
 void scene_set_fish_count(struct scene *sc, int w, int h, int count);
 int scene_fish_display_count(const struct scene *sc);

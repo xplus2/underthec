@@ -10,6 +10,7 @@
 #include "art/jellyfish.h"
 #include "art/misc.h"
 #include "art/monster.h"
+#include "art/rowers.h"
 #include "art/seahorse.h"
 #include "art/shark.h"
 #include "art/ship.h"
@@ -78,6 +79,7 @@ static void spawn_fish_from_table(struct scene *sc, const struct sprite_pair *ta
   int height = entity_height(e);
   e->y = random_swim_y(h, height);
   e->x = odd ? (double)(w - 2) : (double)(1 - width);
+  e->physical = true;
   finish_creature_spawn(e, ENT_FISH, rng_int(Z_FISH_RANGE) + Z_FISH_MIN, speed, 0, DEATH_ADD_FISH, (struct attr){.col = COL_DEFAULT, .bold = false});
 }
 
@@ -306,6 +308,12 @@ static void spawn_swan(struct scene *sc, int w, int h) {
   spawn_simple_creature(sc, w, &def);
 }
 
+static void spawn_rowers(struct scene *sc, int w, int h) {
+  (void)h;
+  static const struct simple_creature_def def = {ENT_ROWERS, Z_ROWERS, 1.0, 4, 5, 2.5, "WHITE", {rowers[0], rowers[1]}};
+  spawn_simple_creature(sc, w, &def);
+}
+
 static void spawn_dolphins(struct scene *sc, int w, int h) {
   (void)h;
   int dir = rng_int(2);
@@ -402,7 +410,7 @@ void spawn_random_object(struct scene *sc, int w, int h) {
   {spawn_swordfish, sc->aquatic.swordfish}, {spawn_ducks, sc->aquatic.ducks},
   {spawn_dolphins, sc->aquatic.dolphins},   {spawn_swan, sc->aquatic.swan},
   {spawn_fishhook, sc->aquatic.fishhook},   {spawn_crab, sc->aquatic.crab},
-  {spawn_seahorse, sc->aquatic.seahorse},
+  {spawn_seahorse, sc->aquatic.seahorse},   {spawn_rowers, sc->aquatic.rowers},
   {spawn_message_event, sc->message_rows != NULL && sc->message_position == MSG_POS_EVENT},
   };
   const int count = (int)(sizeof(table) / sizeof(table[0]));
