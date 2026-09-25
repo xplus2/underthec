@@ -5,133 +5,133 @@
 
 static const char *const rowers_image_0_0[] = {
   "  q  q  q  q",
-  "\\==\\==\\==\\==\\===/",
+  "\\==\\==\\==\\==\\==/",
   "    \\  \\  \\  \\",
   NULL
 };
 
 static const char *const rowers_image_0_1[] = {
   "   o  o  o  o",
-  "\\==|==|==|==|===/",
+  "\\==|==|==|==|==/",
   "   |  |  |  |",
   NULL
 };
 
 static const char *const rowers_image_0_2[] = {
   "    p  p  p  p",
-  "\\==/==/==/==/===/",
+  "\\==/==/==/==/==/",
   "  /  /  /  /",
   NULL
 };
 
 static const char *const rowers_image_0_3[] = {
   "___o__o__o__o",
-  "\\===============/",
+  "\\==============/",
   NULL
 };
 
 static const char *const rowers_image_0_4[] = {
   "  q__q__q__q___",
-  "\\===============/",
+  "\\==============/",
   NULL
 };
 
 static const char *const rowers_image_1_0[] = {
-  "     p  p  p  p  ",
-  "\\===/==/==/==/==/",
-  "   /  /  /  /    ",
+  "    p  p  p  p  ",
+  "\\==/==/==/==/==/",
+  "  /  /  /  /    ",
   NULL
 };
 
 static const char *const rowers_image_1_1[] = {
-  "    o  o  o  o   ",
-  "\\===|==|==|==|==/",
-  "    |  |  |  |   ",
+  "   o  o  o  o   ",
+  "\\==|==|==|==|==/",
+  "   |  |  |  |   ",
   NULL
 };
 
 static const char *const rowers_image_1_2[] = {
-  "   q  q  q  q    ",
-  "\\===\\==\\==\\==\\==/",
-  "     \\  \\  \\  \\  ",
+  "  q  q  q  q    ",
+  "\\==\\==\\==\\==\\==/",
+  "    \\  \\  \\  \\  ",
   NULL
 };
 
 static const char *const rowers_image_1_3[] = {
-  "    o__o__o__o___",
-  "\\===============/",
+  "   o__o__o__o___",
+  "\\==============/",
   NULL
 };
 
 static const char *const rowers_image_1_4[] = {
-  "  ___p__p__p__p  ",
-  "\\===============/",
+  " ___p__p__p__p  ",
+  "\\==============/",
   NULL
 };
 
 static const char *const rowers_mask_0_0[] = {
   "",
-  "rrr rr rr rr rrrr",
+  "rrr rr rr rr rrr",
   "",
   NULL
 };
 
 static const char *const rowers_mask_0_1[] = {
   "",
-  "rrr rr rr rr rrrr",
+  "rrr rr rr rr rrr",
   "",
   NULL
 };
 
 static const char *const rowers_mask_0_2[] = {
   "",
-  "rrr rr rr rr rrrr",
+  "rrr rr rr rr rrr",
   "",
   NULL
 };
 
 static const char *const rowers_mask_0_3[] = {
   "",
-  "rrrrrrrrrrrrrrrrr",
+  "rrrrrrrrrrrrrrrr",
   NULL
 };
 
 static const char *const rowers_mask_0_4[] = {
   "",
-  "rrrrrrrrrrrrrrrrr",
+  "rrrrrrrrrrrrrrrr",
   NULL
 };
 
 static const char *const rowers_mask_1_0[] = {
   "",
-  "rrrr rr rr rr rrr",
+  "rrr rr rr rr rrr",
   "",
   NULL
 };
 
 static const char *const rowers_mask_1_1[] = {
   "",
-  "rrrr rr rr rr rrr",
+  "rrr rr rr rr rrr",
   "",
   NULL
 };
 
 static const char *const rowers_mask_1_2[] = {
   "",
-  "rrrr rr rr rr rrr",
+  "rrr rr rr rr rrr",
   "",
   NULL
 };
 
 static const char *const rowers_mask_1_3[] = {
   "",
-  "rrrrrrrrrrrrrrrrr",
+  "rrrrrrrrrrrrrrrr",
   NULL
 };
 
 static const char *const rowers_mask_1_4[] = {
   "",
-  "rrrrrrrrrrrrrrrrr",
+  "rrrrrrrrrrrrrrrr",
   NULL
 };
 

@@ -26,6 +26,7 @@ const OPTIONS = [
   ["pace", "p"],
   ["uturn-chance", "u"],
   ["fps", "f"],
+  ["castle-name", "n"],
 ];
 const FONT_PX = 16;
 const FONT = FONT_PX + "px monospace";
@@ -136,7 +137,7 @@ underthec().then((M) => {
     if (key < 0 || e.key === " ") e.preventDefault();
     M._web_key(key);
   });
-  canvas.addEventListener("pointerdown", () => M._web_feed());
+  canvas.addEventListener("pointerdown", (e) => M._web_click(Math.floor(e.offsetX / cellW), Math.floor(e.offsetY / cellH)));
   let next = performance.now();
   function tick(now) {
     if (now >= next) {
