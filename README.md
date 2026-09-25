@@ -4,6 +4,8 @@ Asciiquarium is an aquarium/C animation in ASCII art.
 This is a C-port of [Asciiquarium v1.1](https://github.com/cmatsuoka/asciiquarium),
 see "Credits" below for the original authors.
 
+Here is a [Live Demo](https://xplus2.github.io/underthec/?m=Press+h+for+help&M=white&f=24).
+
 [Build](doc/build.md) and [release](https://github.com/xplus2/underthec/releases) targets:
 * Linux
   - Terminal: amd64, arm64, armel, armhf, i386, riscv64
