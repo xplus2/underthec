@@ -11,6 +11,7 @@
 void config_init(struct config *cfg) {
   *cfg = (struct config){
       .aquatic = scene_aquatic_default(),
+      .no_castle = false,
       .message_position = MSG_POS_MIDDLE,
       .pace = 1.0,
       .uturn_chance = 200,
@@ -58,6 +59,13 @@ bool config_set(struct config *cfg, const char *name, const char *value, const c
     if (!opts_parse_castle_name(value, name_buf, sizeof name_buf, eb, sizeof eb)) return fail(err, err_len, eb, shown);
     free(cfg->castle_name);
     cfg->castle_name = opts_strdup(name_buf);
+  } else if (strcmp(name, "no-castle") == 0) {
+    if (strcmp(value, "0") == 0) cfg->no_castle = false;
+    else if (strcmp(value, "1") == 0) cfg->no_castle = true;
+    else {
+      opts_set_errbuf(eb, sizeof eb, (const char *[]){"invalid value '", value, "', expected 0 or 1"}, 3);
+      return fail(err, err_len, eb, shown);
+    }
   } else if (strcmp(name, "pace") == 0) {
     if (!opts_parse_pace(value, &cfg->pace, eb, sizeof eb)) return fail(err, err_len, eb, shown);
   } else if (strcmp(name, "uturn-chance") == 0) {
@@ -85,6 +93,7 @@ void config_start(const struct config *cfg, struct app *app, double now) {
   if (cfg->message_color != NULL) scene_set_message_color(&app->scene, color_from_name(cfg->message_color));
   scene_set_message_position(&app->scene, cfg->message_position);
   scene_set_uturn_chance(&app->scene, cfg->uturn_chance);
+  scene_set_castle(&app->scene, !cfg->no_castle);
   if (cfg->castle_name != NULL) scene_set_castle_name(&app->scene, cfg->castle_name);
   if (cfg->message != NULL) {
     char *buf = opts_strdup(cfg->message);

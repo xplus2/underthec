@@ -36,7 +36,7 @@ static void spawn_flake(struct scene *sc, int x) {
   entity_set_owned_single_row(e, row, 0.0);
 }
 
-void feed_trigger(struct scene *sc, int w, int h) {
+void feed_trigger(struct scene *sc, int w, int h, int col) {
   (void)h;
   bool have_fish = false;
   double lowest_fish_y = 0.0;
@@ -56,7 +56,13 @@ void feed_trigger(struct scene *sc, int w, int h) {
 
   int max_band = w - FLAKE_BAND_WIDTH;
   if (max_band < 1) max_band = 1;
-  int band_x0 = rng_int(max_band);
+  int band_x0;
+  if (col == FEED_COL_AUTO) band_x0 = rng_int(max_band);
+  else {
+    band_x0 = col - FLAKE_BAND_WIDTH / 2;
+    if (band_x0 < 0) band_x0 = 0;
+    if (band_x0 > max_band) band_x0 = max_band;
+  }
   for (int i = 0; i < FLAKE_COUNT; i++) spawn_flake(sc, band_x0 + rng_int(FLAKE_BAND_WIDTH));
   sc->feed_alerted = false;
 }

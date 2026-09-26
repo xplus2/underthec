@@ -33,9 +33,15 @@ set(UNDERTHEC_CORE_SOURCES
         src/canvas.c
         src/color.c
         src/rng.c
-        src/entity.c
-        src/help.c
-        src/settings.c
+        src/entity/utf8.c
+        src/entity/list.c
+        src/entity/shape.c
+        src/entity/tick.c
+        src/entity/seaweed.c
+        src/entity/collide.c
+        src/entity/draw.c
+        src/ui/help.c
+        src/ui/settings.c
         src/scene/scene.c
         src/scene/effects.c
         src/scene/creatures.c
@@ -47,22 +53,24 @@ set(UNDERTHEC_CORE_SOURCES
 set(UNDERTHEC_SOURCES ${UNDERTHEC_CORE_SOURCES})
 
 if (EMSCRIPTEN)
-    list(APPEND UNDERTHEC_SOURCES src/config.c src/web/web_main.c)
+    list(APPEND UNDERTHEC_SOURCES src/config.c src/target/web/web_main.c)
 else ()
     list(APPEND UNDERTHEC_SOURCES
             src/main.c
-            src/term/term_common.c
-            src/teletext/tt_render.c
-            src/teletext/tt_t42.c
-            src/teletext/tt_ts.c
-            src/teletext/tt_net.c
+            src/ui/args.c
+            src/ui/cli_help.c
+            src/target/terminal/term_common.c
+            src/target/teletext/tt_render.c
+            src/target/teletext/tt_t42.c
+            src/target/teletext/tt_ts.c
+            src/target/teletext/tt_net.c
     )
     if (WIN32)
         enable_language(RC)
-        list(APPEND UNDERTHEC_SOURCES src/term/term_windows.c src/win/underthec.rc)
-        set_source_files_properties(src/win/underthec.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_SOURCE_DIR}/src/win/underthec.ico)
+        list(APPEND UNDERTHEC_SOURCES src/target/terminal/term_windows.c src/target/windows/underthec.rc)
+        set_source_files_properties(src/target/windows/underthec.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_SOURCE_DIR}/src/target/windows/underthec.ico)
     else ()
-        list(APPEND UNDERTHEC_SOURCES src/term/term_posix.c)
+        list(APPEND UNDERTHEC_SOURCES src/target/terminal/term_posix.c)
     endif ()
 endif ()
 
@@ -87,7 +95,9 @@ if (EMSCRIPTEN)
             -sEXPORTED_RUNTIME_METHODS=HEAPU32,ccall
     )
     add_custom_command(TARGET underthec POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/web/index.html $<TARGET_FILE_DIR:underthec>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/src/target/web/index.html $<TARGET_FILE_DIR:underthec>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/src/target/web/apple-touch-icon.png $<TARGET_FILE_DIR:underthec>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/src/target/windows/underthec.ico $<TARGET_FILE_DIR:underthec>/favicon.ico
     )
 else ()
     if (UNDERTHEC_STATIC AND NOT APPLE)
@@ -101,11 +111,11 @@ if (WIN32 AND NOT EMSCRIPTEN)
     add_executable(underthec_scr WIN32
             ${UNDERTHEC_CORE_SOURCES}
             src/config.c
-            src/scr/scr_main.c
-            src/scr/scr_cfg.c
-            src/scr/scr.rc
+            src/target/scr_windows/scr_main.c
+            src/target/scr_windows/scr_cfg.c
+            src/target/scr_windows/scr.rc
     )
-    set_source_files_properties(src/scr/scr.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_SOURCE_DIR}/src/scr/scr.manifest;${CMAKE_SOURCE_DIR}/src/win/scr.ico")
+    set_source_files_properties(src/target/scr_windows/scr.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_SOURCE_DIR}/src/target/scr_windows/scr.manifest;${CMAKE_SOURCE_DIR}/src/target/windows/scr.ico")
     target_include_directories(underthec_scr PRIVATE src)
     set_target_properties(underthec_scr PROPERTIES OUTPUT_NAME underthec SUFFIX ".scr")
     target_link_libraries(underthec_scr PRIVATE gdi32 advapi32)
@@ -124,8 +134,8 @@ if (NOT WIN32 AND NOT EMSCRIPTEN)
         add_executable(underthec_xscr
                 ${UNDERTHEC_CORE_SOURCES}
                 src/config.c
-                src/xscr/xscr_main.c
-                src/xscr/xscr_font.c
+                src/target/scr_x11/xscr_main.c
+                src/target/scr_x11/xscr_font.c
         )
         target_include_directories(underthec_xscr PRIVATE src ${X11_INCLUDE_DIR})
         target_link_libraries(underthec_xscr PRIVATE ${X11_LIBRARIES})
@@ -146,7 +156,7 @@ if (NOT WIN32 AND NOT EMSCRIPTEN)
             message(STATUS "UNDERTHEC_STATIC has no effect on the xscreensaver build (X11/Xft aren't available static)")
         endif ()
         install(PROGRAMS $<TARGET_FILE:underthec_xscr> DESTINATION ${UNDERTHEC_XSCREENSAVER_BINDIR} RENAME underthec)
-        install(FILES src/xscr/underthec.xml DESTINATION ${UNDERTHEC_XSCREENSAVER_CONFIGDIR})
+        install(FILES src/target/scr_x11/underthec.xml DESTINATION ${UNDERTHEC_XSCREENSAVER_CONFIGDIR})
     else ()
         message(STATUS "X11 development headers not found, skipping the xscreensaver target")
     endif ()

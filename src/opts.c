@@ -112,8 +112,8 @@ bool opts_parse_uturn_chance(const char *val, int *out, char *errbuf, size_t err
 bool opts_parse_fps(const char *val, int *out, char *errbuf, size_t errbuf_len) {
   char *endptr = NULL;
   long n = strtol(val, &endptr, 10);
-  if (val[0] == '\0' || *endptr != '\0' || n < 1 || n > 120) {
-    opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid fps '", val, "', expected 1-120"}, 3);
+  if (val[0] == '\0' || *endptr != '\0' || n < 1 || n > 144) {
+    opts_set_errbuf(errbuf, errbuf_len, (const char *[]){"invalid fps '", val, "', expected 1-144"}, 3);
     return false;
   }
   *out = (int)n;

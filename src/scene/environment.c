@@ -23,7 +23,6 @@ void add_environment(struct scene *sc, int w, int h) {
     char *tiled = xmalloc((size_t)unit_len * (size_t)repeat + 1);
     tiled[0] = '\0';
     for (int r = 0; r < repeat; r++) strcat(tiled, unit);
-
     struct entity *e = entity_spawn(&sc->entities);
     e->type = ENT_WATERLINE;
     e->x = 0;
@@ -142,7 +141,7 @@ void spawn_rubble(struct scene *sc, double castle_x, double castle_y, int castle
   e->y = castle_y + castle_height - rubble_height;
 }
 
-#define CASTLE_DOOR_ONE_IN 9000 /* ~15 min at 10 ticks/s */
+#define CASTLE_DOOR_ONE_IN 3000 /* ~5 min at 10 ticks/s */
 
 static const int castle_door_hold_ticks[CASTLE_DOOR_STEPS] = {4, 4, 4, 2, 2, 2, 0, 2, 2, 4, 4, 4};
 
@@ -191,7 +190,6 @@ void castle_door_tick(struct scene *sc) {
     door->frame_timer -= 1.0;
     return;
   }
-
   int next = door->frame_cur + 1;
   if (next >= door->frame_count) {
     door->marked_dead = true;
@@ -223,21 +221,25 @@ void add_seaweed(struct scene *sc, int w, int h) {
   rows0[height] = NULL;
   rows1[height] = NULL;
 
-  int castle_left = w - CASTLE_X_OFFSET;
-  int castle_right = castle_left + CASTLE_WIDTH - 1;
-  int left_lo = 1;
-  int left_hi = castle_left - 1;
-  int right_lo = castle_right + 1;
-  int right_hi = w - 2;
-  int left_span = left_hi >= left_lo ? left_hi - left_lo + 1 : 0;
-  int right_span = right_hi >= right_lo ? right_hi - right_lo + 1 : 0;
-  int total_span = left_span + right_span;
   int x;
-  if (total_span <= 0) {
+  if (!sc->castle) {
     x = rng_int(w - 2) + 1;
   } else {
-    int pick = rng_int(total_span);
-    x = pick < left_span ? left_lo + pick : right_lo + (pick - left_span);
+    int castle_left = w - CASTLE_X_OFFSET;
+    int castle_right = castle_left + CASTLE_WIDTH - 1;
+    int left_lo = 1;
+    int left_hi = castle_left - 1;
+    int right_lo = castle_right + 1;
+    int right_hi = w - 2;
+    int left_span = left_hi >= left_lo ? left_hi - left_lo + 1 : 0;
+    int right_span = right_hi >= right_lo ? right_hi - right_lo + 1 : 0;
+    int total_span = left_span + right_span;
+    if (total_span <= 0) {
+      x = rng_int(w - 2) + 1;
+    } else {
+      int pick = rng_int(total_span);
+      x = pick < left_span ? left_lo + pick : right_lo + (pick - left_span);
+    }
   }
   int y = h - height;
   double anim_speed = rng_double(0.05) + 0.25; /* seconds/frame */

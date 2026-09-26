@@ -2,7 +2,6 @@
 #include "color.h"
 #include "rng.h"
 #include "xalloc.h"
-
 #include "art/fishhook.h"
 
 #include <stdlib.h>
@@ -13,6 +12,11 @@ static int fishhook_body_height(void) {
   while (fishhook_image[n] != NULL) n++;
   return n;
 }
+
+#define FISHHOOK_TIP_ROW 3
+/* fishhook_image row: barb, not the wire attachment /|
+   definitely not "Barb Wire (1996)" */
+static const char *const fishhook_tip_row[] = { "/|", NULL };
 
 static void grow_fishhook_rope(struct entity *e, int hook_h) {
   char **rows = e->owned_shape_rows[0];
@@ -104,17 +108,17 @@ void fishhook_tick(struct scene *sc, int term_h) {
       } else if (hook->die_after < 0.0) {
         hook->die_after = rng_double(10.0) + 5.0; /* avoid stuck hook when nothing bites */
       }
-      struct sprite_pair barb_pair = { entity_shape(hook) + (int)hook->splat_x, NULL };
+      struct sprite_pair barb_pair = { fishhook_tip_row, NULL };
       struct entity barb = *hook;
       barb.frames = &barb_pair;
       barb.frame_count = 1;
       barb.frame_cur = 0;
       barb.wh_valid = false;
-      barb.y = hook->y + hook->splat_x;
+      barb.y = hook->y + hook->splat_x + FISHHOOK_TIP_ROW;
       for (int j = 0; j < sc->entities.count; j++) {
         struct entity *candidate = &sc->entities.items[j];
         if (candidate->marked_dead) continue;
-        if (candidate->type != ENT_FISH && candidate->type != ENT_KAIJU) continue;
+        if (candidate->type != ENT_FISH) continue;
         if (!entity_glyph_overlap(&barb, candidate)) continue;
         hook->physical = false;
         hook->die_after = -1.0;

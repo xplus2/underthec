@@ -57,13 +57,13 @@ if [ "$emcc" = "1" ]; then
 	static=0
 fi
 
-srcs="src/app.c src/opts.c src/canvas.c src/color.c src/rng.c src/entity.c src/help.c src/settings.c src/scene/scene.c src/scene/effects.c src/scene/creatures.c src/scene/environment.c src/scene/kaiju.c src/scene/fishhook.c src/scene/feed.c"
+srcs="src/app.c src/opts.c src/canvas.c src/color.c src/rng.c src/entity/utf8.c src/entity/list.c src/entity/shape.c src/entity/tick.c src/entity/seaweed.c src/entity/collide.c src/entity/draw.c src/ui/help.c src/ui/settings.c src/scene/scene.c src/scene/effects.c src/scene/creatures.c src/scene/environment.c src/scene/kaiju.c src/scene/fishhook.c src/scene/feed.c"
 
 if [ "$emcc" = "1" ]; then
-	srcs="$srcs src/config.c src/web/web_main.c"
+	srcs="$srcs src/config.c src/target/web/web_main.c"
 else
 	core_srcs="$srcs"
-	srcs="$srcs src/main.c src/term/term_common.c src/teletext/tt_render.c src/teletext/tt_t42.c src/teletext/tt_ts.c src/teletext/tt_net.c"
+	srcs="$srcs src/main.c src/ui/args.c src/ui/cli_help.c src/target/terminal/term_common.c src/target/teletext/tt_render.c src/target/teletext/tt_t42.c src/target/teletext/tt_ts.c src/target/teletext/tt_net.c"
 	windows=0
 	case "$host" in
 	*mingw*) windows=1 ;;
@@ -74,12 +74,12 @@ else
 		;;
 	esac
 	if [ "$windows" = "1" ]; then
-		srcs="$srcs src/term/term_windows.c"
-		rc="src/win/underthec.rc"
-		scr_srcs="$core_srcs src/config.c src/scr/scr_main.c src/scr/scr_cfg.c"
+		srcs="$srcs src/target/terminal/term_windows.c"
+		rc="src/target/windows/underthec.rc"
+		scr_srcs="$core_srcs src/config.c src/target/scr_windows/scr_main.c src/target/scr_windows/scr_cfg.c"
 		if [ -n "$host" ]; then windres="${host}-windres"; else windres=windres; fi
 	else
-		srcs="$srcs src/term/term_posix.c"
+		srcs="$srcs src/target/terminal/term_posix.c"
 	fi
 fi
 
@@ -160,18 +160,18 @@ fi
 	fi
 	if [ "$emcc" = "1" ]; then
 		echo 'TARGET = $(BUILDDIR)/underthec.js'
-		echo 'WEB_FILES = $(BUILDDIR)/index.html'
+		echo 'WEB_FILES = $(BUILDDIR)/index.html $(BUILDDIR)/favicon.ico $(BUILDDIR)/apple-touch-icon.png'
 	fi
 	if [ -n "$scr_srcs" ]; then
 		echo 'SCR_TARGET = $(BUILDDIR)/underthec.scr'
 		echo "SCR_SRCS = $scr_srcs"
-		echo "SCR_RC = src/scr/scr.rc"
+		echo "SCR_RC = src/target/scr_windows/scr.rc"
 		echo "WINDRES = $windres"
 		echo "SCR_LDFLAGS = -mwindows -lgdi32 -ladvapi32"
 	fi
 	if [ "$have_x11" = "1" ]; then
 		echo 'XSCR_TARGET = $(BUILDDIR)/underthec-xscr'
-		echo "XSCR_SRCS = $core_srcs src/config.c src/xscr/xscr_main.c src/xscr/xscr_font.c"
+		echo "XSCR_SRCS = $core_srcs src/config.c src/target/scr_x11/xscr_main.c src/target/scr_x11/xscr_font.c"
 		echo "XSCR_LDFLAGS = $x11_libs $xft_libs"
 		echo "XSCR_BINDIR = $xscr_bindir"
 		echo "XSCR_CONFIGDIR = $xscr_configdir"

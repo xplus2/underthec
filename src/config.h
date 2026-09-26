@@ -16,6 +16,7 @@ struct config {
   char *message;
   char *message_color;
   char *castle_name;
+  bool no_castle;
   enum message_position message_position;
   double pace;
   int uturn_chance;

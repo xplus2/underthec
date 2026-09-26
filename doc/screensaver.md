@@ -1,7 +1,7 @@
 # Screensaver
 
-## X11 Screensaver
-> Note: This is an XScreensaver, not to be confused what wayland compositors do on current distros
+## X11 screensaver
+> Note: This is an XScreensaver, not to be confused with what Wayland compositors do on current distros.
 
 ### Building it
 Building it requires X11 development headers (`libx11`) and optionally Xft (`libxft`) for anti-aliased text.
@@ -34,7 +34,7 @@ The normal Windows build (from Linux) will also create the `.scr`, as long as `w
 (that usually already comes with mingw-w64) exists.
 
 ```sh
-cmake -B build-win -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-toolchain.cmake
+cmake -B build-win -DCMAKE_TOOLCHAIN_FILE=toolchain/mingw-w64-toolchain.cmake
 cmake --build build-win
 ```
 

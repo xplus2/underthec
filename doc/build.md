@@ -11,24 +11,22 @@ The `Release` build type (the default) links statically wherever the target plat
 
 Static musl build on Linux (requires `musl-gcc`):
 ```sh
-cmake -B build-musl -DCMAKE_TOOLCHAIN_FILE=cmake/musl-toolchain.cmake
+cmake -B build-musl -DCMAKE_TOOLCHAIN_FILE=toolchain/musl-toolchain.cmake
 cmake --build build-musl
 ```
 
 If `libx11` and `libxft` headers are installed, this also builds the X11 screensaver (non-static).
 
 ### Windows
-Cross-compiling a static Windows build requires the `mingw-w64` cross toolchain:
-
-It creates the terminal binary as well as the screensaver.
+Cross-compiling a static Windows build requires the `mingw-w64` cross toolchain.
+Windows builds also produce the screensaver `underthec.scr`.
+It needs `windres` (comes with mingw-w64).
 
 ```sh
-cmake -B build-win -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-toolchain.cmake
+cmake -B build-win -DCMAKE_TOOLCHAIN_FILE=toolchain/mingw-w64-toolchain.cmake
 cmake --build build-win
 ```
 
-Windows builds also produce the screensaver `underthec.scr`.
-It needs `windres` (comes with mingw-w64).
 With configure + make, `--host=*-mingw32` builds `build/underthec.scr`.
 
 ### macOS
@@ -62,4 +60,4 @@ or
 make
 ```
 
-Browsers don't load wasm from `file://`, serve the directory over HTTP.
+Browsers don't load wasm from `file://`, so serve the directory over HTTP.

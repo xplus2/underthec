@@ -30,7 +30,7 @@ void app_resize(struct app *a, int w, int h) {
 void app_key(struct app *a, int key) {
   if (key == 'r') scene_reset(&a->scene, a->w, a->h);
   if (key == 'p') a->paused = !a->paused;
-  if (key == 'f') app_feed(a);
+  if (key == 'f') app_feed(a, FEED_COL_AUTO);
   if (key == 's') {
     if (help_ui_is_open(&a->help)) help_ui_close(&a->help);
     settings_ui_toggle(&a->settings);
@@ -46,11 +46,11 @@ void app_key(struct app *a, int key) {
   if (help_ui_is_open(&a->help) && key == '\x1b') help_ui_close(&a->help);
 }
 
-void app_feed(struct app *a) { scene_feed(&a->scene, a->w, a->h); }
+void app_feed(struct app *a, int col) { scene_feed(&a->scene, a->w, a->h, col); }
 
 void app_click(struct app *a, int x, int y) {
   if (settings_ui_click(&a->settings, x, y, a->w, a->h)) return;
-  app_feed(a);
+  app_feed(a, x);
 }
 
 void app_frame(struct app *a, double now) {

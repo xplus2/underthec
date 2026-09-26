@@ -1,7 +1,7 @@
 # WebAssembly
 
-Keys like `h` for help, `f` to feed or `s`for settings work. 
-Click or tap also feeds, but not necessarily at this position.
+Keys like `h` for help, `f` to feed or `s` for settings work. 
+Click or tap also drops some flakes.
 
 ## Query params
 Options can go in the URL query, by long or short name (long wins if both are set),
@@ -18,5 +18,6 @@ with the same values as on the command line:
 | `uturn-chance`     | `u`   | `?u=50`                |
 | `fps`              | `f`   | `?f=30`                |
 | `castle-name`      | `n`   | `?n=MyCastle`          |
+| `no-castle`        |       | `?no-castle`           |
 
 An invalid value shows the error instead of the aquarium.

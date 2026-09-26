@@ -4,9 +4,9 @@
 #include <stdbool.h>
 
 #include "canvas.h"
-#include "help.h"
+#include "ui/help.h"
 #include "scene.h"
-#include "settings.h"
+#include "ui/settings.h"
 
 /* dialogs point into struct, no copies after init */
 struct app {
@@ -31,7 +31,8 @@ void app_resize(struct app *a, int w, int h);
 
 /* r,p,f,s,h,esc + dialog keys */
 void app_key(struct app *a, int key);
-void app_feed(struct app *a);
+/* column: click/tap pos or FEED_COL_AUTO */
+void app_feed(struct app *a, int col);
 /* dialog hits, otherwise: feed */
 void app_click(struct app *a, int x, int y);
 

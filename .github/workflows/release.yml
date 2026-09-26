@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - run: sudo apt-get update && sudo apt-get install -y musl-tools libx11-dev libxft-dev
-      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/musl-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=toolchain/musl-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build -j
       - name: build xscreensaver (native, not musl - X11 has no static archives)
         run: |
@@ -43,7 +43,7 @@ jobs:
           ver=${{ needs.version.outputs.version }}
           name=underthec-${ver}-linux-${{ matrix.arch }}
           mkdir "$name"
-          cp build/underthec build-xscr/underthec_xscr src/xscr/underthec.xml LICENSE "$name"/
+          cp build/underthec build-xscr/underthec_xscr src/target/scr_x11/underthec.xml LICENSE "$name"/
           tar -czf "${name}.tar.gz" "$name"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -58,19 +58,19 @@ jobs:
           - arch: armhf
             compiler: arm-linux-musleabihf-gcc
             zigtarget: arm-linux-musleabihf
-            toolchain: cmake/arm-linux-musleabihf-toolchain.cmake
+            toolchain: toolchain/arm-linux-musleabihf-toolchain.cmake
           - arch: armel
             compiler: arm-linux-musleabi-gcc
             zigtarget: arm-linux-musleabi
-            toolchain: cmake/arm-linux-musleabi-toolchain.cmake
+            toolchain: toolchain/arm-linux-musleabi-toolchain.cmake
           - arch: i386
             compiler: i686-linux-musl-gcc
             zigtarget: x86-linux-musl
-            toolchain: cmake/i686-linux-musl-toolchain.cmake
+            toolchain: toolchain/i686-linux-musl-toolchain.cmake
           - arch: riscv64
             compiler: riscv64-linux-musl-gcc
             zigtarget: riscv64-linux-musl
-            toolchain: cmake/riscv64-linux-musl-toolchain.cmake
+            toolchain: toolchain/riscv64-linux-musl-toolchain.cmake
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -120,7 +120,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - run: sudo apt-get update && sudo apt-get install -y mingw-w64
-      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=toolchain/mingw-w64-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build -j
       - run: |
           ver=${{ needs.version.outputs.version }}
@@ -144,7 +144,7 @@ jobs:
           echo "cee8d2ce3da5145ce4dc882e70d0b0719a783d53a99752c60948fc0659975a65  llvm-mingw.tar.xz" | sha256sum -c -
           sudo tar -xJf llvm-mingw.tar.xz -C /opt
           echo "/opt/llvm-mingw-20260826-ucrt-ubuntu-22.04-x86_64/bin" >> "$GITHUB_PATH"
-      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-w64-mingw32-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+      - run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=toolchain/aarch64-w64-mingw32-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build -j
       - run: |
           ver=${{ needs.version.outputs.version }}

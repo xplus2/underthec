@@ -74,8 +74,10 @@ void scene_set_message_color(struct scene *sc, struct attr attr);
 void scene_set_message_position(struct scene *sc, enum message_position pos);
 void scene_set_uturn_chance(struct scene *sc, int one_in);
 void scene_set_castle(struct scene *sc, bool on);
+void scene_toggle_castle(struct scene *sc, int w, int h);
 void scene_set_castle_name(struct scene *sc, const char *name);
-void scene_feed(struct scene *sc, int w, int h);
+#define FEED_COL_AUTO (-1)
+void scene_feed(struct scene *sc, int w, int h, int col);
 void scene_set_fish_count(struct scene *sc, int w, int h, int count);
 int scene_fish_display_count(const struct scene *sc);
 void scene_on_species_toggled(struct scene *sc, int w, int h);

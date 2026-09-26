@@ -8,7 +8,7 @@ Instead of the terminal, output can be rendered as an EBU Teletext page (page 10
   IPv6 groups are written `[GROUP]:PORT`.
 * `--iface` takes a local address (IPv4) or an interface name (IPv6). Not available on Windows.
 * `--teletext-mode mosaic` draws 2x3 mosaic blocks. `--teletext-mode text` (default) draws text characters, one per cell.
-  Text mode is 39x25. The Level 1 character set swaps `# [ \ ] ^ _ ` { | } ~` for national characters, so those are sent
+  Text mode is 39x25. The Level 1 character set swaps ``# [ \ ] ^ _ ` { | } ~`` for national characters, so those are sent
   as X/26 enhancement packets (Level 1.5). Decoders without X/26 support show look-alikes instead.
 * `--teletext-caption <text>` sets the page caption, printable ASCII, max 32 chars. Default=`UNDERTHEC`.
 
@@ -25,11 +25,12 @@ Each second, the whole page is retransmitted, in between only changed rows.
 If you want to test it locally in VLC, it will need an alibi-video ES:
 
 * `underthec --mcast 239.1.1.1:5000 --iface 127.0.0.1`
-* ```sh 
-  ffmpeg -f lavfi -i color=c=black:s=720x576:r=25 -i "udp://239.1.1.1:5000?localaddr=127.0.0.1" \
-    -map 0:v -map 1:s -c:v mpeg2video -b:v 500k -c:s copy \
-    -f mpegts "udp://239.1.1.2:5000?ttl=1&pkt_size=1316"
-  ```
+* Run ffmpeg:
+    ```sh 
+    ffmpeg -f lavfi -i color=c=black:s=720x576:r=25 -i "udp://239.1.1.1:5000?localaddr=127.0.0.1" \
+      -map 0:v -map 1:s -c:v mpeg2video -b:v 500k -c:s copy \
+      -f mpegts "udp://239.1.1.2:5000?ttl=1&pkt_size=1316"
+    ```
 * Wait until ffmpeg produces an output
 * and launch VLC like this:
   `vlc udp://@239.1.1.2:5000` (or open VLC, ^N and enter `udp://@239.1.1.2:5000`)

@@ -31,11 +31,19 @@ $(BUILDDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
-$(BUILDDIR)/%.res.o: %.rc src/version.h src/scr/scr_res.h src/scr/scr.manifest src/win/underthec.ico src/win/scr.ico
+$(BUILDDIR)/%.res.o: %.rc src/version.h src/target/scr_windows/scr_res.h src/target/scr_windows/scr.manifest src/target/windows/underthec.ico src/target/windows/scr.ico
 	@mkdir -p $(dir $@)
 	$(WINDRES) -Isrc -O coff $< -o $@
 
-$(BUILDDIR)/index.html: web/index.html
+$(BUILDDIR)/index.html: src/target/web/index.html
+	@mkdir -p $(dir $@)
+	cp $< $@
+
+$(BUILDDIR)/apple-touch-icon.png: src/target/web/apple-touch-icon.png
+	@mkdir -p $(dir $@)
+	cp $< $@
+
+$(BUILDDIR)/favicon.ico: src/target/windows/underthec.ico
 	@mkdir -p $(dir $@)
 	cp $< $@
 
@@ -53,5 +61,5 @@ install: $(TARGET)
 		install -d $(DESTDIR)$(XSCR_BINDIR); \
 		install -m 755 $(XSCR_TARGET) $(DESTDIR)$(XSCR_BINDIR)/underthec; \
 		install -d $(DESTDIR)$(XSCR_CONFIGDIR); \
-		install -m 644 src/xscr/underthec.xml $(DESTDIR)$(XSCR_CONFIGDIR)/underthec.xml; \
+		install -m 644 src/target/scr_x11/underthec.xml $(DESTDIR)$(XSCR_CONFIGDIR)/underthec.xml; \
 	fi

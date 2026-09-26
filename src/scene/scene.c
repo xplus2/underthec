@@ -192,6 +192,21 @@ void scene_set_uturn_chance(struct scene *sc, int one_in) {
 
 void scene_set_castle(struct scene *sc, bool on) { sc->castle = on; }
 
+void scene_toggle_castle(struct scene *sc, int w, int h) {
+  sc->castle = !sc->castle;
+  if (sc->castle) {
+    if (entity_find_first(&sc->entities, ENT_CASTLE) == NULL) add_castle(sc, w, h);
+    return;
+  }
+  for (int i = 0; i < sc->entities.count; i++) {
+    struct entity *e = &sc->entities.items[i];
+    if (e->type == ENT_CASTLE || e->type == ENT_CASTLE_DOOR || e->type == ENT_RUBBLE) e->marked_dead = true;
+  }
+  sc->castle_hidden_by = 0;
+  struct scene_ctx ctx = {sc, w, h};
+  entity_reap(&sc->entities, on_death, &ctx);
+}
+
 void scene_set_castle_name(struct scene *sc, const char *name) {
   free(sc->castle_name);
   sc->castle_name = NULL;
@@ -201,8 +216,8 @@ void scene_set_castle_name(struct scene *sc, const char *name) {
   memcpy(sc->castle_name, name, len + 1);
 }
 
-void scene_feed(struct scene *sc, int w, int h) {
-  feed_trigger(sc, w, h);
+void scene_feed(struct scene *sc, int w, int h, int col) {
+  feed_trigger(sc, w, h, col);
 }
 
 int scene_fish_display_count(const struct scene *sc) {
